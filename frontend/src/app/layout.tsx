@@ -12,6 +12,13 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "OMEGA Afro Caribbean Superstore",
   description: "Your one-stop shop for authentic African and Caribbean groceries",
+  icons: {
+    icon: [
+      { url: '/omega-logo.jpg' },
+      { url: '/omega-logo.jpg', sizes: '32x32', type: 'image/jpeg' },
+    ],
+    apple: '/omega-logo.jpg',
+  },
 };
 
 export default function RootLayout({
