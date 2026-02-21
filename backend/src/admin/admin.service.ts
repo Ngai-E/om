@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto, UpdateProductDto, UpdateInventoryDto, InventoryAction } from './dto';
+import { Readable } from 'stream';
+import * as csvParser from 'csv-parser';
 
 @Injectable()
 export class AdminService {
@@ -272,6 +274,194 @@ export class AdminService {
       newQuantity,
       change: newQuantity - inventory.quantity,
     };
+  }
+
+  async importProductsFromCSV(file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    if (!file.originalname.endsWith('.csv')) {
+      throw new BadRequestException('File must be a CSV');
+    }
+
+    const results: any[] = [];
+    const errors: any[] = [];
+    let createdCount = 0;
+    let updatedCount = 0;
+    let errorCount = 0;
+
+    return new Promise((resolve, reject) => {
+      const stream = Readable.from(file.buffer.toString());
+      
+      stream
+        .pipe(csvParser())
+        .on('data', (row) => {
+          results.push(row);
+        })
+        .on('end', async () => {
+          // Process each row
+          for (let i = 0; i < results.length; i++) {
+            const row = results[i];
+            try {
+              // Parse the CSV row
+              const imageUrl = row.imageUrl || row.ImageUrl || '';
+              const images = imageUrl 
+                ? imageUrl.split('|').map((url: string, index: number) => ({
+                    url: url.trim(),
+                    altText: row.name || row.Name,
+                    sortOrder: index,
+                  }))
+                : [];
+
+              const productData: any = {
+                name: row.name || row.Name,
+                description: row.description || row.Description || '',
+                price: parseFloat(row.price || row.Price),
+                compareAtPrice: row.compareAtPrice || row.CompareAtPrice ? parseFloat(row.compareAtPrice || row.CompareAtPrice) : undefined,
+                category: row.category || row.Category,
+                categoryId: row.categoryId || row.CategoryId,
+                unitSize: row.unitSize || row.UnitSize || row.unit || row.Unit,
+                sku: row.sku || row.SKU,
+                barcode: row.barcode || row.Barcode,
+                tags: row.tags || row.Tags ? (row.tags || row.Tags).split(',').map((t: string) => t.trim()) : [],
+                isFeatured: row.isFeatured === 'true' || row.IsFeatured === 'true' || row.isFeatured === '1',
+                isActive: row.isActive !== 'false' && row.IsActive !== 'false' && row.isActive !== '0',
+                images,
+                inventory: {
+                  quantity: row.stock || row.Stock ? parseInt(row.stock || row.Stock) : 0,
+                  lowStockThreshold: row.lowStockThreshold || row.LowStockThreshold ? parseInt(row.lowStockThreshold || row.LowStockThreshold) : 10,
+                  isTracked: row.trackInventory === 'true' || row.TrackInventory === 'true' || row.trackInventory === '1',
+                },
+              };
+
+              // Check if product exists (by ID, SKU, or name)
+              const productId = row.id || row.Id;
+              let existingProduct = null;
+
+              if (productId) {
+                existingProduct = await this.prisma.product.findUnique({ where: { id: productId } });
+              }
+              
+              if (!existingProduct && productData.sku) {
+                existingProduct = await this.prisma.product.findUnique({ where: { sku: productData.sku } });
+              }
+
+              if (!existingProduct) {
+                const slug = productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                existingProduct = await this.prisma.product.findUnique({ where: { slug } });
+              }
+
+              if (existingProduct) {
+                // Update existing product
+                await this.updateProduct(existingProduct.id, productData);
+                updatedCount++;
+              } else {
+                // Create new product
+                await this.createProduct(productData);
+                createdCount++;
+              }
+            } catch (error) {
+              errorCount++;
+              errors.push({
+                row: i + 2, // +2 because of 0-index and header row
+                data: row,
+                error: error.message,
+              });
+            }
+          }
+
+          resolve({
+            message: 'CSV import completed',
+            totalRows: results.length,
+            createdCount,
+            updatedCount,
+            successCount: createdCount + updatedCount,
+            errorCount,
+            errors: errors.length > 0 ? errors : undefined,
+          });
+        })
+        .on('error', (error) => {
+          reject(new BadRequestException(`CSV parsing error: ${error.message}`));
+        });
+    });
+  }
+
+  async exportProductsToCSV(includeInactive = false) {
+    // Fetch all products with their relationships
+    const products = await this.prisma.product.findMany({
+      where: includeInactive ? {} : { isActive: true },
+      include: {
+        category: true,
+        images: { orderBy: { sortOrder: 'asc' } },
+        inventory: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+
+    // CSV Headers - All fields needed to create/update a product
+    const headers = [
+      'id',
+      'name',
+      'description',
+      'price',
+      'compareAtPrice',
+      'category',
+      'categoryId',
+      'imageUrl',
+      'tags',
+      'unitSize',
+      'sku',
+      'barcode',
+      'stock',
+      'lowStockThreshold',
+      'trackInventory',
+      'isFeatured',
+      'isActive',
+    ];
+
+    // Build CSV rows
+    const rows = products.map((product) => {
+      const imageUrls = product.images?.map(img => img.url).join('|') || '';
+      const stock = product.inventory?.quantity || 0;
+      const lowStockThreshold = product.inventory?.lowStockThreshold || 10;
+      const trackInventory = product.inventory?.isTracked !== false ? 'true' : 'false';
+      const tags = product.tags?.join(',') || '';
+
+      return [
+        product.id,
+        this.escapeCsvValue(product.name),
+        this.escapeCsvValue(product.description || ''),
+        product.price.toString(),
+        product.compareAtPrice?.toString() || '',
+        this.escapeCsvValue(product.category?.name || ''),
+        product.categoryId || '',
+        imageUrls,
+        this.escapeCsvValue(tags),
+        product.unitSize || '',
+        product.sku || '',
+        product.barcode || '',
+        stock,
+        lowStockThreshold,
+        trackInventory,
+        product.isFeatured ? 'true' : 'false',
+        product.isActive ? 'true' : 'false',
+      ].join(',');
+    });
+
+    // Combine headers and rows
+    return [headers.join(','), ...rows].join('\n');
+  }
+
+  private escapeCsvValue(value: string): string {
+    if (!value) return '';
+    
+    // If value contains comma, quote, or newline, wrap in quotes and escape quotes
+    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+    
+    return value;
   }
 
   // ============================================

@@ -1,0 +1,11 @@
+name,description,price,compareAtPrice,category,categoryId,imageUrl,tags,unitSize,sku,barcode,stock,lowStockThreshold,trackInventory,isFeatured,isActive
+Premium Plantain,Fresh green plantains from the Caribbean,1.49,2.99,Vegetables,,https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e,"plantain,caribbean,fresh",1kg,PLT-001,1234567890123,100,10,true,true,true
+Yam (White),Fresh white yam from West Africa,2.99,3.99,Vegetables,,https://images.unsplash.com/photo-1568584711271-f9b3c0c6c8e3,"yam,african,fresh",1kg,YAM-001,1234567890124,50,10,true,false,true
+Scotch Bonnet Peppers,Hot scotch bonnet peppers - handle with care!,3.49,,Vegetables,,https://images.unsplash.com/photo-1583663848850-46af132dc08e,"pepper,spicy,caribbean",100g pack,SBP-001,1234567890125,75,15,true,true,true
+Jollof Rice Mix,Authentic West African jollof rice seasoning mix,4.99,5.99,Pantry,,https://images.unsplash.com/photo-1516684732162-798a0062be99,"rice,seasoning,african",500g pack,JRM-001,1234567890126,200,20,true,true,true
+Palm Oil (500ml),Pure red palm oil for authentic African cooking,6.99,,Pantry,,https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5,"oil,cooking,african",500ml bottle,PLM-001,1234567890127,150,15,true,false,true
+Cassava Flour,Gluten-free cassava flour for baking,5.49,6.99,Pantry,,https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b,"flour,gluten-free,african",1kg,CSF-001,1234567890128,80,10,true,false,true
+Dried Fish (Stockfish),Premium Norwegian stockfish for soups and stews,12.99,14.99,Seafood,,https://images.unsplash.com/photo-1544943910-4c1dc44aab44,"fish,dried,protein",250g pack,DFS-001,1234567890129,40,5,true,true,true
+Egusi Seeds,Ground egusi (melon) seeds for soup,7.99,,Pantry,,https://images.unsplash.com/photo-1587411768941-1c0d0f0c1e5f,"seeds,soup,african",500g pack,EGS-001,1234567890130,60,10,true,false,true
+Fufu Flour,Instant fufu flour - just add water,4.49,5.49,Pantry,,https://images.unsplash.com/photo-1586201375761-83865001e31c,"fufu,flour,african",1kg pack,FUF-001,1234567890131,120,15,true,true,true
+Suya Spice Mix,Authentic Nigerian suya spice blend,3.99,,Spices,,https://images.unsplash.com/photo-1596040033229-a0b3b1f1e3d8,"spice,suya,nigerian",100g jar,SYS-001,1234567890132,90,10,true,false,true

@@ -11,7 +11,12 @@ import {
   UseGuards,
   ParseIntPipe,
   DefaultValuePipe,
+  UploadedFile,
+  UseInterceptors,
+  Res,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { CreateProductDto, UpdateProductDto, UpdateInventoryDto } from './dto';
@@ -85,6 +90,30 @@ export class AdminController {
   @ApiResponse({ status: 404, description: 'Product not found' })
   async updateInventory(@Param('id') productId: string, @Body() dto: UpdateInventoryDto) {
     return this.adminService.updateInventory(productId, dto);
+  }
+
+  @Post('products/import-csv')
+  @ApiOperation({ summary: 'Import products from CSV file (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Products imported successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid CSV format' })
+  @UseInterceptors(FileInterceptor('file'))
+  async importProductsFromCSV(@UploadedFile() file: Express.Multer.File) {
+    return this.adminService.importProductsFromCSV(file);
+  }
+
+  @Get('products/export-csv')
+  @ApiOperation({ summary: 'Export all products to CSV file (Admin only)' })
+  @ApiQuery({ name: 'includeInactive', required: false, type: Boolean, description: 'Include inactive products' })
+  @ApiResponse({ status: 200, description: 'CSV file downloaded' })
+  async exportProductsToCSV(
+    @Query('includeInactive') includeInactive: boolean,
+    @Res() res: Response,
+  ) {
+    const csv = await this.adminService.exportProductsToCSV(includeInactive);
+    
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="products-export-${new Date().toISOString().split('T')[0]}.csv"`);
+    res.send(csv);
   }
 
   // ============================================

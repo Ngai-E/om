@@ -55,10 +55,15 @@ export class CreateProductDto {
   @IsString()
   categoryId: string;
 
-  @ApiProperty({ example: 'kg', required: false })
+  @ApiProperty({ example: 'kg', required: false, description: 'Legacy field, use unitSize instead' })
   @IsOptional()
   @IsString()
   unit?: string;
+
+  @ApiProperty({ example: '1kg', required: false })
+  @IsOptional()
+  @IsString()
+  unitSize?: string;
 
   @ApiProperty({ example: ['plantain', 'caribbean', 'fresh'], required: false })
   @IsOptional()
@@ -100,4 +105,14 @@ export class CreateProductDto {
   @IsNumber()
   @Min(0)
   stock?: number;
+
+  @ApiProperty({ example: 'SKU-12345', required: false })
+  @IsOptional()
+  @IsString()
+  sku?: string;
+
+  @ApiProperty({ example: '1234567890123', required: false })
+  @IsOptional()
+  @IsString()
+  barcode?: string;
 }
