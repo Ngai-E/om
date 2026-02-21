@@ -20,8 +20,10 @@ async function bootstrap() {
   app.use(compression());
   app.use(cookieParser());
 
-  // Global prefix
-  app.setGlobalPrefix('v1');
+  // Global prefix (exclude health check for Render)
+  app.setGlobalPrefix('v1', {
+    exclude: ['health', ''],
+  });
 
   // Validation
   app.useGlobalPipes(

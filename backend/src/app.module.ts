@@ -12,6 +12,7 @@ import { DeliveryModule } from './delivery/delivery.module';
 import { AdminModule } from './admin/admin.module';
 import { StaffModule } from './staff/staff.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -42,5 +43,6 @@ import { NotificationsModule } from './notifications/notifications.module';
     StaffModule,
     NotificationsModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
