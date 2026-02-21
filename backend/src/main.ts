@@ -11,8 +11,27 @@ async function bootstrap() {
 
   // Security
   app.use(helmet());
+  
+  // CORS - support multiple origins
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'https://www.omegaafro.com',
+    'https://omegaafro.com',
+    'https://om-ebon-omega.vercel.app',
+    process.env.FRONTEND_URL,
+  ].filter(Boolean);
+
   app.enableCors({
-    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   });
 
@@ -55,7 +74,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 4000;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
   console.log('');
   console.log('🚀 OMEGA AFRO SHOP Backend API');
