@@ -6,7 +6,6 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import { useCartStore } from '@/lib/store/cart-store';
 import { accountApi } from '@/lib/api/account';
 import { ordersApi } from '@/lib/api/orders';
-import { StripePayment } from '@/components/checkout/stripe-payment';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { MapPin, Clock, CreditCard, Truck, Store } from 'lucide-react';
