@@ -1,0 +1,1055 @@
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateProductDto, UpdateProductDto, UpdateInventoryDto, InventoryAction } from './dto';
+
+@Injectable()
+export class AdminService {
+  constructor(private prisma: PrismaService) {}
+
+  // ============================================
+  // PRODUCT MANAGEMENT
+  // ============================================
+
+  async createProduct(dto: CreateProductDto) {
+    // Generate slug from name
+    const slug = dto.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    // Check if slug already exists
+    const existing = await this.prisma.product.findUnique({
+      where: { slug },
+    });
+
+    if (existing) {
+      throw new BadRequestException(`Product with slug "${slug}" already exists`);
+    }
+
+    // Handle category - support both categoryId and legacy category name
+    let categoryId = dto.categoryId;
+    if (!categoryId && dto.category) {
+      // Legacy: Find or create category by name
+      let category = await this.prisma.category.findFirst({
+        where: { name: dto.category },
+      });
+
+      if (!category) {
+        const categorySlug = dto.category
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+        
+        category = await this.prisma.category.create({
+          data: {
+            name: dto.category,
+            slug: categorySlug,
+          },
+        });
+      }
+      categoryId = category.id;
+    }
+
+    if (!categoryId) {
+      throw new BadRequestException('Category is required');
+    }
+
+    const product = await this.prisma.product.create({
+      data: {
+        name: dto.name,
+        slug,
+        description: dto.description,
+        price: dto.price,
+        compareAtPrice: dto.compareAtPrice,
+        categoryId,
+        unitSize: dto.unit || 'unit',
+        tags: dto.tags || [],
+        isFeatured: dto.isFeatured || false,
+        isActive: dto.isActive !== false,
+        // Create images if provided
+        images: dto.images ? {
+          create: dto.images.map((img, index) => ({
+            url: img.url,
+            altText: img.altText || dto.name,
+            sortOrder: index,
+          })),
+        } : undefined,
+        // Create inventory if provided
+        inventory: {
+          create: {
+            quantity: dto.inventory?.quantity ?? dto.stock ?? 0,
+            lowStockThreshold: dto.inventory?.lowStockThreshold ?? 10,
+            isTracked: dto.inventory?.isTracked ?? true,
+          },
+        },
+      },
+      include: {
+        images: true,
+        inventory: true,
+        category: true,
+      },
+    });
+
+    return product;
+  }
+
+  async updateProduct(productId: string, dto: UpdateProductDto) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    // If name is being updated, regenerate slug
+    let slug = product.slug;
+    if (dto.name && dto.name !== product.name) {
+      slug = dto.name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      // Check if new slug conflicts
+      const existing = await this.prisma.product.findUnique({
+        where: { slug },
+      });
+
+      if (existing && existing.id !== productId) {
+        throw new BadRequestException(`Product with slug "${slug}" already exists`);
+      }
+    }
+
+    // Handle category update
+    let categoryId = product.categoryId;
+    if (dto.category) {
+      let category = await this.prisma.category.findFirst({
+        where: { name: dto.category },
+      });
+
+      if (!category) {
+        const categorySlug = dto.category
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+        
+        category = await this.prisma.category.create({
+          data: {
+            name: dto.category,
+            slug: categorySlug,
+          },
+        });
+      }
+      categoryId = category.id;
+    }
+
+    const updateData: any = {
+      slug,
+      updatedAt: new Date(), // Force update timestamp
+    };
+
+    if (dto.name) updateData.name = dto.name;
+    if (dto.description !== undefined) updateData.description = dto.description;
+    if (dto.price !== undefined) updateData.price = dto.price;
+    if (dto.compareAtPrice !== undefined) updateData.compareAtPrice = dto.compareAtPrice;
+    if (dto.unit) updateData.unitSize = dto.unit;
+    if (dto.tags) updateData.tags = dto.tags;
+    if (dto.isFeatured !== undefined) updateData.isFeatured = dto.isFeatured;
+    if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
+    if (categoryId !== product.categoryId) updateData.categoryId = categoryId;
+    if (dto.categoryId) updateData.categoryId = dto.categoryId;
+
+    // Handle image updates
+    if (dto.images && dto.images.length > 0) {
+      // Delete existing images
+      await this.prisma.productImage.deleteMany({
+        where: { productId },
+      });
+
+      // Create new images
+      updateData.images = {
+        create: dto.images.map((img, index) => ({
+          url: img.url,
+          altText: img.altText || dto.name || product.name,
+          sortOrder: img.sortOrder ?? index,
+        })),
+      };
+    }
+
+    // Handle inventory updates
+    if (dto.inventory) {
+      updateData.inventory = {
+        upsert: {
+          create: {
+            quantity: dto.inventory.quantity ?? 0,
+            lowStockThreshold: dto.inventory.lowStockThreshold ?? 10,
+            isTracked: dto.inventory.isTracked ?? true,
+          },
+          update: {
+            quantity: dto.inventory.quantity,
+            lowStockThreshold: dto.inventory.lowStockThreshold,
+            isTracked: dto.inventory.isTracked,
+          },
+        },
+      };
+    }
+
+    const updated = await this.prisma.product.update({
+      where: { id: productId },
+      data: updateData,
+      include: {
+        images: { orderBy: { sortOrder: 'asc' } },
+        inventory: true,
+        category: true,
+      },
+    });
+
+    // Update inventory if stock is provided (legacy support)
+    if (dto.stock !== undefined && !dto.inventory) {
+      await this.prisma.inventory.update({
+        where: { productId },
+        data: { quantity: dto.stock },
+      });
+    }
+
+    return updated;
+  }
+
+  async deleteProduct(productId: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    // Soft delete by setting isActive to false
+    await this.prisma.product.update({
+      where: { id: productId },
+      data: { isActive: false },
+    });
+
+    return { message: 'Product deleted successfully' };
+  }
+
+  async updateInventory(productId: string, dto: UpdateInventoryDto) {
+    const inventory = await this.prisma.inventory.findUnique({
+      where: { productId },
+      include: { product: true },
+    });
+
+    if (!inventory) {
+      throw new NotFoundException('Product inventory not found');
+    }
+
+    let newQuantity = inventory.quantity;
+
+    switch (dto.action) {
+      case InventoryAction.ADD:
+        newQuantity += dto.quantity;
+        break;
+      case InventoryAction.SUBTRACT:
+        newQuantity -= dto.quantity;
+        if (newQuantity < 0) {
+          throw new BadRequestException('Stock cannot be negative');
+        }
+        break;
+      case InventoryAction.SET:
+        newQuantity = dto.quantity;
+        break;
+    }
+
+    const updated = await this.prisma.inventory.update({
+      where: { productId },
+      data: { quantity: newQuantity },
+      include: { product: true },
+    });
+
+    return {
+      inventory: updated,
+      previousQuantity: inventory.quantity,
+      newQuantity,
+      change: newQuantity - inventory.quantity,
+    };
+  }
+
+  // ============================================
+  // ORDER MANAGEMENT
+  // ============================================
+
+  async getAllOrders(page = 1, limit = 20, status?: string, isPhoneOrder?: boolean) {
+    const skip = (page - 1) * limit;
+    const where: any = {};
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (isPhoneOrder !== undefined) {
+      where.isPhoneOrder = isPhoneOrder;
+    }
+
+    const [orders, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          items: {
+            include: {
+              product: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                },
+              },
+            },
+          },
+          address: true,
+          deliverySlot: true,
+          payment: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+
+    return {
+      data: orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getOrderDetails(orderId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+          },
+        },
+        items: {
+          include: {
+            product: true,
+          },
+        },
+        address: true,
+        deliverySlot: true,
+        payment: true,
+        statusHistory: {
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    return order;
+  }
+
+  async updateOrderStatus(orderId: string, status: string) {
+    // Validate order exists
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Update order status
+    const updatedOrder = await this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: status as any },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        items: {
+          include: {
+            product: true,
+          },
+        },
+        payment: true,
+      },
+    });
+
+    // Create status history entry
+    await this.prisma.orderStatusHistory.create({
+      data: {
+        orderId,
+        status: status as any,
+        notes: `Status updated to ${status}`,
+      },
+    });
+
+    return updatedOrder;
+  }
+
+  // ============================================
+  // USER MANAGEMENT
+  // ============================================
+
+  async getAllUsers(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+
+    const [users, total] = await Promise.all([
+      this.prisma.user.findMany({
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          emailVerified: true,
+          createdAt: true,
+          _count: {
+            select: {
+              orders: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.user.count(),
+    ]);
+
+    return {
+      data: users,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getUserDetails(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        emailVerified: true,
+        createdAt: true,
+        updatedAt: true,
+        addresses: true,
+        orders: {
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+          include: {
+            items: true,
+            payment: true,
+          },
+        },
+        _count: {
+          select: {
+            orders: true,
+          },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    return user;
+  }
+
+  // ============================================
+  // DASHBOARD STATS
+  // ============================================
+
+  async getDashboardStats() {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const [
+      totalOrders,
+      totalRevenue,
+      totalCustomers,
+      totalProducts,
+      recentOrders,
+      lowStockProducts,
+      ordersByStatus,
+      newOrdersToday,
+      pendingPayment,
+      todayRevenue,
+      deliverySlots,
+    ] = await Promise.all([
+      // Total orders
+      this.prisma.order.count(),
+
+      // Total revenue
+      this.prisma.order.aggregate({
+        _sum: { total: true },
+        where: {
+          payment: {
+            status: 'SUCCEEDED',
+          },
+        },
+      }),
+
+      // Total customers
+      this.prisma.user.count({
+        where: { role: 'CUSTOMER' },
+      }),
+
+      // Total products
+      this.prisma.product.count({
+        where: { isActive: true },
+      }),
+
+      // Recent orders (last 10)
+      this.prisma.order.findMany({
+        take: 10,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: {
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          },
+          payment: {
+            select: {
+              status: true,
+            },
+          },
+        },
+      }),
+
+      // Low stock products (< 10 units)
+      this.prisma.inventory.findMany({
+        where: {
+          quantity: {
+            lt: 10,
+          },
+          product: {
+            isActive: true,
+          },
+        },
+        include: {
+          product: true,
+        },
+        orderBy: { quantity: 'asc' },
+        take: 10,
+      }),
+
+      // Orders by status
+      this.prisma.order.groupBy({
+        by: ['status'],
+        _count: true,
+      }),
+
+      // NEW: Orders created today
+      this.prisma.order.count({
+        where: {
+          createdAt: {
+            gte: today,
+            lt: tomorrow,
+          },
+        },
+      }),
+
+      // NEW: Orders with pending payment
+      this.prisma.order.count({
+        where: {
+          payment: {
+            status: 'PENDING',
+          },
+        },
+      }),
+
+      // NEW: Today's revenue
+      this.prisma.order.aggregate({
+        _sum: { total: true },
+        where: {
+          createdAt: {
+            gte: today,
+            lt: tomorrow,
+          },
+          payment: {
+            status: {
+              not: 'FAILED',
+            },
+          },
+        },
+      }),
+
+      // NEW: Delivery slots utilization
+      this.prisma.deliverySlot.findMany({
+        where: { isActive: true },
+        orderBy: { startTime: 'asc' },
+      }),
+    ]);
+
+    // Calculate delivery slot utilization (for today)
+    const slotsWithUsage = await Promise.all(
+      deliverySlots.map(async (slot) => {
+        const used = await this.prisma.order.count({
+          where: {
+            deliverySlotId: slot.id,
+            status: {
+              notIn: ['CANCELLED', 'DELIVERED', 'COLLECTED', 'REFUNDED'],
+            },
+          },
+        });
+
+        return {
+          label: `${slot.startTime}-${slot.endTime}`,
+          time: `${slot.startTime}-${slot.endTime}`,
+          used,
+          capacity: slot.capacity,
+        };
+      }),
+    );
+
+    return {
+      // Legacy fields
+      totalOrders,
+      totalRevenue: totalRevenue._sum.total?.toString() || '0',
+      totalCustomers,
+      totalProducts,
+      recentOrders,
+      topProducts: [], // Can be implemented later
+      
+      // NEW: Dashboard metrics
+      newOrdersToday,
+      pendingPayment,
+      lowStockItems: lowStockProducts.length,
+      todayRevenue: todayRevenue._sum.total?.toString() || '0',
+      ordersByStatus: ordersByStatus.map((item) => ({
+        status: item.status,
+        count: item._count,
+      })),
+      deliverySlots: slotsWithUsage,
+    };
+  }
+
+  // ============================================
+  // NEW ENDPOINTS
+  // ============================================
+
+  async toggleProductStatus(productId: string, isActive: boolean) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return this.prisma.product.update({
+      where: { id: productId },
+      data: { isActive },
+    });
+  }
+
+  async duplicateProduct(productId: string, nameSuffix: string) {
+    const sourceProduct = await this.prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        images: true,
+        inventory: true,
+      },
+    });
+
+    if (!sourceProduct) {
+      throw new NotFoundException('Product not found');
+    }
+
+    // Generate new name and slug
+    const newName = sourceProduct.name + nameSuffix;
+    const baseSlug = newName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    // Ensure unique slug
+    let slug = baseSlug;
+    let counter = 1;
+    while (await this.prisma.product.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    // Create duplicate product
+    const newProduct = await this.prisma.product.create({
+      data: {
+        name: newName,
+        slug,
+        description: sourceProduct.description,
+        price: sourceProduct.price,
+        compareAtPrice: sourceProduct.compareAtPrice,
+        categoryId: sourceProduct.categoryId,
+        isActive: false, // Duplicates start as inactive
+        isFeatured: false,
+        // Copy images
+        images: {
+          create: sourceProduct.images.map((img) => ({
+            url: img.url,
+            altText: img.altText,
+            sortOrder: img.sortOrder,
+          })),
+        },
+        // Copy inventory settings (but reset quantity to 0)
+        inventory: sourceProduct.inventory
+          ? {
+              create: {
+                quantity: 0,
+                lowStockThreshold: sourceProduct.inventory.lowStockThreshold,
+                isTracked: sourceProduct.inventory.isTracked,
+              },
+            }
+          : undefined,
+      },
+      include: {
+        category: true,
+        images: true,
+        inventory: true,
+      },
+    });
+
+    return newProduct;
+  }
+
+  async markOrderPaid(orderId: string, status: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { payment: true },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.payment?.paymentMethod !== 'CASH_ON_DELIVERY') {
+      throw new BadRequestException('Only COD orders can be marked as paid');
+    }
+
+    // Update payment status
+    await this.prisma.payment.update({
+      where: { id: order.payment.id },
+      data: {
+        status: 'SUCCEEDED',
+        paidAt: new Date(),
+      },
+    });
+
+    return this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: {
+        payment: true,
+        user: true,
+        items: {
+          include: { product: true },
+        },
+      },
+    });
+  }
+
+  async processRefund(orderId: string, amount: number, reason: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { payment: true },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.payment?.status !== 'SUCCEEDED') {
+      throw new BadRequestException('Can only refund succeeded payments');
+    }
+
+    const orderTotal = parseFloat(order.total.toString());
+    if (amount > orderTotal) {
+      throw new BadRequestException('Refund amount cannot exceed order total');
+    }
+
+    // TODO: Integrate with Stripe API to process actual refund
+    // const stripeRefund = await stripe.refunds.create({
+    //   payment_intent: order.payment.stripePaymentIntentId,
+    //   amount: Math.round(amount * 100), // Convert to cents
+    // });
+
+    // Create refund record (if Refund model exists in schema)
+    // const refund = await this.prisma.refund.create({
+    //   data: {
+    //     orderId,
+    //     amount: amount.toString(),
+    //     reason,
+    //     status: 'SUCCEEDED',
+    //     stripeRefundId: stripeRefund.id,
+    //   },
+    // });
+
+    // For now, just return refund data without saving to DB
+    const refund = {
+      id: `refund-${Date.now()}`,
+      orderId,
+      amount: amount.toString(),
+      reason,
+      status: 'SUCCEEDED',
+      createdAt: new Date(),
+    };
+
+    // Update payment status if fully refunded
+    if (amount >= orderTotal) {
+      await this.prisma.payment.update({
+        where: { id: order.payment.id },
+        data: { status: 'REFUNDED' },
+      });
+    } else {
+      await this.prisma.payment.update({
+        where: { id: order.payment.id },
+        data: { status: 'PARTIALLY_REFUNDED' },
+      });
+    }
+
+    // TODO: Send email notification to customer
+
+    return refund;
+  }
+
+  async assignDriver(orderId: string, driverId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.fulfillmentType !== 'DELIVERY') {
+      throw new BadRequestException('Can only assign drivers to delivery orders');
+    }
+
+    // TODO: Verify driver exists and is available
+    // const driver = await this.prisma.user.findUnique({
+    //   where: { id: driverId, role: 'DRIVER' },
+    // });
+    // if (!driver) {
+    //   throw new NotFoundException('Driver not found');
+    // }
+
+    // Update order with driver
+    const updatedOrder = await this.prisma.order.update({
+      where: { id: orderId },
+      data: {
+        // driverId, // Add this field to schema if needed
+      },
+      include: {
+        user: true,
+        items: {
+          include: { product: true },
+        },
+      },
+    });
+
+    // TODO: Send SMS notification to driver
+    // TODO: Send push notification via driver app
+
+    return {
+      ...updatedOrder,
+      driverId,
+      driver: {
+        id: driverId,
+        name: 'Driver Name', // TODO: Get from database
+        phone: '+44 7700 900000', // TODO: Get from database
+      },
+    };
+  }
+
+  // ============================================
+  // DELIVERY MANAGEMENT
+  // ============================================
+
+  // Delivery Zones
+  async getAllDeliveryZones() {
+    const zones = await this.prisma.deliveryZone.findMany({
+      orderBy: { name: 'asc' },
+    });
+    return zones;
+  }
+
+  async createDeliveryZone(data: any) {
+    const zone = await this.prisma.deliveryZone.create({
+      data: {
+        name: data.name,
+        postcodePrefix: data.postcodePrefix,
+        deliveryFee: data.deliveryFee,
+        minOrderValue: data.minOrderValue,
+        freeDeliveryThreshold: data.freeDeliveryThreshold || null,
+        isActive: data.isActive ?? true,
+      },
+    });
+    return zone;
+  }
+
+  async updateDeliveryZone(id: string, data: any) {
+    const zone = await this.prisma.deliveryZone.update({
+      where: { id },
+      data: {
+        name: data.name,
+        postcodePrefix: data.postcodePrefix,
+        deliveryFee: data.deliveryFee,
+        minOrderValue: data.minOrderValue,
+        freeDeliveryThreshold: data.freeDeliveryThreshold || null,
+        isActive: data.isActive,
+      },
+    });
+    return zone;
+  }
+
+  async deleteDeliveryZone(id: string) {
+    await this.prisma.deliveryZone.delete({
+      where: { id },
+    });
+    return { message: 'Zone deleted successfully' };
+  }
+
+  // Delivery Slots
+  async getAllDeliverySlots(date?: string) {
+    const where: any = {};
+    
+    if (date) {
+      where.date = new Date(date);
+    }
+
+    const slots = await this.prisma.deliverySlot.findMany({
+      where,
+      include: {
+        _count: {
+          select: {
+            orders: {
+              where: {
+                status: {
+                  notIn: ['CANCELLED', 'REFUNDED'],
+                },
+              },
+            },
+          },
+        },
+      },
+      orderBy: [
+        { date: 'asc' },
+        { startTime: 'asc' },
+      ],
+    });
+
+    return slots.map(slot => ({
+      ...slot,
+      bookedCount: slot._count.orders,
+    }));
+  }
+
+  async createDeliverySlot(data: any) {
+    const slot = await this.prisma.deliverySlot.create({
+      data: {
+        date: new Date(data.date),
+        startTime: data.startTime,
+        endTime: data.endTime,
+        capacity: parseInt(data.capacity),
+        isActive: data.isActive ?? true,
+      },
+      include: {
+        _count: {
+          select: { orders: true },
+        },
+      },
+    });
+
+    return {
+      ...slot,
+      bookedCount: slot._count.orders,
+    };
+  }
+
+  async updateDeliverySlot(id: string, data: any) {
+    const slot = await this.prisma.deliverySlot.update({
+      where: { id },
+      data: {
+        date: data.date ? new Date(data.date) : undefined,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        capacity: data.capacity ? parseInt(data.capacity) : undefined,
+        isActive: data.isActive,
+      },
+      include: {
+        _count: {
+          select: { orders: true },
+        },
+      },
+    });
+
+    return {
+      ...slot,
+      bookedCount: slot._count.orders,
+    };
+  }
+
+  async deleteDeliverySlot(id: string) {
+    // Check if slot has bookings
+    const slot = await this.prisma.deliverySlot.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: { orders: true },
+        },
+      },
+    });
+
+    if (slot._count.orders > 0) {
+      throw new BadRequestException(`Cannot delete slot with ${slot._count.orders} existing bookings`);
+    }
+
+    await this.prisma.deliverySlot.delete({
+      where: { id },
+    });
+
+    return { message: 'Slot deleted successfully' };
+  }
+}

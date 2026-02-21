@@ -1,0 +1,402 @@
+// Prisma Schema for OMEGA AFRO SHOP
+// Database: PostgreSQL 15+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USER MANAGEMENT
+// ============================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String    // bcrypt hashed
+  firstName     String
+  lastName      String
+  phone         String?
+  role          Role      @default(CUSTOMER)
+  emailVerified Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime? // Soft delete
+
+  // Relations
+  customerProfile CustomerProfile?
+  addresses       Address[]
+  carts           Cart[]
+  orders          Order[]
+  auditLogs       AuditLog[]
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+enum Role {
+  CUSTOMER
+  STAFF
+  ADMIN
+  PICKER
+  DRIVER
+}
+
+model CustomerProfile {
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth       DateTime?
+  marketingOptIn    Boolean   @default(false)
+  smsOptIn          Boolean   @default(false)
+  preferredLanguage String    @default("en")
+  loyaltyPoints     Int       @default(0) // Phase 2
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("customer_profiles")
+}
+
+model Address {
+  id             String        @id @default(uuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  label          String? // e.g., "Home", "Work"
+  line1          String
+  line2          String?
+  city           String
+  county         String?
+  postcode       String
+  country        String        @default("GB")
+  isDefault      Boolean       @default(false)
+  deliveryZoneId String?
+  deliveryZone   DeliveryZone? @relation(fields: [deliveryZoneId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  // Relations
+  orders Order[]
+
+  @@index([userId])
+  @@index([postcode])
+  @@map("addresses")
+}
+
+// ============================================
+// PRODUCT CATALOG
+// ============================================
+
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  slug        String     @unique
+  description String?
+  image       String? // S3 URL
+  parentId    String?
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  sortOrder   Int        @default(0)
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  products Product[]
+
+  @@index([slug])
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Product {
+  id              String         @id @default(uuid())
+  name            String
+  slug            String         @unique
+  description     String?
+  price           Decimal        @db.Decimal(10, 2)
+  compareAtPrice  Decimal?       @db.Decimal(10, 2) // Original price (for sales)
+  sku             String?        @unique
+  barcode         String?
+  unitSize        String? // e.g., "1kg", "500g"
+  origin          String? // Country of origin
+  ingredients     String?
+  allergens       String?
+  nutritionalInfo Json? // Flexible JSON field
+  categoryId      String
+  category        Category       @relation(fields: [categoryId], references: [id])
+  isActive        Boolean        @default(true)
+  isFeatured      Boolean        @default(false)
+  tags            String[] // e.g., ["vegan", "gluten-free", "halal"]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime? // Soft delete
+
+  // Relations
+  inventory  Inventory?
+  images     ProductImage[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([slug])
+  @@index([categoryId])
+  @@index([sku])
+  @@index([isActive])
+  @@map("products")
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String // S3 URL
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@map("product_images")
+}
+
+model Inventory {
+  id                String   @id @default(uuid())
+  productId         String   @unique
+  product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity          Int      @default(0)
+  lowStockThreshold Int      @default(10)
+  isTracked         Boolean  @default(true) // If false, always "in stock"
+  updatedAt         DateTime @updatedAt
+
+  @@map("inventory")
+}
+
+// ============================================
+// SHOPPING CART
+// ============================================
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String? // Null for guest carts
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sessionId String? // For guest carts
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  expiresAt DateTime // Auto-expire after 24 hours
+
+  // Relations
+  items CartItem[]
+
+  @@index([userId])
+  @@index([sessionId])
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId]) // Prevent duplicate products in same cart
+  @@index([cartId])
+  @@map("cart_items")
+}
+
+// ============================================
+// ORDERS & PAYMENTS
+// ============================================
+
+model Order {
+  id                String              @id @default(uuid())
+  orderNumber       String              @unique // Human-readable (e.g., "ORD-2024-00001")
+  userId            String? // Null for guest orders
+  user              User?               @relation(fields: [userId], references: [id])
+  guestEmail        String? // For guest orders
+  guestPhone        String?
+  status            OrderStatus         @default(RECEIVED)
+  fulfillmentType   FulfillmentType
+  subtotal          Decimal             @db.Decimal(10, 2)
+  deliveryFee       Decimal             @db.Decimal(10, 2) @default(0)
+  total             Decimal             @db.Decimal(10, 2)
+  notes             String? // Customer notes
+  staffNotes        String? // Internal notes
+  isPhoneOrder      Boolean             @default(false) // Created via phone order system
+  addressId         String?
+  address           Address?            @relation(fields: [addressId], references: [id])
+  deliverySlotId    String?
+  deliverySlot      DeliverySlot?       @relation(fields: [deliverySlotId], references: [id])
+  estimatedDelivery DateTime?
+  deliveredAt       DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  // Relations
+  items         OrderItem[]
+  payment       Payment?
+  statusHistory OrderStatusHistory[]
+
+  @@index([orderNumber])
+  @@index([userId])
+  @@index([status])
+  @@index([isPhoneOrder])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  RECEIVED
+  PICKING
+  PACKED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  READY_FOR_COLLECTION
+  COLLECTED
+  CANCELLED
+  REFUNDED
+}
+
+enum FulfillmentType {
+  DELIVERY
+  COLLECTION
+}
+
+model OrderItem {
+  id              String  @id @default(uuid())
+  orderId         String
+  order           Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product @relation(fields: [productId], references: [id])
+  productName     String // Snapshot at order time
+  productPrice    Decimal @db.Decimal(10, 2)
+  quantity        Int
+  subtotal        Decimal @db.Decimal(10, 2)
+  substitutedWith String? // Product ID if substituted
+  notes           String? // e.g., "customer prefers ripe plantains"
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus
+  notes     String?
+  createdBy String? // User ID who made the change
+  createdAt DateTime    @default(now())
+
+  @@index([orderId])
+  @@map("order_status_history")
+}
+
+model Payment {
+  id                      String        @id @default(uuid())
+  orderId                 String        @unique
+  order                   Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stripePaymentIntentId   String?       @unique
+  stripePaymentLinkId     String? // Payment link URL for phone orders
+  stripeCheckoutSessionId String?       @unique // Checkout session ID for webhook tracking
+  amount                  Decimal       @db.Decimal(10, 2)
+  currency                String        @default("GBP")
+  status                  PaymentStatus @default(PENDING)
+  paymentMethod           PaymentMethod
+  paidAt                  DateTime?
+  refundedAt              DateTime?
+  refundAmount            Decimal?      @db.Decimal(10, 2)
+  refundReason            String?
+  metadata                Json? // Additional Stripe metadata
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+
+  @@index([stripePaymentIntentId])
+  @@index([stripeCheckoutSessionId])
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  APPLE_PAY
+  GOOGLE_PAY
+  CASH_ON_DELIVERY
+  PAY_IN_STORE
+}
+
+// ============================================
+// DELIVERY MANAGEMENT
+// ============================================
+
+model DeliveryZone {
+  id                    String    @id @default(uuid())
+  name                  String // e.g., "Bolton Central"
+  postcodePrefix        String[] // e.g., ["BL1", "BL2"]
+  deliveryFee           Decimal   @db.Decimal(10, 2)
+  minOrderValue         Decimal   @db.Decimal(10, 2) @default(0)
+  freeDeliveryThreshold Decimal?  @db.Decimal(10, 2)
+  isActive              Boolean   @default(true)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // Relations
+  addresses Address[]
+
+  @@map("delivery_zones")
+}
+
+model DeliverySlot {
+  id        String   @id @default(uuid())
+  date      DateTime @db.Date
+  startTime String // e.g., "10:00"
+  endTime   String // e.g., "12:00"
+  capacity  Int      @default(10)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  orders Order[]
+
+  @@unique([date, startTime, endTime])
+  @@index([date])
+  @@map("delivery_slots")
+}
+
+// ============================================
+// AUDIT & LOGGING
+// ============================================
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String // e.g., "CREATE_PRODUCT", "UPDATE_ORDER"
+  entity    String // e.g., "Product", "Order"
+  entityId  String // ID of affected entity
+  changes   Json? // Before/after snapshot
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
