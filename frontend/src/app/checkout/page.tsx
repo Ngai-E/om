@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useCartStore } from '@/lib/store/cart-store';
 import { accountApi } from '@/lib/api/account';
-import { orderApi } from '@/lib/api/orders';
+import { ordersApi } from '@/lib/api/orders';
 import { StripePayment } from '@/components/checkout/stripe-payment';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
