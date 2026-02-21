@@ -209,7 +209,7 @@ export function DeliverySlotsTab() {
             </tr>
           </thead>
           <tbody>
-            {slots.map((slot) => {
+            {slots.map((slot: DeliverySlot) => {
               const booked = slot.bookedCount || 0;
               const available = slot.capacity - booked;
               const percentage = (booked / slot.capacity) * 100;
@@ -332,7 +332,7 @@ export function DeliverySlotsTab() {
             <div>
               <p className="text-sm text-gray-600">Total Capacity</p>
               <p className="text-2xl font-bold text-gray-900">
-                {slots.reduce((sum, slot) => sum + slot.capacity, 0)}
+                {slots.reduce((sum: number, slot: DeliverySlot) => sum + slot.capacity, 0)}
               </p>
             </div>
             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -345,7 +345,7 @@ export function DeliverySlotsTab() {
             <div>
               <p className="text-sm text-gray-600">Total Booked</p>
               <p className="text-2xl font-bold text-orange-600">
-                {slots.reduce((sum, slot) => sum + (slot.bookedCount || 0), 0)}
+                {slots.reduce((sum: number, slot: DeliverySlot) => sum + (slot.bookedCount || 0), 0)}
               </p>
             </div>
             <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
@@ -358,7 +358,7 @@ export function DeliverySlotsTab() {
             <div>
               <p className="text-sm text-gray-600">Available</p>
               <p className="text-2xl font-bold text-green-600">
-                {slots.reduce((sum, slot) => sum + (slot.capacity - (slot.bookedCount || 0)), 0)}
+                {slots.reduce((sum: number, slot: DeliverySlot) => sum + (slot.capacity - (slot.bookedCount || 0)), 0)}
               </p>
             </div>
             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
