@@ -1,16 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Search, Plus, Edit, Trash2, Copy, Power, PowerOff, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Edit, Trash2, Copy, Power, PowerOff, RefreshCw, Download, Upload } from 'lucide-react';
 import { useProducts } from '@/lib/hooks/use-products';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAuthStore } from '@/lib/store/auth-store';
+import { useToast } from '@/hooks/use-toast';
+import { Toast } from '@/components/ui/toast';
 
 export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const { token } = useAuthStore();
+  const { toast, success, error, hideToast } = useToast();
   
   const { data: productsData, isLoading, refetch } = useProducts({
     search: searchTerm,
@@ -23,6 +31,76 @@ export default function AdminProductsPage() {
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['products'] });
     await refetch();
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/export-csv`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `products-export-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      success('Products exported successfully');
+    } catch (err) {
+      error('Failed to export products');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/import-csv`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) throw new Error(result.message || 'Import failed');
+
+      const message = `Import completed: ${result.createdCount || 0} created, ${result.updatedCount || 0} updated, ${result.errorCount || 0} errors`;
+      success(message);
+      
+      // Refresh products list
+      await handleRefresh();
+    } catch (err: any) {
+      error(err.message || 'Failed to import products');
+    } finally {
+      setIsImporting(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   if (isLoading) {
@@ -42,6 +120,29 @@ export default function AdminProductsPage() {
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Products</h1>
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleExport}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2 font-medium"
+              disabled={isExporting}
+            >
+              <Download className={`w-4 h-4 ${isExporting ? 'animate-bounce' : ''}`} />
+              {isExporting ? 'Exporting...' : 'Export CSV'}
+            </button>
+            <button
+              onClick={handleImportClick}
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition flex items-center gap-2 font-medium"
+              disabled={isImporting}
+            >
+              <Upload className={`w-4 h-4 ${isImporting ? 'animate-bounce' : ''}`} />
+              {isImporting ? 'Importing...' : 'Import CSV'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="hidden"
+            />
             <button
               onClick={handleRefresh}
               className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition flex items-center gap-2 font-medium"
@@ -218,6 +319,15 @@ export default function AdminProductsPage() {
           Showing {productsData?.data.length || 0} of {productsData?.pagination?.total || 0} products
         </div>
       </div>
+
+      {/* Toast notifications */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={hideToast}
+        />
+      )}
     </AdminLayout>
   );
 }
