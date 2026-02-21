@@ -110,7 +110,7 @@ export function DeliveryZonesTab() {
     
     const zoneData = {
       name: formData.name,
-      postcodePrefix: formData.postcodePrefix.split(',').map(p => p.trim()),
+      postcodePrefix: formData.postcodePrefix.split(',').map((p: string) => p.trim()),
       deliveryFee: parseFloat(formData.deliveryFee),
       minOrderValue: parseFloat(formData.minOrderValue),
       freeDeliveryThreshold: formData.freeDeliveryThreshold ? parseFloat(formData.freeDeliveryThreshold) : null,
@@ -162,7 +162,7 @@ export function DeliveryZonesTab() {
             </tr>
           </thead>
           <tbody>
-            {zones.map((zone) => (
+            {zones.map((zone: DeliveryZone) => (
               <tr key={zone.id} className="border-b hover:bg-gray-50 transition">
                 <td className="p-4">
                   <div className="flex items-center gap-2">
@@ -172,7 +172,7 @@ export function DeliveryZonesTab() {
                 </td>
                 <td className="p-4">
                   <div className="flex flex-wrap gap-1">
-                    {zone.postcodePrefix.map((code) => (
+                    {zone.postcodePrefix.map((code: string) => (
                       <span
                         key={code}
                         className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded font-medium"

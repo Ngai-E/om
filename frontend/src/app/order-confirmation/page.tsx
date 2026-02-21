@@ -1,13 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CheckCircle, Package, Truck, Home, ArrowRight, Loader2 } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/lib/api/admin';
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const orderId = searchParams.get('orderId');
@@ -250,5 +250,21 @@ export default function OrderConfirmationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+          <Loader2 className="w-16 h-16 text-green-600 animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Loading...</h2>
+          <p className="text-gray-600">Please wait while we load your order confirmation.</p>
+        </div>
+      </div>
+    }>
+      <OrderConfirmationContent />
+    </Suspense>
   );
 }
