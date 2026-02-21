@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { useCartStore } from '@/lib/store/cart-store';
 import { accountApi } from '@/lib/api/account';
 import { ordersApi } from '@/lib/api/orders';
 import { useToast } from '@/hooks/use-toast';
@@ -18,7 +18,6 @@ import { PaymentForm } from '@/components/checkout/payment-form';
 export default function CheckoutPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { items, total, clearCart } = useCartStore();
   const { toast, hideToast, error } = useToast();
   const { data: cart, isLoading: cartLoading } = useCart();
   const createOrder = useCreateOrder();
