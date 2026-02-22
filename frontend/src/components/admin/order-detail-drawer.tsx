@@ -352,76 +352,132 @@ export function OrderDetailDrawer({ isOpen, onClose, orderId }: OrderDetailDrawe
                   </div>
                 </div>
 
-                {/* Payment Link Section */}
-                {order.payment?.stripePaymentLinkId && (
-                  <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                {/* Payment Information Section */}
+                {order.payment && (
+                  <div className={`border-2 rounded-lg p-4 ${
+                    order.payment.status === 'SUCCEEDED' ? 'bg-green-50 border-green-200' :
+                    order.payment.status === 'FAILED' ? 'bg-red-50 border-red-200' :
+                    'bg-yellow-50 border-yellow-200'
+                  }`}>
                     <h3 className="font-bold text-lg mb-3 flex items-center gap-2">
-                      <CreditCard className="w-5 h-5 text-blue-600" />
-                      Payment Link
+                      <CreditCard className={`w-5 h-5 ${
+                        order.payment.status === 'SUCCEEDED' ? 'text-green-600' :
+                        order.payment.status === 'FAILED' ? 'text-red-600' :
+                        'text-yellow-600'
+                      }`} />
+                      Payment Information
                     </h3>
                     <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-2">
-                          Payment Status: <span className={`font-semibold ${order.payment.status === 'PENDING' ? 'text-yellow-600' : 'text-green-600'}`}>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">Payment Status</p>
+                          <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${
+                            order.payment.status === 'SUCCEEDED' ? 'bg-green-100 text-green-700' :
+                            order.payment.status === 'FAILED' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
                             {order.payment.status}
                           </span>
-                        </p>
-                        <p className="text-sm text-gray-600">
-                          Payment Method: <span className="font-semibold">Card (Online)</span>
-                        </p>
-                      </div>
-                      
-                      <div className="bg-white border border-blue-200 rounded p-3">
-                        <p className="text-xs text-gray-500 mb-1">Payment Link:</p>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={order.payment.stripePaymentLinkId}
-                            readOnly
-                            className="flex-1 text-sm px-2 py-1 bg-gray-50 border rounded font-mono"
-                          />
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(order.payment.stripePaymentLinkId);
-                              success('Payment link copied to clipboard!');
-                            }}
-                            className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm font-medium flex items-center gap-1"
-                          >
-                            <Copy className="w-3 h-3" />
-                            Copy
-                          </button>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">Payment Method</p>
+                          <p className="font-semibold text-sm">
+                            {order.payment.paymentMethod === 'CARD' ? '💳 Card' :
+                             order.payment.paymentMethod === 'CASH_ON_DELIVERY' ? '💵 Cash on Delivery' :
+                             order.payment.paymentMethod === 'PAY_IN_STORE' ? '🏪 Pay in Store' :
+                             order.payment.paymentMethod}
+                          </p>
                         </div>
                       </div>
 
-                      {order.payment.status === 'PENDING' && (
-                        <>
-                          <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
-                            <p className="text-xs text-yellow-800">
-                              <AlertCircle className="w-4 h-4 inline mr-1" />
-                              Send this link to the customer via SMS, email, or WhatsApp for payment.
-                            </p>
-                          </div>
-                          
-                          <button
-                            onClick={() => verifyPayment.mutate(orderId)}
-                            disabled={verifyPayment.isPending}
-                            className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium flex items-center justify-center gap-2 disabled:opacity-50"
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                            {verifyPayment.isPending ? 'Verifying with Stripe...' : 'Verify Payment Status'}
-                          </button>
-                        </>
+                      {order.payment.amount && (
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">Payment Amount</p>
+                          <p className="font-bold text-lg">£{parseFloat(order.payment.amount).toFixed(2)}</p>
+                        </div>
                       )}
 
-                      {order.payment.status === 'SUCCEEDED' && (
-                        <div className="bg-green-50 border border-green-200 rounded p-3">
-                          <p className="text-xs text-green-800">
-                            <CheckCircle className="w-4 h-4 inline mr-1" />
-                            Payment completed successfully!
-                          </p>
+                      {order.payment.stripePaymentIntentId && (
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">Stripe Payment Intent ID</p>
+                          <div className="flex items-center gap-2">
+                            <code className="flex-1 text-xs px-2 py-1 bg-white border rounded font-mono">
+                              {order.payment.stripePaymentIntentId}
+                            </code>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(order.payment.stripePaymentIntentId);
+                                success('Payment Intent ID copied!');
+                              }}
+                              className="p-1 hover:bg-white rounded"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {order.payment.stripePaymentLinkId && (
+                        <div>
+                          <p className="text-xs text-gray-600 mb-1">Payment Link (Phone Order)</p>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={order.payment.stripePaymentLinkId}
+                              readOnly
+                              className="flex-1 text-xs px-2 py-1 bg-white border rounded font-mono"
+                            />
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(order.payment.stripePaymentLinkId);
+                                success('Payment link copied!');
+                              }}
+                              className="px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </button>
+                          </div>
                         </div>
                       )}
                     </div>
+
+                    {/* Payment Actions */}
+                    {order.payment?.paymentMethod === 'CARD' && (
+                      <div className="mt-4 pt-4 border-t">
+                        <h4 className="font-semibold text-sm mb-2">Payment Actions</h4>
+                        
+                        {/* Phone Order - Show payment link info */}
+                        {order.payment.stripePaymentLinkId && order.payment.status === 'PENDING' && (
+                          <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-3">
+                            <p className="text-xs text-yellow-800">
+                              <AlertCircle className="w-4 h-4 inline mr-1" />
+                              Send payment link to customer via SMS, email, or WhatsApp.
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Verify Payment Button - Available for ALL card payments */}
+                        {(order.payment.stripePaymentIntentId || order.payment.stripeCheckoutSessionId) && order.payment.status !== 'SUCCEEDED' && (
+                          <button
+                            onClick={() => verifyPayment.mutate(orderId)}
+                            disabled={verifyPayment.isPending}
+                            className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-medium flex items-center justify-center gap-2 disabled:opacity-50 mb-3"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            {verifyPayment.isPending ? 'Verifying with Stripe...' : 'Verify Payment Status with Stripe'}
+                          </button>
+                        )}
+
+                        {order.payment.status === 'SUCCEEDED' && (
+                          <div className="bg-green-50 border border-green-200 rounded p-3">
+                            <p className="text-xs text-green-800">
+                              <CheckCircle className="w-4 h-4 inline mr-1" />
+                              Payment verified and completed successfully!
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

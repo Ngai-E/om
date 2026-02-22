@@ -248,15 +248,25 @@ export default function AdminOrdersPage() {
                         </span>
                       </td>
                       <td className="p-4">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                          order.payment?.status === 'SUCCEEDED'
-                            ? 'bg-green-100 text-green-700'
-                            : order.payment?.status === 'FAILED'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                        }`}>
-                          {order.payment?.status || 'PENDING'}
-                        </span>
+                        <div className="space-y-1">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            order.payment?.status === 'SUCCEEDED'
+                              ? 'bg-green-100 text-green-700'
+                              : order.payment?.status === 'FAILED'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {order.payment?.status || 'PENDING'}
+                          </span>
+                          {order.payment?.paymentMethod && (
+                            <p className="text-xs text-gray-500">
+                              {order.payment.paymentMethod === 'CARD' ? '💳 Card' :
+                               order.payment.paymentMethod === 'CASH_ON_DELIVERY' ? '💵 Cash on Delivery' :
+                               order.payment.paymentMethod === 'PAY_IN_STORE' ? '🏪 Pay in Store' :
+                               order.payment.paymentMethod}
+                            </p>
+                          )}
+                        </div>
                       </td>
                       <td className="p-4">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${

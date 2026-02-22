@@ -116,20 +116,23 @@ export default function LoginPage() {
         </p>
       </div>
 
-      <div className="mt-8 pt-6 border-t">
-        <p className="text-xs text-muted-foreground text-center mb-3">Test Accounts:</p>
-        <div className="space-y-2 text-xs">
-          <div className="bg-muted/50 p-2 rounded">
-            <strong>Customer:</strong> customer@example.com / Customer123!
-          </div>
-          <div className="bg-muted/50 p-2 rounded">
-            <strong>Staff:</strong> staff@omegaafroshop.com / Staff123!
-          </div>
-          <div className="bg-muted/50 p-2 rounded">
-            <strong>Admin:</strong> admin@omegaafroshop.com / Admin123!
+      {/* Only show test accounts in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-8 pt-6 border-t">
+          <p className="text-xs text-muted-foreground text-center mb-3">Test Accounts:</p>
+          <div className="space-y-2 text-xs">
+            <div className="bg-muted/50 p-2 rounded">
+              <strong>Customer:</strong> customer@example.com / Customer123!
+            </div>
+            <div className="bg-muted/50 p-2 rounded">
+              <strong>Staff:</strong> staff@omegaafroshop.com / Staff123!
+            </div>
+            <div className="bg-muted/50 p-2 rounded">
+              <strong>Admin:</strong> admin@omegaafroshop.com / Admin123!
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

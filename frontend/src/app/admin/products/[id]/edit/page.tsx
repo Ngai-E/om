@@ -128,12 +128,15 @@ export default function EditProductPage() {
         isFeatured: data.isFeatured,
       };
 
-      if (data.imageUrl) {
+      // Always send images array - empty array will delete all images
+      if (data.imageUrl && data.imageUrl.trim()) {
         payload.images = [{
-          url: data.imageUrl,
+          url: data.imageUrl.trim(),
           altText: data.name,
           sortOrder: 0,
         }];
+      } else {
+        payload.images = []; // Empty array to delete all images
       }
 
       if (data.trackInventory) {

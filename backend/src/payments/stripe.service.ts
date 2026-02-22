@@ -69,6 +69,62 @@ export class StripeService implements OnModuleInit {
     return this.getStripe().refunds.create(refundData);
   }
 
+  async createCheckoutSession(
+    orderData: {
+      orderId: string;
+      orderNumber: string;
+      items: Array<{ name: string; price: number; quantity: number; image?: string }>;
+      total: number;
+      deliveryFee?: number;
+    },
+    successUrl: string,
+    cancelUrl: string,
+  ): Promise<{ url: string; sessionId: string }> {
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = orderData.items.map(item => ({
+      price_data: {
+        currency: 'gbp',
+        product_data: {
+          name: item.name,
+          images: item.image ? [item.image] : undefined,
+        },
+        unit_amount: Math.round(item.price * 100),
+      },
+      quantity: item.quantity,
+    }));
+
+    // Add delivery fee if applicable
+    if (orderData.deliveryFee && orderData.deliveryFee > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'gbp',
+          product_data: {
+            name: 'Delivery Fee',
+          },
+          unit_amount: Math.round(orderData.deliveryFee * 100),
+        },
+        quantity: 1,
+      });
+    }
+
+    const session = await this.getStripe().checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: {
+        orderId: orderData.orderId,
+        orderNumber: orderData.orderNumber,
+      },
+      customer_email: undefined, // Can be set if you have customer email
+    });
+
+    return {
+      url: session.url!,
+      sessionId: session.id,
+    };
+  }
+
   async createPaymentLink(
     amount: number,
     orderId: string,

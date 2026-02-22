@@ -37,6 +37,9 @@ export default function RegisterPage() {
     resolver: zodResolver(registerSchema),
   });
 
+  const [showVerificationMessage, setShowVerificationMessage] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+
   const onSubmit = async (data: RegisterFormData) => {
     try {
       setIsLoading(true);
@@ -45,14 +48,42 @@ export default function RegisterPage() {
       const { confirmPassword, ...registerData } = data;
       const response = await authApi.register(registerData);
       
-      setAuth(response.user, response.accessToken);
-      router.push('/products');
+      // Show verification message instead of auto-login
+      setUserEmail(data.email);
+      setShowVerificationMessage(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (showVerificationMessage) {
+    return (
+      <div className="bg-card border rounded-lg shadow-lg p-8 max-w-md mx-auto text-center">
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-bold mb-4">Verify Your Email</h2>
+        <p className="text-muted-foreground mb-6">
+          We've sent a verification email to <strong>{userEmail}</strong>. 
+          Please check your inbox and click the verification link to activate your account.
+        </p>
+        <p className="text-sm text-muted-foreground mb-6">
+          Didn't receive the email? Check your spam folder or{' '}
+          <button className="text-primary hover:underline">resend verification email</button>.
+        </p>
+        <Link
+          href="/login"
+          className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+        >
+          Go to Login
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-card border rounded-lg shadow-lg p-8">

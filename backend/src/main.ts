@@ -5,6 +5,7 @@ import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import * as compression from 'compression';
+import { json, raw } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -38,6 +39,10 @@ async function bootstrap() {
   // Middleware
   app.use(compression());
   app.use(cookieParser());
+  
+  // Raw body parsing for Stripe webhooks ONLY
+  // This must be before the global JSON parser
+  app.use('/v1/payments/webhook', raw({ type: 'application/json' }));
 
   // Global prefix (exclude health check for Render)
   app.setGlobalPrefix('v1', {

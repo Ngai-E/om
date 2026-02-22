@@ -90,7 +90,9 @@ export default function AdminProductsPage() {
       const message = `Import completed: ${result.createdCount || 0} created, ${result.updatedCount || 0} updated, ${result.errorCount || 0} errors`;
       success(message);
       
-      // Refresh products list
+      // Aggressively refresh products list and clear cache
+      await queryClient.invalidateQueries({ queryKey: ['products'], refetchType: 'all' });
+      await queryClient.refetchQueries({ queryKey: ['products'] });
       await handleRefresh();
     } catch (err: any) {
       error(err.message || 'Failed to import products');

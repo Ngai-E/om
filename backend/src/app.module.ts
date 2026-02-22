@@ -12,6 +12,7 @@ import { DeliveryModule } from './delivery/delivery.module';
 import { AdminModule } from './admin/admin.module';
 import { StaffModule } from './staff/staff.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { SettingsModule } from './settings/settings.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -42,6 +43,7 @@ import { AppController } from './app.controller';
     AdminModule,
     StaffModule,
     NotificationsModule,
+    SettingsModule,
   ],
   controllers: [AppController],
 })

@@ -3,12 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { StripeService } from './stripe.service';
 import { CreatePaymentIntentDto, ConfirmPaymentDto } from './dto';
 import { PaymentMethod } from '@prisma/client';
+import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class PaymentsService {
   constructor(
     private prisma: PrismaService,
     private stripeService: StripeService,
+    private settingsService: SettingsService,
   ) {}
 
   async createPaymentIntent(userId: string, dto: CreatePaymentIntentDto) {
@@ -77,6 +79,132 @@ export class PaymentsService {
     };
   }
 
+  async createPaymentForOrder(
+    orderId: string,
+    userId: string,
+    successUrl: string,
+    cancelUrl: string,
+  ) {
+    // Get order with items
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, userId },
+      include: {
+        payment: true,
+        items: {
+          include: {
+            product: {
+              include: {
+                images: { take: 1, orderBy: { sortOrder: 'asc' } },
+              },
+            },
+          },
+        },
+        deliverySlot: true,
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.payment?.status === 'SUCCEEDED') {
+      throw new BadRequestException('Order has already been paid');
+    }
+
+    // Get selected payment method from settings
+    const paymentMethod = await this.settingsService.getPaymentMethod();
+    console.log('💳 Payment method from settings:', paymentMethod);
+
+    if (paymentMethod === 'stripe_checkout') {
+      // Create Stripe Checkout Session
+      const orderData = {
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        items: order.items.map(item => ({
+          name: item.productName,
+          price: Number(item.productPrice),
+          quantity: item.quantity,
+          image: item.product.images[0]?.url,
+        })),
+        total: Number(order.total),
+        deliveryFee: order.deliverySlot ? Number(order.deliveryFee || 0) : 0,
+      };
+
+      const { url, sessionId } = await this.stripeService.createCheckoutSession(
+        orderData,
+        successUrl,
+        cancelUrl,
+      );
+
+      // Create or update payment record
+      if (order.payment) {
+        await this.prisma.payment.update({
+          where: { id: order.payment.id },
+          data: {
+            stripeCheckoutSessionId: sessionId,
+            status: 'PENDING',
+          },
+        });
+      } else {
+        await this.prisma.payment.create({
+          data: {
+            orderId: order.id,
+            stripeCheckoutSessionId: sessionId,
+            amount: order.total,
+            currency: 'GBP',
+            status: 'PENDING',
+            paymentMethod: 'CARD',
+          },
+        });
+      }
+
+      return {
+        type: 'redirect',
+        url,
+        sessionId,
+      };
+    } else {
+      // Create Payment Intent for Stripe Elements
+      const paymentIntent = await this.stripeService.createPaymentIntent(
+        Number(order.total),
+        'gbp',
+        {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          userId: order.userId,
+        },
+      );
+
+      // Create or update payment record
+      if (order.payment) {
+        await this.prisma.payment.update({
+          where: { id: order.payment.id },
+          data: {
+            stripePaymentIntentId: paymentIntent.id,
+            status: 'PENDING',
+          },
+        });
+      } else {
+        await this.prisma.payment.create({
+          data: {
+            orderId: order.id,
+            stripePaymentIntentId: paymentIntent.id,
+            amount: order.total,
+            currency: 'GBP',
+            status: 'PENDING',
+            paymentMethod: 'CARD',
+          },
+        });
+      }
+
+      return {
+        type: 'client_secret',
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id,
+      };
+    }
+  }
+
   async confirmPayment(dto: ConfirmPaymentDto) {
     // Retrieve payment intent from Stripe
     const paymentIntent = await this.stripeService.retrievePaymentIntent(dto.paymentIntentId);
@@ -140,6 +268,9 @@ export class PaymentsService {
         case 'payment_intent.payment_failed':
           await this.handlePaymentFailed(event.data.object);
           break;
+        case 'charge.succeeded':
+          await this.handleChargeSucceeded(event.data.object);
+          break;
         case 'charge.refunded':
           await this.handleRefund(event.data.object);
           break;
@@ -157,6 +288,8 @@ export class PaymentsService {
 
   private async handleCheckoutSessionCompleted(session: any) {
     console.log(`🔍 Looking for payment with session ID: ${session.id}`);
+    console.log(`📋 Session payment_intent: ${session.payment_intent}`);
+    console.log(`📋 Session payment_status: ${session.payment_status}`);
     
     // Find payment by checkout session ID
     const payment = await this.prisma.payment.findUnique({
@@ -165,6 +298,45 @@ export class PaymentsService {
 
     if (!payment) {
       console.error(`❌ Payment not found for checkout session: ${session.id}`);
+      console.log(`🔍 Attempting to find by payment_intent: ${session.payment_intent}`);
+      
+      // Try to find by payment intent as fallback
+      const paymentByIntent = await this.prisma.payment.findFirst({
+        where: { stripePaymentIntentId: session.payment_intent },
+      });
+      
+      if (!paymentByIntent) {
+        console.error(`❌ Payment not found by payment_intent either`);
+        return;
+      }
+      
+      console.log(`✅ Found payment by payment_intent for order: ${paymentByIntent.orderId}`);
+      
+      // Update with session ID and mark as succeeded
+      await this.prisma.payment.update({
+        where: { id: paymentByIntent.id },
+        data: {
+          status: 'SUCCEEDED',
+          paidAt: new Date(),
+          stripeCheckoutSessionId: session.id,
+        },
+      });
+
+      // Update order status
+      await this.prisma.order.update({
+        where: { id: paymentByIntent.orderId },
+        data: {
+          status: 'PICKING',
+          statusHistory: {
+            create: {
+              status: 'PICKING',
+              notes: 'Payment confirmed via Stripe Checkout, order is being prepared',
+            },
+          },
+        },
+      });
+
+      console.log(`✅ Checkout session completed for order: ${paymentByIntent.orderId}`);
       return;
     }
     
@@ -250,6 +422,56 @@ export class PaymentsService {
     });
 
     console.log(`❌ Payment failed for order: ${payment.orderId}`);
+  }
+
+  private async handleChargeSucceeded(charge: any) {
+    // charge.succeeded is sent after payment_intent.succeeded or checkout.session.completed
+    // Try to find payment by payment_intent first
+    let payment = await this.prisma.payment.findFirst({
+      where: { stripePaymentIntentId: charge.payment_intent },
+    });
+
+    // If not found and charge has invoice (from checkout), try to find by other means
+    if (!payment && charge.payment_intent) {
+      // The payment might exist but payment_intent not yet stored
+      // This is informational only - checkout.session.completed will handle it
+      console.log(`ℹ️  Charge succeeded (${charge.id}) - will be processed by checkout.session.completed webhook`);
+      return;
+    }
+
+    if (!payment) {
+      console.log(`ℹ️  Charge succeeded but payment not found: ${charge.id}`);
+      return;
+    }
+
+    // Update payment with charge details if not already succeeded
+    if (payment.status !== 'SUCCEEDED') {
+      await this.prisma.payment.update({
+        where: { id: payment.id },
+        data: {
+          status: 'SUCCEEDED',
+          paidAt: new Date(),
+        },
+      });
+
+      // Update order status
+      await this.prisma.order.update({
+        where: { id: payment.orderId },
+        data: {
+          status: 'PICKING',
+          statusHistory: {
+            create: {
+              status: 'PICKING',
+              notes: 'Payment confirmed via charge webhook, order is being prepared',
+            },
+          },
+        },
+      });
+
+      console.log(`✅ Charge succeeded for order: ${payment.orderId}`);
+    } else {
+      console.log(`ℹ️  Charge succeeded for already completed payment: ${payment.orderId}`);
+    }
   }
 
   private async handleRefund(charge: any) {

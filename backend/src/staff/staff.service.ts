@@ -106,9 +106,9 @@ export class StaffService {
         deliveryFee,
         total,
         isPhoneOrder: true, // Mark as phone order
-        addressId: dto.addressId,
-        deliverySlotId: dto.deliverySlotId,
-        notes: dto.notes,
+        addressId: dto.addressId || undefined, // Convert empty string to undefined
+        deliverySlotId: dto.deliverySlotId || undefined, // Convert empty string to undefined
+        notes: dto.notes || undefined,
         staffNotes: `Phone order created by staff ID: ${staffId}`,
         items: {
           create: orderItems,
@@ -148,9 +148,21 @@ export class StaffService {
         const successUrl = `${frontendUrl}/order-confirmation?orderId=${order.id}`;
         const cancelUrl = `${frontendUrl}/checkout?orderId=${order.id}`;
 
-        const { url: paymentLink, sessionId } = await this.stripeService.createPaymentLink(
-          Number(total),
-          order.orderNumber,
+        // Prepare order data for Stripe Checkout
+        const orderData = {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          items: orderItems.map(item => ({
+            name: item.productName,
+            price: Number(item.productPrice),
+            quantity: item.quantity,
+          })),
+          total: Number(total),
+          deliveryFee: deliveryFee,
+        };
+
+        const { url: paymentLink, sessionId } = await this.stripeService.createCheckoutSession(
+          orderData,
           successUrl,
           cancelUrl,
         );
@@ -185,6 +197,17 @@ export class StaffService {
         console.error('Failed to create payment link:', error);
         // Don't fail the order creation, just log the error
       }
+    } else if (dto.paymentMethod === 'CASH_ON_DELIVERY' || dto.paymentMethod === 'PAY_IN_STORE') {
+      // Create payment record for COD or Pay in Store
+      await this.prisma.payment.create({
+        data: {
+          orderId: order.id,
+          amount: total,
+          currency: 'GBP',
+          status: 'PENDING',
+          paymentMethod: dto.paymentMethod,
+        },
+      });
     }
 
     return order;

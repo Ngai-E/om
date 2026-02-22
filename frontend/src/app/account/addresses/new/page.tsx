@@ -48,8 +48,13 @@ export default function NewAddressPage() {
   const onSubmit = async (data: AddressFormData) => {
     try {
       await createAddress.mutateAsync(data);
+      success('Address saved successfully!');
+      // Navigate back after a short delay
+      setTimeout(() => {
+        router.push('/account/addresses');
+      }, 1000);
     } catch (err: any) {
-      // Error handled by mutation onError
+      error(err.response?.data?.message || 'Failed to save address');
       console.error('Create address error:', err);
     }
   };

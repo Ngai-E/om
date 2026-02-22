@@ -212,6 +212,121 @@ export class DeliveryService {
   }
 
   /**
+   * Validate cart against delivery zone requirements
+   */
+  async validateCartForDelivery(userId: string, addressId?: string) {
+    // Get user's cart
+    const cart = await this.prisma.cart.findFirst({
+      where: { userId },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
+    });
+
+    if (!cart || cart.items.length === 0) {
+      return {
+        isValid: false,
+        canProceed: false,
+        message: 'Your cart is empty',
+        subtotal: 0,
+      };
+    }
+
+    // Calculate subtotal
+    const subtotal = cart.items.reduce((sum, item) => {
+      return sum + Number(item.product.price) * item.quantity;
+    }, 0);
+
+    // If no address selected, just return cart info
+    if (!addressId) {
+      return {
+        isValid: true,
+        canProceed: true,
+        subtotal,
+        message: 'Please select a delivery address',
+      };
+    }
+
+    // Get address with delivery zone
+    const address = await this.prisma.address.findUnique({
+      where: { id: addressId },
+      include: { deliveryZone: true },
+    });
+
+    if (!address) {
+      return {
+        isValid: false,
+        canProceed: false,
+        message: 'Address not found',
+        subtotal,
+      };
+    }
+
+    if (!address.deliveryZone) {
+      return {
+        isValid: false,
+        canProceed: false,
+        message: 'This address is not in a delivery zone. Please contact support or choose collection.',
+        subtotal,
+      };
+    }
+
+    const zone = address.deliveryZone;
+
+    // Check minimum order value
+    const minOrderValue = Number(zone.minOrderValue);
+    const freeDeliveryThreshold = zone.freeDeliveryThreshold ? Number(zone.freeDeliveryThreshold) : null;
+    const deliveryFee = Number(zone.deliveryFee);
+
+    if (subtotal < minOrderValue) {
+      const amountNeeded = minOrderValue - subtotal;
+      return {
+        isValid: false,
+        canProceed: false,
+        subtotal,
+        minOrderValue,
+        amountNeeded,
+        deliveryFee,
+        freeDeliveryThreshold,
+        zoneName: zone.name,
+        message: `Minimum order value for ${zone.name} is £${minOrderValue.toFixed(2)}. Add £${amountNeeded.toFixed(2)} more to proceed.`,
+      };
+    }
+
+    // Check if eligible for free delivery
+    const isFreeDelivery = freeDeliveryThreshold && subtotal >= freeDeliveryThreshold;
+    const finalDeliveryFee = isFreeDelivery ? 0 : deliveryFee;
+    const total = subtotal + finalDeliveryFee;
+
+    let message = `Delivery fee: £${finalDeliveryFee.toFixed(2)}`;
+    if (isFreeDelivery) {
+      message = '🎉 You qualify for free delivery!';
+    } else if (freeDeliveryThreshold) {
+      const amountForFree = freeDeliveryThreshold - subtotal;
+      if (amountForFree > 0) {
+        message = `Add £${amountForFree.toFixed(2)} more for free delivery!`;
+      }
+    }
+
+    return {
+      isValid: true,
+      canProceed: true,
+      subtotal,
+      minOrderValue,
+      deliveryFee: finalDeliveryFee,
+      freeDeliveryThreshold,
+      isFreeDelivery,
+      total,
+      zoneName: zone.name,
+      message,
+    };
+  }
+
+  /**
    * Helper: Format time slot for display
    */
   private formatTimeSlot(date: Date, startTime: string, endTime: string): string {

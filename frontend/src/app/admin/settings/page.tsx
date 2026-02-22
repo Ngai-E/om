@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { useSettingsStore } from '@/lib/store/settings-store';
+import { PaymentsTab } from '@/components/admin/settings/payments-tab';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('store');
@@ -239,68 +240,7 @@ export default function SettingsPage() {
         )}
 
         {/* Payments */}
-        {activeTab === 'payments' && (
-          <div className="space-y-6">
-            <div className="bg-white border rounded-lg p-6">
-              <h2 className="text-lg font-bold mb-4">Payment Methods</h2>
-              <div className="space-y-4">
-                <label className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <div>
-                    <p className="font-medium">Stripe</p>
-                    <p className="text-sm text-gray-600">Accept credit and debit cards</p>
-                  </div>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 rounded" />
-                </label>
-                <label className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <div>
-                    <p className="font-medium">Cash on Delivery</p>
-                    <p className="text-sm text-gray-600">Accept cash when order is delivered</p>
-                  </div>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 rounded" />
-                </label>
-                <label className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
-                  <div>
-                    <p className="font-medium">Pay in Store</p>
-                    <p className="text-sm text-gray-600">Customer pays when collecting order</p>
-                  </div>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 rounded" />
-                </label>
-              </div>
-            </div>
-
-            <div className="bg-white border rounded-lg p-6">
-              <h2 className="text-lg font-bold mb-4">Stripe Configuration</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Publishable Key</label>
-                  <input
-                    type="text"
-                    placeholder="pk_test_..."
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Secret Key</label>
-                  <input
-                    type="password"
-                    placeholder="sk_test_..."
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button 
-                onClick={handleSaveSettings}
-                disabled={isSaving}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSaving ? 'Saving...' : 'Save Configuration'}
-              </button>
-            </div>
-          </div>
-        )}
+        {activeTab === 'payments' && <PaymentsTab />}
 
         {/* User Roles */}
         {activeTab === 'users' && (

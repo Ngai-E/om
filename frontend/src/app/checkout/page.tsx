@@ -8,16 +8,17 @@ import { accountApi } from '@/lib/api/account';
 import { ordersApi } from '@/lib/api/orders';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
-import { MapPin, Clock, CreditCard, Truck, Store } from 'lucide-react';
+import { MapPin, Clock, CreditCard, Truck, Store, AlertCircle, ShoppingBag, TrendingUp } from 'lucide-react';
 import { useCart } from '@/lib/hooks/use-cart';
 import { useCreateOrder } from '@/lib/hooks/use-orders';
 import { useQuery } from '@tanstack/react-query';
 import { useDeliverySlots } from '@/lib/hooks/use-delivery';
-import { PaymentForm } from '@/components/checkout/payment-form';
+import { StripePaymentElement } from '@/components/checkout/stripe-payment-element';
+import { useCartValidation } from '@/lib/hooks/use-cart-validation';
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
   const { toast, hideToast, error } = useToast();
   const { data: cart, isLoading: cartLoading } = useCart();
   const createOrder = useCreateOrder();
@@ -41,30 +42,106 @@ export default function CheckoutPage() {
     new Date().toISOString().split('T')[0]
   );
 
+  // Validate cart against delivery zone requirements
+  const { data: cartValidation } = useCartValidation(
+    fulfillmentType === 'DELIVERY' ? selectedAddressId : undefined
+  );
+
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
+
   const handlePlaceOrder = async () => {
     if (!cart) return;
 
+    // Validate based on payment method
+    if (paymentMethod === 'CARD') {
+      if (fulfillmentType === 'DELIVERY' && (!selectedAddressId || !selectedSlotId)) {
+        error('Please select delivery address and time slot');
+        return;
+      }
+      
+      // For card payments, create order first then handle payment
+      await handleCardPayment();
+    } else {
+      // For non-card payments, create order directly
+      try {
+        const orderData: any = {
+          fulfillmentType,
+          notes: '',
+        };
+
+        if (fulfillmentType === 'DELIVERY') {
+          if (!selectedAddressId || !selectedSlotId) {
+            error('Please select delivery address and time slot');
+            return;
+          }
+          orderData.addressId = selectedAddressId;
+          orderData.deliverySlotId = selectedSlotId;
+        }
+
+        const order = await createOrder.mutateAsync(orderData);
+        
+        // Store order number for success page
+        sessionStorage.setItem('orderNumber', order.orderNumber);
+        
+        // Redirect to order confirmation
+        router.push(`/orders/${order.id}`);
+      } catch (err: any) {
+        error(err.response?.data?.message || 'Failed to create order');
+      }
+    }
+  };
+
+  const handleCardPayment = async () => {
+    setIsProcessingPayment(true);
+    
     try {
+      // Create order first
       const orderData: any = {
         fulfillmentType,
         notes: '',
       };
 
       if (fulfillmentType === 'DELIVERY') {
-        if (!selectedAddressId || !selectedSlotId) {
-          error('Please select delivery address and time slot');
-          return;
-        }
         orderData.addressId = selectedAddressId;
         orderData.deliverySlotId = selectedSlotId;
       }
 
       const order = await createOrder.mutateAsync(orderData);
       
-      // Redirect to order confirmation
-      router.push(`/orders/${order.id}`);
+      // Store order number for success page
+      sessionStorage.setItem('orderNumber', order.orderNumber);
+
+      // Create payment
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/create`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          orderId: order.id,
+          successUrl: `${window.location.origin}/checkout/success`,
+          cancelUrl: `${window.location.origin}/checkout/cancel`,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create payment');
+      }
+
+      const paymentData = await response.json();
+
+      if (paymentData.type === 'redirect') {
+        // Stripe Checkout - redirect to Stripe
+        window.location.href = paymentData.url;
+      } else if (paymentData.type === 'client_secret') {
+        // Stripe Elements - show payment form
+        setPaymentClientSecret(paymentData.clientSecret);
+      }
     } catch (err: any) {
-      error(err.response?.data?.message || 'Failed to create order');
+      error(err.message || 'Failed to process payment');
+      setIsProcessingPayment(false);
     }
   };
 
@@ -76,7 +153,8 @@ export default function CheckoutPage() {
     );
   }
 
-  if (!cart || cart.items.length === 0) {
+  // Don't show empty cart message if we're processing payment (order already created)
+  if ((!cart || cart.items.length === 0) && !isProcessingPayment && !paymentClientSecret) {
     return (
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-16 text-center">
@@ -87,6 +165,24 @@ export default function CheckoutPage() {
         </div>
       </div>
     );
+  }
+
+  // Show processing state while creating order and payment
+  if (isProcessingPayment && !paymentClientSecret) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg font-semibold">Creating your order...</p>
+          <p className="text-sm text-muted-foreground mt-2">Please wait, you'll be redirected to payment</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Safety check for TypeScript
+  if (!cart) {
+    return null;
   }
 
   return (
@@ -227,8 +323,117 @@ export default function CheckoutPage() {
                     })}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">No delivery slots available</p>
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground mb-2">No delivery slots available for your area</p>
+                    {!selectedAddress?.deliveryZone && (
+                      <p className="text-sm text-destructive">
+                        Your address is not in a delivery zone. Please contact support.
+                      </p>
+                    )}
+                    {selectedAddress?.deliveryZone && (
+                      <p className="text-sm text-muted-foreground">
+                        Delivery zone: {selectedAddress.deliveryZone.name}
+                      </p>
+                    )}
+                  </div>
                 )}
+              </div>
+            )}
+
+            {/* Cart Validation Alert */}
+            {fulfillmentType === 'DELIVERY' && selectedAddressId && cartValidation && !cartValidation.canProceed && (
+              <div className="bg-orange-50 border-2 border-orange-200 rounded-lg p-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="font-bold text-orange-900 mb-2">
+                      Minimum Order Not Met
+                    </h3>
+                    <p className="text-orange-800 mb-4">
+                      {cartValidation.message}
+                    </p>
+                    
+                    <div className="bg-white rounded-lg p-4 mb-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-gray-600">Current Subtotal</p>
+                          <p className="text-lg font-bold text-gray-900">
+                            £{cartValidation.subtotal.toFixed(2)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Minimum Required</p>
+                          <p className="text-lg font-bold text-orange-600">
+                            £{cartValidation.minOrderValue?.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 p-3 bg-orange-100 rounded-lg mb-4">
+                      <TrendingUp className="w-5 h-5 text-orange-700" />
+                      <p className="text-sm font-semibold text-orange-900">
+                        Add £{cartValidation.amountNeeded?.toFixed(2)} more to proceed with delivery
+                      </p>
+                    </div>
+
+                    <div className="flex gap-3">
+                      <Link
+                        href="/products"
+                        className="flex-1 inline-flex items-center justify-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-700 transition"
+                      >
+                        <ShoppingBag className="w-4 h-4" />
+                        Add More Items
+                      </Link>
+                      <button
+                        onClick={() => setFulfillmentType('COLLECTION')}
+                        className="flex-1 px-4 py-2 border-2 border-orange-600 text-orange-600 rounded-lg font-semibold hover:bg-orange-50 transition"
+                      >
+                        Switch to Collection
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Free Delivery Notification */}
+            {fulfillmentType === 'DELIVERY' && selectedAddressId && cartValidation?.isFreeDelivery && (
+              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <span className="text-2xl">🎉</span>
+                  </div>
+                  <div>
+                    <p className="font-bold text-green-900">You qualify for free delivery!</p>
+                    <p className="text-sm text-green-700">No delivery fee will be charged</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Almost Free Delivery */}
+            {fulfillmentType === 'DELIVERY' && selectedAddressId && cartValidation?.canProceed && 
+             !cartValidation.isFreeDelivery && cartValidation.freeDeliveryThreshold && 
+             cartValidation.subtotal < cartValidation.freeDeliveryThreshold && (
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-3">
+                  <TrendingUp className="w-5 h-5 text-blue-600" />
+                  <div className="flex-1">
+                    <p className="font-semibold text-blue-900">
+                      Add £{(cartValidation.freeDeliveryThreshold - cartValidation.subtotal).toFixed(2)} more for free delivery!
+                    </p>
+                    <p className="text-sm text-blue-700">
+                      Current: £{cartValidation.subtotal.toFixed(2)} | Free delivery at: £{cartValidation.freeDeliveryThreshold.toFixed(2)}
+                    </p>
+                  </div>
+                  <Link
+                    href="/products"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition text-sm"
+                  >
+                    Add Items
+                  </Link>
+                </div>
               </div>
             )}
 
@@ -277,23 +482,19 @@ export default function CheckoutPage() {
                 </button>
               </div>
 
-              {/* Card Payment Form */}
-              {paymentMethod === 'CARD' && (
+              {/* Card Payment - Show Payment Element if client secret exists */}
+              {paymentMethod === 'CARD' && paymentClientSecret && (
                 <div className="mt-6 p-6 bg-muted/20 rounded-lg">
                   <h3 className="font-semibold mb-4">Enter Card Details</h3>
-                  <PaymentForm
-                    amount={
-                      parseFloat(cart?.subtotal.toString() || '0') +
-                      (fulfillmentType === 'DELIVERY' && selectedAddress?.deliveryZone
-                        ? parseFloat(selectedAddress.deliveryZone.deliveryFee)
-                        : 0)
-                    }
-                    onSuccess={(paymentIntentId) => {
-                      console.log('Payment successful:', paymentIntentId);
-                      handlePlaceOrder();
+                  <StripePaymentElement
+                    clientSecret={paymentClientSecret}
+                    onSuccess={() => {
+                      router.push('/checkout/success');
                     }}
                     onError={(err) => {
                       error(`Payment failed: ${err}`);
+                      setIsProcessingPayment(false);
+                      setPaymentClientSecret(null);
                     }}
                   />
                 </div>
@@ -339,22 +540,29 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {paymentMethod !== 'CARD' && (
-                <button
-                  onClick={handlePlaceOrder}
-                  disabled={
-                    createOrder.isPending ||
-                    (fulfillmentType === 'DELIVERY' && (!selectedAddressId || !selectedSlotId))
-                  }
-                  className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {createOrder.isPending ? 'Placing Order...' : 'Place Order'}
-                </button>
-              )}
+              <button
+                onClick={handlePlaceOrder}
+                disabled={
+                  createOrder.isPending ||
+                  isProcessingPayment ||
+                  (paymentMethod === 'CARD' && !!paymentClientSecret) ||
+                  (fulfillmentType === 'DELIVERY' && (!selectedAddressId || !selectedSlotId)) ||
+                  (fulfillmentType === 'DELIVERY' && cartValidation && !cartValidation.canProceed)
+                }
+                className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {cartValidation && !cartValidation.canProceed && fulfillmentType === 'DELIVERY' ? 
+                 'Minimum Order Not Met' :
+                 isProcessingPayment ? 'Processing...' : 
+                 createOrder.isPending ? 'Creating Order...' : 
+                 paymentMethod === 'CARD' && paymentClientSecret ? 'Complete Payment Above' :
+                 paymentMethod === 'CARD' ? 'Proceed to Payment' :
+                 'Place Order'}
+              </button>
 
-              {paymentMethod === 'CARD' && (
-                <p className="text-sm text-center text-muted-foreground">
-                  Complete payment above to place your order
+              {paymentMethod === 'CARD' && paymentClientSecret && (
+                <p className="text-sm text-center text-muted-foreground mt-2">
+                  Complete payment form above to finalize your order
                 </p>
               )}
 

@@ -64,12 +64,14 @@ export class AdminService {
         price: dto.price,
         compareAtPrice: dto.compareAtPrice,
         categoryId,
-        unitSize: dto.unit || 'unit',
+        unitSize: dto.unitSize || dto.unit || undefined,
+        sku: dto.sku || undefined,
+        barcode: dto.barcode || undefined,
         tags: dto.tags || [],
         isFeatured: dto.isFeatured || false,
         isActive: dto.isActive !== false,
         // Create images if provided
-        images: dto.images ? {
+        images: dto.images && dto.images.length > 0 ? {
           create: dto.images.map((img, index) => ({
             url: img.url,
             altText: img.altText || dto.name,
@@ -155,6 +157,9 @@ export class AdminService {
     if (dto.price !== undefined) updateData.price = dto.price;
     if (dto.compareAtPrice !== undefined) updateData.compareAtPrice = dto.compareAtPrice;
     if (dto.unit) updateData.unitSize = dto.unit;
+    if (dto.unitSize) updateData.unitSize = dto.unitSize;
+    if (dto.sku !== undefined) updateData.sku = dto.sku;
+    if (dto.barcode !== undefined) updateData.barcode = dto.barcode;
     if (dto.tags) updateData.tags = dto.tags;
     if (dto.isFeatured !== undefined) updateData.isFeatured = dto.isFeatured;
     if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
@@ -162,20 +167,26 @@ export class AdminService {
     if (dto.categoryId) updateData.categoryId = dto.categoryId;
 
     // Handle image updates
-    if (dto.images && dto.images.length > 0) {
+    if (dto.images !== undefined && Array.isArray(dto.images)) {
+      console.log(`Updating images for product ${productId}: deleting old images, adding ${dto.images.length} new images`);
+      
       // Delete existing images
       await this.prisma.productImage.deleteMany({
         where: { productId },
       });
 
-      // Create new images
-      updateData.images = {
-        create: dto.images.map((img, index) => ({
-          url: img.url,
-          altText: img.altText || dto.name || product.name,
-          sortOrder: img.sortOrder ?? index,
-        })),
-      };
+      // Create new images if provided
+      if (dto.images.length > 0) {
+        updateData.images = {
+          create: dto.images.map((img, index) => ({
+            url: img.url,
+            altText: img.altText || dto.name || product.name,
+            sortOrder: img.sortOrder ?? index,
+          })),
+        };
+      }
+    } else {
+      console.log(`Skipping image update for product ${productId}: images is ${dto.images === undefined ? 'undefined' : 'not an array'}`);
     }
 
     // Handle inventory updates
@@ -304,15 +315,18 @@ export class AdminService {
           for (let i = 0; i < results.length; i++) {
             const row = results[i];
             try {
-              // Parse the CSV row
-              const imageUrl = row.imageUrl || row.ImageUrl || '';
+              // Parse the CSV row - handle empty/missing imageUrl field
+              const imageUrlRaw = row.imageUrl || row.ImageUrl;
+              const imageUrl = imageUrlRaw !== undefined ? String(imageUrlRaw).trim() : '';
               const images = imageUrl 
                 ? imageUrl.split('|').map((url: string, index: number) => ({
                     url: url.trim(),
                     altText: row.name || row.Name,
                     sortOrder: index,
-                  }))
+                  })).filter((img: any) => img.url) // Filter out empty URLs
                 : [];
+              
+              console.log(`Row ${i + 1}: imageUrl="${imageUrl}", parsed ${images.length} images`);
 
               const productData: any = {
                 name: row.name || row.Name,
@@ -320,18 +334,18 @@ export class AdminService {
                 price: parseFloat(row.price || row.Price),
                 compareAtPrice: row.compareAtPrice || row.CompareAtPrice ? parseFloat(row.compareAtPrice || row.CompareAtPrice) : undefined,
                 category: row.category || row.Category,
-                categoryId: row.categoryId || row.CategoryId,
-                unitSize: row.unitSize || row.UnitSize || row.unit || row.Unit,
-                sku: row.sku || row.SKU,
-                barcode: row.barcode || row.Barcode,
-                tags: row.tags || row.Tags ? (row.tags || row.Tags).split(',').map((t: string) => t.trim()) : [],
+                categoryId: row.categoryId || row.CategoryId || undefined,
+                unitSize: row.unitSize || row.UnitSize || row.unit || row.Unit || undefined,
+                sku: row.sku || row.SKU || undefined,
+                barcode: row.barcode || row.Barcode || undefined,
+                tags: row.tags || row.Tags ? (row.tags || row.Tags).split(',').map((t: string) => t.trim()).filter((t: string) => t) : [],
                 isFeatured: row.isFeatured === 'true' || row.IsFeatured === 'true' || row.isFeatured === '1',
                 isActive: row.isActive !== 'false' && row.IsActive !== 'false' && row.isActive !== '0',
-                images,
+                images: images, // Always pass images array (even if empty) to trigger update
                 inventory: {
                   quantity: row.stock || row.Stock ? parseInt(row.stock || row.Stock) : 0,
                   lowStockThreshold: row.lowStockThreshold || row.LowStockThreshold ? parseInt(row.lowStockThreshold || row.LowStockThreshold) : 10,
-                  isTracked: row.trackInventory === 'true' || row.TrackInventory === 'true' || row.trackInventory === '1',
+                  isTracked: row.trackInventory === 'true' || row.TrackInventory === 'true' || row.trackInventory === '1' || row.trackInventory !== 'false',
                 },
               };
 
@@ -354,10 +368,12 @@ export class AdminService {
 
               if (existingProduct) {
                 // Update existing product
+                console.log(`Updating product ${existingProduct.id} with ${productData.images?.length || 0} images`);
                 await this.updateProduct(existingProduct.id, productData);
                 updatedCount++;
               } else {
                 // Create new product
+                console.log(`Creating new product with ${productData.images?.length || 0} images`);
                 await this.createProduct(productData);
                 createdCount++;
               }

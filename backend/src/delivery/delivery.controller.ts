@@ -5,10 +5,13 @@ import {
   Body,
   Param,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { DeliveryService } from './delivery.service';
 import { CheckPostcodeDto, GetDeliverySlotsDto } from './dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('delivery')
 @Controller('delivery')
@@ -48,15 +51,28 @@ export class DeliveryController {
   }
 
   @Get('zones/:zoneId/fee')
-  @ApiOperation({ summary: 'Calculate delivery fee' })
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Calculate delivery fee for zone' })
   @ApiParam({ name: 'zoneId', description: 'Zone ID' })
   @ApiQuery({ name: 'orderTotal', required: true, description: 'Order total amount' })
   @ApiResponse({ status: 200, description: 'Fee calculated' })
   @ApiResponse({ status: 404, description: 'Zone not found' })
-  async calculateFee(
+  async calculateDeliveryFee(
     @Param('zoneId') zoneId: string,
     @Query('orderTotal') orderTotal: string,
   ) {
     return this.deliveryService.calculateDeliveryFee(zoneId, parseFloat(orderTotal));
+  }
+
+  @Get('validate-cart')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Validate cart against delivery zone requirements' })
+  async validateCart(
+    @CurrentUser() user: any,
+    @Query('addressId') addressId?: string,
+  ) {
+    return this.deliveryService.validateCartForDelivery(user.id, addressId);
   }
 }
