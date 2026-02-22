@@ -165,10 +165,25 @@ export class OrdersService {
       }
     }
 
-    // Clear cart
-    await this.prisma.cartItem.deleteMany({
-      where: { cartId: cart.id },
+    // DON'T clear cart here - it will be cleared when payment is confirmed
+    // For card payments: cleared via webhook (checkout.session.completed or payment_intent.succeeded)
+    // For cash/in-store: cleared immediately below
+    
+    // Only clear cart for non-card payment methods (cash on delivery, pay in store)
+    // Card payments will be cleared via webhook after successful payment
+    const payment = await this.prisma.payment.findFirst({
+      where: { orderId: order.id },
     });
+
+    if (payment && payment.paymentMethod !== 'CARD') {
+      // Clear cart immediately for non-card payments
+      await this.prisma.cartItem.deleteMany({
+        where: { cartId: cart.id },
+      });
+      console.log(`🛒 Cart cleared for ${payment.paymentMethod} payment`);
+    } else {
+      console.log(`🛒 Cart will be cleared after payment confirmation`);
+    }
 
     return order;
   }

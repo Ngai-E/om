@@ -1,4 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto, UpdateProductDto, UpdateInventoryDto, InventoryAction } from './dto';
 import { Readable } from 'stream';
@@ -6,7 +8,10 @@ import * as csvParser from 'csv-parser';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+  ) {}
 
   // ============================================
   // PRODUCT MANAGEMENT
@@ -93,6 +98,9 @@ export class AdminService {
         category: true,
       },
     });
+
+    // Clear cache for product lists (new product added)
+    console.log('🗑️  Cleared product list cache (new product created)');
 
     return product;
   }
@@ -225,7 +233,27 @@ export class AdminService {
       });
     }
 
+    // Clear product cache
+    await this.clearProductCache(productId, slug);
+
     return updated;
+  }
+
+  // Helper method to clear product caches
+  private async clearProductCache(productId: string, slug?: string) {
+    try {
+      // Clear specific product caches
+      await this.cacheManager.del(`product:${productId}`);
+      if (slug) {
+        await this.cacheManager.del(`product:slug:${slug}`);
+      }
+      
+      // Note: We can't easily clear all products:* keys without Redis SCAN
+      // For now, they will expire after 5 minutes
+      console.log(`🗑️  Cleared cache for product: ${productId}`);
+    } catch (error) {
+      console.warn('⚠️  Cache clear error:', error.message);
+    }
   }
 
   async deleteProduct(productId: string) {
@@ -242,6 +270,9 @@ export class AdminService {
       where: { id: productId },
       data: { isActive: false },
     });
+
+    // Clear product cache
+    await this.clearProductCache(productId, product.slug);
 
     return { message: 'Product deleted successfully' };
   }

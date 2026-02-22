@@ -29,6 +29,18 @@ export default function CheckoutPage() {
   const [selectedSlotId, setSelectedSlotId] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH_ON_DELIVERY' | 'PAY_IN_STORE'>('CASH_ON_DELIVERY');
 
+  // Fetch enabled payment methods
+  const { data: paymentSettings } = useQuery({
+    queryKey: ['payment-settings'],
+    queryFn: async () => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings`);
+      if (!response.ok) throw new Error('Failed to fetch settings');
+      return response.json();
+    },
+  });
+
+  const enabledPaymentTypes = paymentSettings?.enabled_payment_types || ['card', 'cash_on_delivery', 'pay_in_store'];
+
   // Fetch addresses
   const { data: addresses } = useQuery({
     queryKey: ['addresses'],
@@ -445,41 +457,50 @@ export default function CheckoutPage() {
               </h2>
 
               <div className="space-y-3">
-                <button
-                  onClick={() => setPaymentMethod('CARD')}
-                  className={`w-full text-left p-4 border-2 rounded-lg transition ${
-                    paymentMethod === 'CARD'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  <p className="font-semibold">Card Payment</p>
-                  <p className="text-sm text-muted-foreground">Pay securely with Stripe</p>
-                </button>
+                {/* Card Payment - Only show if enabled */}
+                {enabledPaymentTypes.includes('card') && (
+                  <button
+                    onClick={() => setPaymentMethod('CARD')}
+                    className={`w-full text-left p-4 border-2 rounded-lg transition ${
+                      paymentMethod === 'CARD'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <p className="font-semibold">Card Payment</p>
+                    <p className="text-sm text-muted-foreground">Pay securely with Stripe</p>
+                  </button>
+                )}
 
-                <button
-                  onClick={() => setPaymentMethod('CASH_ON_DELIVERY')}
-                  className={`w-full text-left p-4 border-2 rounded-lg transition ${
-                    paymentMethod === 'CASH_ON_DELIVERY'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  <p className="font-semibold">Cash on Delivery</p>
-                  <p className="text-sm text-muted-foreground">Pay when you receive your order</p>
-                </button>
+                {/* Cash on Delivery - Only show if enabled */}
+                {enabledPaymentTypes.includes('cash_on_delivery') && (
+                  <button
+                    onClick={() => setPaymentMethod('CASH_ON_DELIVERY')}
+                    className={`w-full text-left p-4 border-2 rounded-lg transition ${
+                      paymentMethod === 'CASH_ON_DELIVERY'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <p className="font-semibold">Cash on Delivery</p>
+                    <p className="text-sm text-muted-foreground">Pay when you receive your order</p>
+                  </button>
+                )}
 
-                <button
-                  onClick={() => setPaymentMethod('PAY_IN_STORE')}
-                  className={`w-full text-left p-4 border-2 rounded-lg transition ${
-                    paymentMethod === 'PAY_IN_STORE'
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  }`}
-                >
-                  <p className="font-semibold">Pay in Store</p>
-                  <p className="text-sm text-muted-foreground">Pay when you collect</p>
-                </button>
+                {/* Pay in Store - Only show if enabled */}
+                {enabledPaymentTypes.includes('pay_in_store') && (
+                  <button
+                    onClick={() => setPaymentMethod('PAY_IN_STORE')}
+                    className={`w-full text-left p-4 border-2 rounded-lg transition ${
+                      paymentMethod === 'PAY_IN_STORE'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <p className="font-semibold">Pay in Store</p>
+                    <p className="text-sm text-muted-foreground">Pay when you pick up your order</p>
+                  </button>
+                )}
               </div>
 
               {/* Card Payment - Show Payment Element if client secret exists */}

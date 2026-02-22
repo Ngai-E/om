@@ -323,7 +323,7 @@ export class PaymentsService {
       });
 
       // Update order status
-      await this.prisma.order.update({
+      const order = await this.prisma.order.update({
         where: { id: paymentByIntent.orderId },
         data: {
           status: 'PICKING',
@@ -335,6 +335,9 @@ export class PaymentsService {
           },
         },
       });
+
+      // Clear cart after successful payment
+      await this.clearCartForUser(order.userId);
 
       console.log(`✅ Checkout session completed for order: ${paymentByIntent.orderId}`);
       return;
@@ -353,7 +356,7 @@ export class PaymentsService {
     });
 
     // Update order status
-    await this.prisma.order.update({
+    const order = await this.prisma.order.update({
       where: { id: payment.orderId },
       data: {
         status: 'PICKING',
@@ -366,7 +369,28 @@ export class PaymentsService {
       },
     });
 
+    // Clear cart after successful payment
+    await this.clearCartForUser(order.userId);
+
     console.log(`✅ Checkout session completed for order: ${payment.orderId}`);
+  }
+
+  // Helper method to clear user's cart
+  private async clearCartForUser(userId: string) {
+    try {
+      const cart = await this.prisma.cart.findFirst({
+        where: { userId },
+      });
+
+      if (cart) {
+        await this.prisma.cartItem.deleteMany({
+          where: { cartId: cart.id },
+        });
+        console.log(`🛒 Cart cleared for user: ${userId}`);
+      }
+    } catch (error) {
+      console.error(`❌ Failed to clear cart for user ${userId}:`, error.message);
+    }
   }
 
   private async handlePaymentSuccess(paymentIntent: any) {
@@ -388,7 +412,7 @@ export class PaymentsService {
     });
 
     // Update order status
-    await this.prisma.order.update({
+    const order = await this.prisma.order.update({
       where: { id: payment.orderId },
       data: {
         status: 'PICKING',
@@ -400,6 +424,9 @@ export class PaymentsService {
         },
       },
     });
+
+    // Clear cart after successful payment
+    await this.clearCartForUser(order.userId);
 
     console.log(`✅ Payment succeeded for order: ${payment.orderId}`);
   }

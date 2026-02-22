@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { PrismaModule } from './prisma/prisma.module';
+import { CacheModule } from './cache/cache.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ProductsModule } from './products/products.module';
@@ -30,6 +31,9 @@ import { AppController } from './app.controller';
         limit: parseInt(process.env.RATE_LIMIT_MAX || '100', 10),
       },
     ]),
+
+    // Caching
+    CacheModule,
 
     // Core Modules
     PrismaModule,

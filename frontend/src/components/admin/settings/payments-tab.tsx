@@ -4,15 +4,33 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useAuthStore } from '@/lib/store/auth-store';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, CreditCard, Banknote, Store } from 'lucide-react';
 
 type PaymentMethod = 'stripe_checkout' | 'stripe_elements';
+
+interface PaymentMethodsConfig {
+  card: {
+    enabled: boolean;
+    method: PaymentMethod;
+  };
+  cashOnDelivery: {
+    enabled: boolean;
+  };
+  payInStore: {
+    enabled: boolean;
+  };
+}
 
 export function PaymentsTab() {
   const { toast, success, error, hideToast } = useToast();
   const { token } = useAuthStore();
   const queryClient = useQueryClient();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>('stripe_checkout');
+  const [paymentConfig, setPaymentConfig] = useState<PaymentMethodsConfig>({
+    card: { enabled: true, method: 'stripe_checkout' },
+    cashOnDelivery: { enabled: true },
+    payInStore: { enabled: true },
+  });
 
   // Fetch current payment method
   const { data: paymentData } = useQuery({
@@ -24,11 +42,27 @@ export function PaymentsTab() {
     },
   });
 
+  // Fetch payment methods configuration
+  const { data: paymentMethodsData } = useQuery({
+    queryKey: ['payment-methods-config'],
+    queryFn: async () => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/payment-methods`);
+      if (!response.ok) throw new Error('Failed to fetch payment methods config');
+      return response.json();
+    },
+  });
+
   useEffect(() => {
     if (paymentData?.payment_method) {
       setSelectedMethod(paymentData.payment_method);
     }
   }, [paymentData]);
+
+  useEffect(() => {
+    if (paymentMethodsData?.config) {
+      setPaymentConfig(paymentMethodsData.config);
+    }
+  }, [paymentMethodsData]);
 
   // Update payment method mutation
   const updatePaymentMethod = useMutation({
@@ -58,14 +92,145 @@ export function PaymentsTab() {
     },
   });
 
+  // Update payment methods configuration mutation
+  const updatePaymentMethodsConfig = useMutation({
+    mutationFn: async (config: PaymentMethodsConfig) => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/payment-methods`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ config }),
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to update payment methods config');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['payment-methods-config'] });
+      success('Payment methods updated successfully!');
+    },
+    onError: (err: any) => {
+      error(err.message || 'Failed to update payment methods');
+    },
+  });
+
   const handleMethodChange = async (method: PaymentMethod) => {
     setSelectedMethod(method);
     await updatePaymentMethod.mutateAsync(method);
   };
 
+  const handleConfigChange = async (newConfig: PaymentMethodsConfig) => {
+    setPaymentConfig(newConfig);
+    await updatePaymentMethodsConfig.mutateAsync(newConfig);
+  };
+
   return (
     <div className="space-y-6">
-      {/* Payment Method Selection */}
+      {/* Payment Methods Toggle */}
+      <div className="bg-white border rounded-lg p-6">
+        <h2 className="text-lg font-bold mb-2">Available Payment Methods</h2>
+        <p className="text-sm text-gray-600 mb-6">
+          Enable or disable payment methods for your customers
+        </p>
+
+        <div className="space-y-4">
+          {/* Card Payments */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                paymentConfig.card.enabled ? 'bg-green-100' : 'bg-gray-100'
+              }`}>
+                <CreditCard className={`w-5 h-5 ${
+                  paymentConfig.card.enabled ? 'text-green-600' : 'text-gray-400'
+                }`} />
+              </div>
+              <div>
+                <h3 className="font-semibold">Card Payments</h3>
+                <p className="text-sm text-gray-600">Credit & Debit cards via Stripe</p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={paymentConfig.card.enabled}
+                onChange={(e) => handleConfigChange({
+                  ...paymentConfig,
+                  card: { ...paymentConfig.card, enabled: e.target.checked }
+                })}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+            </label>
+          </div>
+
+          {/* Cash on Delivery */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                paymentConfig.cashOnDelivery.enabled ? 'bg-green-100' : 'bg-gray-100'
+              }`}>
+                <Banknote className={`w-5 h-5 ${
+                  paymentConfig.cashOnDelivery.enabled ? 'text-green-600' : 'text-gray-400'
+                }`} />
+              </div>
+              <div>
+                <h3 className="font-semibold">Cash on Delivery</h3>
+                <p className="text-sm text-gray-600">Pay when order is delivered</p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={paymentConfig.cashOnDelivery.enabled}
+                onChange={(e) => handleConfigChange({
+                  ...paymentConfig,
+                  cashOnDelivery: { enabled: e.target.checked }
+                })}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+            </label>
+          </div>
+
+          {/* Pay in Store */}
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                paymentConfig.payInStore.enabled ? 'bg-green-100' : 'bg-gray-100'
+              }`}>
+                <Store className={`w-5 h-5 ${
+                  paymentConfig.payInStore.enabled ? 'text-green-600' : 'text-gray-400'
+                }`} />
+              </div>
+              <div>
+                <h3 className="font-semibold">Pay in Store</h3>
+                <p className="text-sm text-gray-600">Pay when picking up at store</p>
+              </div>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={paymentConfig.payInStore.enabled}
+                onChange={(e) => handleConfigChange({
+                  ...paymentConfig,
+                  payInStore: { enabled: e.target.checked }
+                })}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Payment Method Selection (only shown if card is enabled) */}
+      {paymentConfig.card.enabled && (
       <div className="bg-white border rounded-lg p-6">
         <h2 className="text-lg font-bold mb-2">Stripe Payment Method</h2>
         <p className="text-sm text-gray-600 mb-6">
@@ -167,8 +332,10 @@ export function PaymentsTab() {
           </button>
         </div>
       </div>
+      )}
 
       {/* Current Status */}
+      {paymentConfig.card.enabled && (
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
           <div className="w-5 h-5 text-blue-600 mt-0.5">ℹ️</div>
@@ -182,8 +349,10 @@ export function PaymentsTab() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Stripe Configuration Info */}
+      {paymentConfig.card.enabled && (
       <div className="bg-white border rounded-lg p-6">
         <h2 className="text-lg font-bold mb-4">Stripe API Keys</h2>
         <p className="text-sm text-gray-600 mb-4">
@@ -215,6 +384,7 @@ export function PaymentsTab() {
           </a>
         </p>
       </div>
+      )}
     </div>
   );
 }

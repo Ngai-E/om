@@ -6,6 +6,25 @@ export enum PaymentMethod {
   STRIPE_ELEMENTS = 'stripe_elements',
 }
 
+export enum PaymentType {
+  CARD = 'card',
+  CASH_ON_DELIVERY = 'cash_on_delivery',
+  PAY_IN_STORE = 'pay_in_store',
+}
+
+export interface PaymentMethodsConfig {
+  card: {
+    enabled: boolean;
+    method: PaymentMethod; // stripe_checkout or stripe_elements
+  };
+  cashOnDelivery: {
+    enabled: boolean;
+  };
+  payInStore: {
+    enabled: boolean;
+  };
+}
+
 @Injectable()
 export class SettingsService {
   constructor(private prisma: PrismaService) {}
@@ -46,6 +65,58 @@ export class SettingsService {
       'Payment processing method for checkout',
       updatedBy,
     );
+  }
+
+  async getPaymentMethodsConfig(): Promise<PaymentMethodsConfig> {
+    const config = await this.getSetting('payment_methods_config');
+    
+    if (config) {
+      try {
+        return JSON.parse(config);
+      } catch (error) {
+        console.error('Failed to parse payment methods config:', error);
+      }
+    }
+    
+    // Default configuration
+    return {
+      card: {
+        enabled: true,
+        method: PaymentMethod.STRIPE_CHECKOUT,
+      },
+      cashOnDelivery: {
+        enabled: true,
+      },
+      payInStore: {
+        enabled: true,
+      },
+    };
+  }
+
+  async setPaymentMethodsConfig(config: PaymentMethodsConfig, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'payment_methods_config',
+      JSON.stringify(config),
+      'Configuration for enabled payment methods',
+      updatedBy,
+    );
+  }
+
+  async getEnabledPaymentTypes(): Promise<PaymentType[]> {
+    const config = await this.getPaymentMethodsConfig();
+    const enabled: PaymentType[] = [];
+
+    if (config.card.enabled) {
+      enabled.push(PaymentType.CARD);
+    }
+    if (config.cashOnDelivery.enabled) {
+      enabled.push(PaymentType.CASH_ON_DELIVERY);
+    }
+    if (config.payInStore.enabled) {
+      enabled.push(PaymentType.PAY_IN_STORE);
+    }
+
+    return enabled;
   }
 
   async getAllSettings(): Promise<Record<string, any>> {
