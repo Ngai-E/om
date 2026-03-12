@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { cartApi } from '@/lib/api/cart';
 import { useCartStore } from '@/lib/store/cart-store';
+import { useAuthStore } from '@/lib/store/auth-store';
 
 export function useCart() {
   const setItemCount = useCartStore((state) => state.setItemCount);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   
   const query = useQuery({
     queryKey: ['cart'],
@@ -12,6 +14,7 @@ export function useCart() {
       setItemCount(cart.itemCount);
       return cart;
     },
+    enabled: isAuthenticated, // Only fetch cart when authenticated
   });
 
   return query;

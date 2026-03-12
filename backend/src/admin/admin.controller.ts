@@ -19,10 +19,11 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
-import { CreateProductDto, UpdateProductDto, UpdateInventoryDto } from './dto';
+import { CreateProductDto, UpdateProductDto, UpdateInventoryDto, CreateStaffDto, UpdateStaffDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -35,6 +36,15 @@ export class AdminController {
   // ============================================
   // PRODUCT MANAGEMENT
   // ============================================
+
+  @Get('products/:id')
+  @ApiOperation({ summary: 'Get product by ID (Admin only - includes inactive)' })
+  @ApiParam({ name: 'id', description: 'Product ID' })
+  @ApiResponse({ status: 200, description: 'Product found' })
+  @ApiResponse({ status: 404, description: 'Product not found' })
+  async getProduct(@Param('id') productId: string) {
+    return this.adminService.getProduct(productId);
+  }
 
   @Post('products')
   @ApiOperation({ summary: 'Create new product (Admin only)' })
@@ -292,5 +302,74 @@ export class AdminController {
   @ApiResponse({ status: 200, description: 'Slot deleted' })
   async deleteDeliverySlot(@Param('id') id: string) {
     return this.adminService.deleteDeliverySlot(id);
+  }
+
+  // ============================================
+  // STAFF MANAGEMENT
+  // ============================================
+
+  @Post('staff')
+  @ApiOperation({ summary: 'Create new staff member (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Staff created' })
+  @ApiResponse({ status: 400, description: 'Email already in use' })
+  async createStaff(@Body() dto: CreateStaffDto, @CurrentUser() user: any) {
+    return this.adminService.createStaff(dto, user.id);
+  }
+
+  @Get('staff')
+  @ApiOperation({ summary: 'Get all staff members (Admin only)' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiResponse({ status: 200, description: 'Staff list retrieved' })
+  async getAllStaff(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.getAllStaff(
+      page ? parseInt(page) : 1,
+      limit ? parseInt(limit) : 50,
+    );
+  }
+
+  @Get('staff/:id')
+  @ApiOperation({ summary: 'Get staff member by ID (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Staff ID' })
+  @ApiResponse({ status: 200, description: 'Staff retrieved' })
+  @ApiResponse({ status: 404, description: 'Staff not found' })
+  async getStaffById(@Param('id') id: string) {
+    return this.adminService.getStaffById(id);
+  }
+
+  @Put('staff/:id')
+  @ApiOperation({ summary: 'Update staff member (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Staff ID' })
+  @ApiResponse({ status: 200, description: 'Staff updated' })
+  @ApiResponse({ status: 404, description: 'Staff not found' })
+  async updateStaff(
+    @Param('id') id: string,
+    @Body() dto: UpdateStaffDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.adminService.updateStaff(id, dto, user.id);
+  }
+
+  @Delete('staff/:id')
+  @ApiOperation({ summary: 'Delete staff member (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Staff ID' })
+  @ApiResponse({ status: 200, description: 'Staff deleted' })
+  async deleteStaff(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.adminService.deleteStaff(id, user.id);
+  }
+
+  @Post('staff/:id/reset-password')
+  @ApiOperation({ summary: 'Reset staff password (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Staff ID' })
+  @ApiResponse({ status: 200, description: 'Password reset' })
+  async resetStaffPassword(
+    @Param('id') id: string,
+    @Body('newPassword') newPassword: string,
+    @CurrentUser() user: any,
+  ) {
+    return this.adminService.resetStaffPassword(id, newPassword, user.id);
   }
 }

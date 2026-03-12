@@ -2,8 +2,9 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, Package, MapPin, Clock, CreditCard } from 'lucide-react';
+import { CheckCircle, Package, MapPin, Clock, CreditCard, Download } from 'lucide-react';
 import { useOrder } from '@/lib/hooks/use-orders';
+import { generateReceipt } from '@/lib/utils/receipt-generator';
 
 export default function OrderConfirmationPage() {
   const params = useParams();
@@ -46,6 +47,45 @@ export default function OrderConfirmationPage() {
           <p className="text-sm text-muted-foreground mt-2">
             Order Number: <span className="font-mono font-semibold">{order.orderNumber}</span>
           </p>
+          
+          {/* Download Receipt Button */}
+          <button
+            onClick={() => generateReceipt({
+              orderNumber: order.orderNumber,
+              createdAt: order.createdAt,
+              customerName: `${order.user?.firstName || ''} ${order.user?.lastName || ''}`.trim() || 'Guest',
+              customerEmail: order.user?.email || '',
+              customerPhone: order.user?.phone,
+              items: order.items.map((item: any) => ({
+                productName: item.productName,
+                variantName: item.variantName,
+                quantity: item.quantity,
+                productPrice: item.productPrice,
+                subtotal: item.subtotal,
+              })),
+              subtotal: order.subtotal,
+              deliveryFee: order.deliveryFee,
+              total: order.total,
+              fulfillmentType: order.fulfillmentType,
+              address: order.address ? {
+                line1: order.address.line1,
+                line2: order.address.line2,
+                city: order.address.city,
+                postcode: order.address.postcode,
+              } : undefined,
+              deliverySlot: order.deliverySlot ? {
+                date: order.deliverySlot.date,
+                startTime: order.deliverySlot.startTime,
+                endTime: order.deliverySlot.endTime,
+              } : undefined,
+              paymentMethod: order.paymentMethod || 'N/A',
+              status: order.status,
+            })}
+            className="mt-4 inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+          >
+            <Download className="w-5 h-5" />
+            Download Receipt
+          </button>
         </div>
 
         <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-6">

@@ -14,6 +14,9 @@ import { AdminModule } from './admin/admin.module';
 import { StaffModule } from './staff/staff.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SettingsModule } from './settings/settings.module';
+import { UploadModule } from './upload/upload.module';
+import { AuditModule } from './audit/audit.module';
+import { EmailModule } from './email/email.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -35,6 +38,12 @@ import { AppController } from './app.controller';
     // Caching
     CacheModule,
 
+    // Audit
+    AuditModule,
+
+    // Email
+    EmailModule,
+
     // Core Modules
     PrismaModule,
     AuthModule,
@@ -48,6 +57,7 @@ import { AppController } from './app.controller';
     StaffModule,
     NotificationsModule,
     SettingsModule,
+    UploadModule,
   ],
   controllers: [AppController],
 })

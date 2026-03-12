@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Search, ShoppingCart, User, Menu, X, LogOut, Heart } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useCartStore } from '@/lib/store/cart-store';
+import { useGuestCartStore } from '@/lib/store/guest-cart-store';
 import { useWishlistStore } from '@/lib/store/wishlist-store';
 import { useSettingsStore } from '@/lib/store/settings-store';
 import { useQuery } from '@tanstack/react-query';
@@ -15,8 +16,12 @@ export function Header() {
   const router = useRouter();
   const { user, isAuthenticated, clearAuth } = useAuthStore();
   const { itemCount } = useCartStore();
+  const { items: guestCartItems } = useGuestCartStore();
   const { items: wishlistItems } = useWishlistStore();
   const { settings } = useSettingsStore();
+  
+  // Calculate total cart count (authenticated or guest)
+  const totalCartCount = isAuthenticated ? itemCount : guestCartItems.length;
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
@@ -84,7 +89,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <img 
-              src="/omega-logo.jpg" 
+              src="/omega-logo.png" 
               alt="OMEGA Afro Caribbean Superstore" 
               className="h-12 w-auto object-contain"
               onError={(e) => {
@@ -93,10 +98,6 @@ export function Header() {
                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
               }}
             />
-            <div className="hidden w-10 h-10 bg-primary rounded-full items-center justify-center text-white font-bold text-xl">
-              Ω
-            </div>
-            <span className="font-bold text-xl hidden sm:block">OMEGA</span>
           </Link>
 
           {/* Desktop Search */}
@@ -180,9 +181,9 @@ export function Header() {
                 </Link>
                 <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition">
                   <ShoppingCart className="w-6 h-6" />
-                  {itemCount > 0 && (
+                  {totalCartCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
-                      {itemCount}
+                      {totalCartCount}
                     </span>
                   )}
                 </Link>
@@ -196,6 +197,15 @@ export function Header() {
               </>
             ) : (
               <>
+                {/* Guest Cart Icon */}
+                <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition">
+                  <ShoppingCart className="w-6 h-6" />
+                  {totalCartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                      {totalCartCount}
+                    </span>
+                  )}
+                </Link>
                 <Link
                   href="/login"
                   className="px-4 py-2 text-primary hover:bg-primary/5 rounded-lg transition font-medium"
@@ -329,6 +339,19 @@ export function Header() {
             ) : (
               <>
                 <div className="border-t my-2"></div>
+                {/* Guest Cart Link */}
+                <Link
+                  href="/cart"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-4 py-3 hover:bg-gray-100 rounded-lg flex items-center justify-between"
+                >
+                  <span>Cart</span>
+                  {totalCartCount > 0 && (
+                    <span className="bg-primary text-white text-xs px-2 py-1 rounded-full">
+                      {totalCartCount}
+                    </span>
+                  )}
+                </Link>
                 <Link
                   href="/login"
                   onClick={() => setMobileMenuOpen(false)}

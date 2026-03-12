@@ -136,6 +136,34 @@ export class SettingsService {
     return result;
   }
 
+  async getGuestCheckoutEnabled(): Promise<boolean> {
+    const enabled = await this.getSetting('guest_checkout_enabled');
+    return enabled === 'true' || enabled === null; // Default to true
+  }
+
+  async setGuestCheckoutEnabled(enabled: boolean, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'guest_checkout_enabled',
+      enabled.toString(),
+      'Allow customers to checkout without creating an account',
+      updatedBy,
+    );
+  }
+
+  async getEmailNotificationsEnabled(): Promise<boolean> {
+    const enabled = await this.getSetting('email_notifications_enabled');
+    return enabled === 'true' || enabled === null; // Default to true
+  }
+
+  async setEmailNotificationsEnabled(enabled: boolean, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'email_notifications_enabled',
+      enabled.toString(),
+      'Send email notifications to customers for order updates',
+      updatedBy,
+    );
+  }
+
   async initializeDefaults(): Promise<void> {
     const defaults = [
       {
@@ -152,6 +180,16 @@ export class SettingsService {
         key: 'currency',
         value: 'GBP',
         description: 'Store currency code',
+      },
+      {
+        key: 'guest_checkout_enabled',
+        value: 'true',
+        description: 'Allow customers to checkout without creating an account',
+      },
+      {
+        key: 'email_notifications_enabled',
+        value: 'true',
+        description: 'Send email notifications to customers for order updates',
       },
     ];
 

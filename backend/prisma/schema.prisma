@@ -19,13 +19,14 @@ datasource db {
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
-  password      String    // bcrypt hashed
+  password      String?   // Optional for guest users
   firstName     String
   lastName      String
   phone         String?
   role          Role      @default(CUSTOMER)
   emailVerified Boolean   @default(false)
   isActive      Boolean   @default(true)
+  isGuest       Boolean   @default(false) // Guest checkout users
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   deletedAt     DateTime? // Soft delete
@@ -39,6 +40,7 @@ model User {
 
   @@index([email])
   @@index([role])
+  @@index([phone])
   @@map("users")
 }
 
@@ -142,6 +144,7 @@ model Product {
   // Relations
   inventory  Inventory?
   images     ProductImage[]
+  variants   ProductVariant[]
   cartItems  CartItem[]
   orderItems OrderItem[]
 
@@ -163,6 +166,29 @@ model ProductImage {
 
   @@index([productId])
   @@map("product_images")
+}
+
+model ProductVariant {
+  id          String     @id @default(uuid())
+  productId   String
+  product     Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name        String // e.g., "1kg", "Red", "Large"
+  sku         String     @unique
+  price       Decimal    @db.Decimal(10, 2)
+  compareAtPrice Decimal? @db.Decimal(10, 2)
+  stock       Int        @default(0)
+  isActive    Boolean    @default(true)
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([productId])
+  @@index([sku])
+  @@map("product_variants")
 }
 
 model Inventory {
@@ -199,16 +225,18 @@ model Cart {
 }
 
 model CartItem {
-  id        String   @id @default(uuid())
+  id        String          @id @default(uuid())
   cartId    String
-  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  cart      Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int      @default(1)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  product   Product         @relation(fields: [productId], references: [id])
+  variantId String?
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
+  quantity  Int             @default(1)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
-  @@unique([cartId, productId]) // Prevent duplicate products in same cart
+  @@unique([cartId, productId, variantId]) // Prevent duplicate products/variants in same cart
   @@index([cartId])
   @@map("cart_items")
 }
@@ -272,15 +300,18 @@ enum FulfillmentType {
 }
 
 model OrderItem {
-  id              String  @id @default(uuid())
+  id              String          @id @default(uuid())
   orderId         String
-  order           Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order           Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   productId       String
-  product         Product @relation(fields: [productId], references: [id])
+  product         Product         @relation(fields: [productId], references: [id])
+  variantId       String?
+  variant         ProductVariant? @relation(fields: [variantId], references: [id])
   productName     String // Snapshot at order time
-  productPrice    Decimal @db.Decimal(10, 2)
+  variantName     String? // Snapshot of variant name
+  productPrice    Decimal         @db.Decimal(10, 2)
   quantity        Int
-  subtotal        Decimal @db.Decimal(10, 2)
+  subtotal        Decimal         @db.Decimal(10, 2)
   substitutedWith String? // Product ID if substituted
   notes           String? // e.g., "customer prefers ripe plantains"
 

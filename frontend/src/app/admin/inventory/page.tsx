@@ -38,15 +38,22 @@ export default function InventoryManagementPage() {
   });
 
   const handleStartEdit = (productId: string, currentQty: number) => {
+    console.log('Starting edit for product:', productId, 'Current qty:', currentQty);
     setEditingId(productId);
     setEditQuantity(currentQty);
   };
 
   const handleSaveEdit = (productId: string) => {
+    console.log('Saving edit for product:', productId, 'New qty:', editQuantity);
+    if (editQuantity < 0) {
+      error('Quantity cannot be negative');
+      return;
+    }
     updateInventory.mutate({ productId, quantity: editQuantity });
   };
 
   const handleCancelEdit = () => {
+    console.log('Canceling edit');
     setEditingId(null);
     setEditQuantity(0);
   };
@@ -353,12 +360,16 @@ export default function InventoryManagementPage() {
                           )}
                         </td>
                         <td className="p-4 text-right">
-                          <button 
-                            onClick={() => handleStartEdit(product.id, inventory?.quantity || 0)}
-                            className="text-sm text-blue-600 hover:underline font-medium"
-                          >
-                            Quick Edit
-                          </button>
+                          {inventory && inventory.isTracked ? (
+                            <button 
+                              onClick={() => handleStartEdit(product.id, inventory.quantity)}
+                              className="text-sm text-blue-600 hover:underline font-medium"
+                            >
+                              Quick Edit
+                            </button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Not tracked</span>
+                          )}
                         </td>
                       </tr>
                     );

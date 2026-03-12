@@ -198,21 +198,21 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+    <div className="min-h-screen bg-background pb-20 lg:pb-8">
+      <div className="container mx-auto px-4 py-4 lg:py-8">
+        <h1 className="text-2xl lg:text-3xl font-bold mb-4 lg:mb-8">Checkout</h1>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Checkout Steps */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 order-2 lg:order-1 space-y-4 lg:space-y-6">
             {/* Step 1: Fulfillment Type */}
-            <div className="bg-card border rounded-lg p-6">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <Truck className="w-5 h-5" />
+            <div className="bg-card border rounded-lg p-4 lg:p-6">
+              <h2 className="text-lg lg:text-xl font-bold mb-3 lg:mb-4 flex items-center gap-2">
+                <Truck className="w-4 h-4 lg:w-5 lg:h-5" />
                 Fulfillment Method
               </h2>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 lg:gap-4">
                 <button
                   onClick={() => setFulfillmentType('DELIVERY')}
                   className={`p-4 border-2 rounded-lg transition ${
@@ -221,9 +221,9 @@ export default function CheckoutPage() {
                       : 'border-border hover:border-primary/50'
                   }`}
                 >
-                  <Truck className="w-6 h-6 mx-auto mb-2" />
-                  <p className="font-semibold">Delivery</p>
-                  <p className="text-sm text-muted-foreground">To your door</p>
+                  <Truck className="w-5 h-5 lg:w-6 lg:h-6 mx-auto mb-1 lg:mb-2" />
+                  <p className="font-semibold text-sm lg:text-base">Delivery</p>
+                  <p className="text-xs lg:text-sm text-muted-foreground">To your door</p>
                 </button>
 
                 <button
@@ -234,37 +234,37 @@ export default function CheckoutPage() {
                       : 'border-border hover:border-primary/50'
                   }`}
                 >
-                  <Store className="w-6 h-6 mx-auto mb-2" />
-                  <p className="font-semibold">Collection</p>
-                  <p className="text-sm text-muted-foreground">Pick up in store</p>
+                  <Store className="w-5 h-5 lg:w-6 lg:h-6 mx-auto mb-1 lg:mb-2" />
+                  <p className="font-semibold text-sm lg:text-base">Collection</p>
+                  <p className="text-xs lg:text-sm text-muted-foreground">Pick up in store</p>
                 </button>
               </div>
             </div>
 
             {/* Step 2: Address (if delivery) */}
             {fulfillmentType === 'DELIVERY' && (
-              <div className="bg-card border rounded-lg p-6">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <MapPin className="w-5 h-5" />
+              <div className="bg-card border rounded-lg p-4 lg:p-6">
+                <h2 className="text-lg lg:text-xl font-bold mb-3 lg:mb-4 flex items-center gap-2">
+                  <MapPin className="w-4 h-4 lg:w-5 lg:h-5" />
                   Delivery Address
                 </h2>
 
                 {addresses && addresses.length > 0 ? (
-                  <div className="space-y-3">
+                  <div className="space-y-2 lg:space-y-3">
                     {addresses.map((address) => (
                       <button
                         key={address.id}
                         onClick={() => setSelectedAddressId(address.id)}
-                        className={`w-full text-left p-4 border-2 rounded-lg transition ${
+                        className={`w-full text-left p-3 lg:p-4 border-2 rounded-lg transition ${
                           selectedAddressId === address.id
                             ? 'border-primary bg-primary/5'
                             : 'border-border hover:border-primary/50'
                         }`}
                       >
-                        <p className="font-semibold">{address.label}</p>
-                        <p className="text-sm">{address.line1}</p>
-                        {address.line2 && <p className="text-sm">{address.line2}</p>}
-                        <p className="text-sm">
+                        <p className="font-semibold text-sm lg:text-base">{address.label}</p>
+                        <p className="text-xs lg:text-sm">{address.line1}</p>
+                        {address.line2 && <p className="text-xs lg:text-sm">{address.line2}</p>}
+                        <p className="text-xs lg:text-sm">
                           {address.city}, {address.postcode}
                         </p>
                         {address.deliveryZone && (
@@ -291,14 +291,14 @@ export default function CheckoutPage() {
 
             {/* Step 3: Delivery Slot (if delivery) */}
             {fulfillmentType === 'DELIVERY' && selectedAddressId && (
-              <div className="bg-card border rounded-lg p-6">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5" />
+              <div className="bg-card border rounded-lg p-4 lg:p-6">
+                <h2 className="text-lg lg:text-xl font-bold mb-3 lg:mb-4 flex items-center gap-2">
+                  <Clock className="w-4 h-4 lg:w-5 lg:h-5" />
                   Delivery Time
                 </h2>
 
                 {slotsData && slotsData.slots.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2 lg:gap-3">
                     {slotsData.slots.map((slot) => {
                       const slotsLeft = slot.capacity - slot.currentOrders;
                       const isLowCapacity = slotsLeft <= 3 && slotsLeft > 0;
@@ -308,7 +308,7 @@ export default function CheckoutPage() {
                           key={slot.id}
                           onClick={() => setSelectedSlotId(slot.id)}
                           disabled={!slot.available}
-                          className={`p-3 border-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
+                          className={`p-2 lg:p-3 border-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
                             selectedSlotId === slot.id
                               ? 'border-primary bg-primary/5'
                               : !slot.available
@@ -318,7 +318,7 @@ export default function CheckoutPage() {
                               : 'border-border hover:border-primary/50'
                           }`}
                         >
-                          <p className="font-semibold text-sm">{slot.displayTime}</p>
+                          <p className="font-semibold text-xs lg:text-sm">{slot.displayTime}</p>
                           {!slot.available ? (
                             <p className="text-xs text-red-600 font-medium">Fully Booked</p>
                           ) : isLowCapacity ? (
@@ -327,7 +327,7 @@ export default function CheckoutPage() {
                             </p>
                           ) : (
                             <p className="text-xs text-green-600">
-                              {slotsLeft} slots available
+                              {slotsLeft} available
                             </p>
                           )}
                         </button>
@@ -450,55 +450,55 @@ export default function CheckoutPage() {
             )}
 
             {/* Step 4: Payment Method */}
-            <div className="bg-card border rounded-lg p-6">
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                <CreditCard className="w-5 h-5" />
+            <div className="bg-card border rounded-lg p-4 lg:p-6">
+              <h2 className="text-lg lg:text-xl font-bold mb-3 lg:mb-4 flex items-center gap-2">
+                <CreditCard className="w-4 h-4 lg:w-5 lg:h-5" />
                 Payment Method
               </h2>
 
-              <div className="space-y-3">
+              <div className="space-y-2 lg:space-y-3">
                 {/* Card Payment - Only show if enabled */}
                 {enabledPaymentTypes.includes('card') && (
                   <button
                     onClick={() => setPaymentMethod('CARD')}
-                    className={`w-full text-left p-4 border-2 rounded-lg transition ${
+                    className={`w-full text-left p-3 lg:p-4 border-2 rounded-lg transition ${
                       paymentMethod === 'CARD'
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <p className="font-semibold">Card Payment</p>
-                    <p className="text-sm text-muted-foreground">Pay securely with Stripe</p>
+                    <p className="font-semibold text-sm lg:text-base">Card Payment</p>
+                    <p className="text-xs lg:text-sm text-muted-foreground">Pay securely with Stripe</p>
                   </button>
                 )}
 
-                {/* Cash on Delivery - Only show if enabled */}
-                {enabledPaymentTypes.includes('cash_on_delivery') && (
+                {/* Cash on Delivery - Only show if enabled AND delivery selected */}
+                {enabledPaymentTypes.includes('cash_on_delivery') && fulfillmentType === 'DELIVERY' && (
                   <button
                     onClick={() => setPaymentMethod('CASH_ON_DELIVERY')}
-                    className={`w-full text-left p-4 border-2 rounded-lg transition ${
+                    className={`w-full text-left p-3 lg:p-4 border-2 rounded-lg transition ${
                       paymentMethod === 'CASH_ON_DELIVERY'
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <p className="font-semibold">Cash on Delivery</p>
-                    <p className="text-sm text-muted-foreground">Pay when you receive your order</p>
+                    <p className="font-semibold text-sm lg:text-base">Cash on Delivery</p>
+                    <p className="text-xs lg:text-sm text-muted-foreground">Pay when you receive your order</p>
                   </button>
                 )}
 
-                {/* Pay in Store - Only show if enabled */}
-                {enabledPaymentTypes.includes('pay_in_store') && (
+                {/* Pay in Store - Only show if enabled AND collection selected */}
+                {enabledPaymentTypes.includes('pay_in_store') && fulfillmentType === 'COLLECTION' && (
                   <button
                     onClick={() => setPaymentMethod('PAY_IN_STORE')}
-                    className={`w-full text-left p-4 border-2 rounded-lg transition ${
+                    className={`w-full text-left p-3 lg:p-4 border-2 rounded-lg transition ${
                       paymentMethod === 'PAY_IN_STORE'
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
                     }`}
                   >
-                    <p className="font-semibold">Pay in Store</p>
-                    <p className="text-sm text-muted-foreground">Pay when you pick up your order</p>
+                    <p className="font-semibold text-sm lg:text-base">Pay in Store</p>
+                    <p className="text-xs lg:text-sm text-muted-foreground">Pay when you pick up your order</p>
                   </button>
                 )}
               </div>
@@ -524,31 +524,31 @@ export default function CheckoutPage() {
           </div>
 
           {/* Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-card border rounded-lg p-6 sticky top-4">
-              <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+          <div className="lg:col-span-1 order-1 lg:order-2">
+            <div className="bg-card border rounded-lg p-4 lg:p-6 lg:sticky lg:top-4">
+              <h2 className="text-lg lg:text-xl font-bold mb-3 lg:mb-4">Order Summary</h2>
 
-              <div className="space-y-3 mb-6">
+              <div className="space-y-2 lg:space-y-3 mb-4 lg:mb-6">
                 {cart.items.map((item) => (
-                  <div key={item.id} className="flex justify-between text-sm">
-                    <span>{item.quantity}x {item.product.name}</span>
-                    <span>£{(parseFloat(item.product.price) * item.quantity).toFixed(2)}</span>
+                  <div key={item.id} className="flex justify-between text-xs lg:text-sm">
+                    <span className="truncate mr-2">{item.quantity}x {item.product.name}</span>
+                    <span className="font-semibold whitespace-nowrap">£{(parseFloat(item.product.price) * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="border-t pt-4 space-y-2 mb-6">
-                <div className="flex justify-between">
+              <div className="border-t pt-3 lg:pt-4 space-y-2 mb-4 lg:mb-6">
+                <div className="flex justify-between text-xs lg:text-sm">
                   <span>Subtotal</span>
-                  <span>£{parseFloat(cart.subtotal.toString()).toFixed(2)}</span>
+                  <span className="font-semibold">£{parseFloat(cart.subtotal.toString()).toFixed(2)}</span>
                 </div>
                 {fulfillmentType === 'DELIVERY' && selectedAddress?.deliveryZone && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-xs lg:text-sm">
                     <span>Delivery</span>
-                    <span>£{parseFloat(selectedAddress.deliveryZone.deliveryFee).toFixed(2)}</span>
+                    <span className="font-semibold">£{parseFloat(selectedAddress.deliveryZone.deliveryFee).toFixed(2)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-lg font-bold pt-2 border-t">
+                <div className="flex justify-between text-base lg:text-lg font-bold pt-2 border-t">
                   <span>Total</span>
                   <span className="text-primary">
                     £{(
@@ -561,6 +561,7 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
+              {/* Desktop Place Order Button */}
               <button
                 onClick={handlePlaceOrder}
                 disabled={
@@ -570,7 +571,7 @@ export default function CheckoutPage() {
                   (fulfillmentType === 'DELIVERY' && (!selectedAddressId || !selectedSlotId)) ||
                   (fulfillmentType === 'DELIVERY' && cartValidation && !cartValidation.canProceed)
                 }
-                className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="hidden lg:block w-full bg-primary text-primary-foreground py-2.5 lg:py-3 rounded-lg text-sm lg:text-base font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cartValidation && !cartValidation.canProceed && fulfillmentType === 'DELIVERY' ? 
                  'Minimum Order Not Met' :
@@ -582,20 +583,54 @@ export default function CheckoutPage() {
               </button>
 
               {paymentMethod === 'CARD' && paymentClientSecret && (
-                <p className="text-sm text-center text-muted-foreground mt-2">
+                <p className="hidden lg:block text-sm text-center text-muted-foreground mt-2">
                   Complete payment form above to finalize your order
                 </p>
               )}
 
               <Link
                 href="/cart"
-                className="block text-center text-sm text-muted-foreground hover:text-primary mt-4"
+                className="block text-center text-xs lg:text-sm text-muted-foreground hover:text-primary mt-3 lg:mt-4"
               >
                 ← Back to Cart
               </Link>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Mobile Sticky Bottom Bar */}
+      <div className="block lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 shadow-2xl p-4 z-[100]">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-semibold">Total:</span>
+          <span className="text-lg font-bold text-primary">
+            £{(
+              parseFloat(cart.subtotal.toString()) +
+              (fulfillmentType === 'DELIVERY' && selectedAddress?.deliveryZone
+                ? parseFloat(selectedAddress.deliveryZone.deliveryFee)
+                : 0)
+            ).toFixed(2)}
+          </span>
+        </div>
+        <button
+          onClick={handlePlaceOrder}
+          disabled={
+            createOrder.isPending ||
+            isProcessingPayment ||
+            (paymentMethod === 'CARD' && !!paymentClientSecret) ||
+            (fulfillmentType === 'DELIVERY' && (!selectedAddressId || !selectedSlotId)) ||
+            (fulfillmentType === 'DELIVERY' && cartValidation && !cartValidation.canProceed)
+          }
+          className="w-full bg-primary text-primary-foreground py-3.5 rounded-lg text-base font-bold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+        >
+          {cartValidation && !cartValidation.canProceed && fulfillmentType === 'DELIVERY' ? 
+           'Minimum Order Not Met' :
+           isProcessingPayment ? 'Processing...' : 
+           createOrder.isPending ? 'Creating Order...' : 
+           paymentMethod === 'CARD' && paymentClientSecret ? 'Complete Payment Above' :
+           paymentMethod === 'CARD' ? 'Proceed to Payment' :
+           `Place Order - ${cart.items.length} item${cart.items.length !== 1 ? 's' : ''}`}
+        </button>
       </div>
 
       {/* Toast Notification */}

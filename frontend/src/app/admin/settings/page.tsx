@@ -1,12 +1,14 @@
 'use client';
 
 import { AdminLayout } from '@/components/admin/admin-layout';
-import { Settings, Store, Bell, CreditCard, Users, Shield, Mail } from 'lucide-react';
+import { Settings, Store, Bell, CreditCard, Users, Shield, Mail, ShoppingCart } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { useSettingsStore } from '@/lib/store/settings-store';
 import { PaymentsTab } from '@/components/admin/settings/payments-tab';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import apiClient from '@/lib/api/client';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('store');
@@ -49,8 +51,50 @@ export default function SettingsPage() {
     }
   };
 
+  const queryClient = useQueryClient();
+
+  // Fetch system settings from backend
+  const { data: systemSettings } = useQuery({
+    queryKey: ['system-settings'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/settings');
+      return data;
+    },
+  });
+
+  // Toggle guest checkout
+  const toggleGuestCheckout = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const { data } = await apiClient.put('/settings/guest-checkout', { enabled });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+      success('Guest checkout setting updated successfully!');
+    },
+    onError: () => {
+      error('Failed to update guest checkout setting');
+    },
+  });
+
+  // Toggle email notifications
+  const toggleEmailNotifications = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const { data } = await apiClient.put('/settings/email-notifications', { enabled });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+      success('Email notifications setting updated successfully!');
+    },
+    onError: () => {
+      error('Failed to update email notifications setting');
+    },
+  });
+
   const tabs = [
     { id: 'store', label: 'Store Settings', icon: Store },
+    { id: 'checkout', label: 'Checkout', icon: ShoppingCart },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'payments', label: 'Payments', icon: CreditCard },
     { id: 'users', label: 'User Roles', icon: Users },
@@ -190,11 +234,78 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* Checkout Settings */}
+        {activeTab === 'checkout' && (
+          <div className="space-y-6">
+            <div className="bg-white border rounded-lg p-6">
+              <h2 className="text-lg font-bold mb-4">Guest Checkout</h2>
+              <div className="space-y-4">
+                <label className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <div>
+                    <p className="font-medium">Allow Guest Checkout</p>
+                    <p className="text-sm text-gray-600">
+                      Let customers place orders without creating an account
+                    </p>
+                  </div>
+                  <div className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={systemSettings?.guest_checkout_enabled ?? true}
+                      onChange={(e) => toggleGuestCheckout.mutate(e.target.checked)}
+                      disabled={toggleGuestCheckout.isPending}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                  </div>
+                </label>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>When enabled:</strong> Customers can checkout by providing their email, phone, and address without registering.
+                  </p>
+                  <p className="text-sm text-blue-800 mt-2">
+                    <strong>When disabled:</strong> Customers must create an account before placing orders.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Notifications */}
         {activeTab === 'notifications' && (
           <div className="space-y-6">
             <div className="bg-white border rounded-lg p-6">
-              <h2 className="text-lg font-bold mb-4">Email Notifications</h2>
+              <h2 className="text-lg font-bold mb-4">Customer Email Notifications</h2>
+              <div className="space-y-4">
+                <label className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
+                  <div>
+                    <p className="font-medium">Order Confirmation Emails</p>
+                    <p className="text-sm text-gray-600">Send email to customers when they place an order</p>
+                  </div>
+                  <div className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={systemSettings?.email_notifications_enabled ?? true}
+                      onChange={(e) => toggleEmailNotifications.mutate(e.target.checked)}
+                      disabled={toggleEmailNotifications.isPending}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                  </div>
+                </label>
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    <strong>When enabled:</strong> Customers receive email confirmations for every order placed.
+                  </p>
+                  <p className="text-sm text-blue-800 mt-2">
+                    <strong>When disabled:</strong> No emails are sent to customers (useful for testing or to reduce email costs).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white border rounded-lg p-6">
+              <h2 className="text-lg font-bold mb-4">Admin Email Notifications</h2>
               <div className="space-y-4">
                 <label className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer">
                   <div>

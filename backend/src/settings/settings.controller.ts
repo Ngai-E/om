@@ -18,6 +18,8 @@ export class SettingsController {
     const settings = await this.settingsService.getAllSettings();
     const paymentMethodsConfig = await this.settingsService.getPaymentMethodsConfig();
     const enabledPaymentTypes = await this.settingsService.getEnabledPaymentTypes();
+    const guestCheckoutEnabled = await this.settingsService.getGuestCheckoutEnabled();
+    const emailNotificationsEnabled = await this.settingsService.getEmailNotificationsEnabled();
     
     // Return only public settings
     return {
@@ -26,6 +28,8 @@ export class SettingsController {
       enabled_payment_types: enabledPaymentTypes,
       store_name: settings.store_name || 'OMEGA AFRO SHOP',
       currency: settings.currency || 'GBP',
+      guest_checkout_enabled: guestCheckoutEnabled,
+      email_notifications_enabled: emailNotificationsEnabled,
     };
   }
 
@@ -79,6 +83,40 @@ export class SettingsController {
       message: 'Payment methods configuration updated successfully',
       config: body.config,
       enabled_payment_types: enabledTypes,
+    };
+  }
+
+  @Put('guest-checkout')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle guest checkout (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Guest checkout setting updated' })
+  async updateGuestCheckout(
+    @Body() body: { enabled: boolean },
+    @CurrentUser() user: any,
+  ) {
+    await this.settingsService.setGuestCheckoutEnabled(body.enabled, user.id);
+    return {
+      message: `Guest checkout ${body.enabled ? 'enabled' : 'disabled'} successfully`,
+      guest_checkout_enabled: body.enabled,
+    };
+  }
+
+  @Put('email-notifications')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle email notifications (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Email notifications setting updated' })
+  async updateEmailNotifications(
+    @Body() body: { enabled: boolean },
+    @CurrentUser() user: any,
+  ) {
+    await this.settingsService.setEmailNotificationsEnabled(body.enabled, user.id);
+    return {
+      message: `Email notifications ${body.enabled ? 'enabled' : 'disabled'} successfully`,
+      email_notifications_enabled: body.enabled,
     };
   }
 

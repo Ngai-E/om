@@ -16,6 +16,14 @@ export function useProduct(id: string) {
   });
 }
 
+export function useAdminProduct(id: string) {
+  return useQuery({
+    queryKey: ['admin-product', id],
+    queryFn: () => productsApi.getAdminProduct(id),
+    enabled: !!id,
+  });
+}
+
 export function useProductBySlug(slug: string) {
   return useQuery({
     queryKey: ['product', 'slug', slug],

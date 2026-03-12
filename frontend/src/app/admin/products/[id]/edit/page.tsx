@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, Plus, Edit, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
-import { useProduct, useCategories } from '@/lib/hooks/use-products';
+import { useAdminProduct, useCategories } from '@/lib/hooks/use-products';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { useToast } from '@/lib/hooks/use-toast';
 import { SuccessToast } from '@/components/ui/success-toast';
@@ -36,7 +36,7 @@ export default function EditProductPage() {
   const queryClient = useQueryClient();
   const productId = params.id as string;
   
-  const { data: product, isLoading: productLoading } = useProduct(productId);
+  const { data: product, isLoading: productLoading } = useAdminProduct(productId);
   const { data: categories } = useCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -373,6 +373,95 @@ export default function EditProductPage() {
             </Link>
           </div>
         </form>
+
+        {/* Product Variants Section */}
+        <div className="max-w-3xl mt-8">
+          <div className="bg-card border rounded-lg p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="font-bold text-lg">Product Variants</h2>
+                <p className="text-sm text-muted-foreground">
+                  Add different options like size, color, or weight
+                </p>
+              </div>
+              <button
+                type="button"
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition"
+              >
+                <Plus className="w-4 h-4" />
+                Add Variant
+              </button>
+            </div>
+
+            {/* Variants List */}
+            {product?.variants && product.variants.length > 0 ? (
+              <div className="space-y-3">
+                {product.variants.map((variant: any) => (
+                  <div
+                    key={variant.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition"
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <h3 className="font-semibold">{variant.name}</h3>
+                        {variant.sku && (
+                          <span className="text-xs px-2 py-1 bg-muted rounded">
+                            SKU: {variant.sku}
+                          </span>
+                        )}
+                        {!variant.isActive && (
+                          <span className="text-xs px-2 py-1 bg-destructive/10 text-destructive rounded">
+                            Inactive
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
+                        <span>£{parseFloat(variant.price).toFixed(2)}</span>
+                        {variant.compareAtPrice && (
+                          <span className="line-through">
+                            £{parseFloat(variant.compareAtPrice).toFixed(2)}
+                          </span>
+                        )}
+                        <span>Stock: {variant.stock}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="p-2 hover:bg-muted rounded-lg transition"
+                        title="Edit variant"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition"
+                        title="Delete variant"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="text-sm">No variants yet</p>
+                <p className="text-xs mt-1">
+                  Click "Add Variant" to create different options for this product
+                </p>
+              </div>
+            )}
+
+            {/* Info Box */}
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>💡 Tip:</strong> Variants are useful for products with different sizes, colors, or weights.
+                Each variant can have its own price, SKU, and stock level.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Toast Notifications */}

@@ -2,13 +2,29 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import * as compression from 'compression';
 import { json, raw } from 'express';
+import { mkdir } from 'fs/promises';
+import { existsSync } from 'fs';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // Create uploads directory if it doesn't exist
+  const uploadsDir = join(process.cwd(), 'uploads', 'products');
+  if (!existsSync(uploadsDir)) {
+    await mkdir(uploadsDir, { recursive: true });
+    console.log('📁 Created uploads directory');
+  }
+
+  // Serve static files from uploads directory
+  app.useStaticAssets(join(process.cwd(), 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   // Security
   app.use(helmet());

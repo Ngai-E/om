@@ -14,10 +14,15 @@ export const metadata: Metadata = {
   description: "Your one-stop shop for authentic African and Caribbean groceries",
   icons: {
     icon: [
-      { url: '/omega-logo.jpg' },
-      { url: '/omega-logo.jpg', sizes: '32x32', type: 'image/jpeg' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
     ],
-    apple: '/omega-logo.jpg',
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/favicon-32x32.png',
   },
   openGraph: {
     title: "OMEGA Afro Caribbean Superstore",
@@ -26,7 +31,7 @@ export const metadata: Metadata = {
     siteName: 'OMEGA Afro Caribbean Superstore',
     images: [
       {
-        url: 'https://www.omegaafro.com/omega-logo.jpg',
+        url: 'https://www.omegaafro.com/omega-logo.png',
         width: 1200,
         height: 630,
         alt: 'OMEGA Afro Caribbean Superstore',
@@ -39,7 +44,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: "OMEGA Afro Caribbean Superstore",
     description: "Your one-stop shop for authentic African and Caribbean groceries",
-    images: ['https://www.omegaafro.com/omega-logo.jpg'],
+    images: ['https://www.omegaafro.com/omega-logo.png'],
   },
 };
 

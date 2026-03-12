@@ -2,10 +2,16 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { FulfillmentType } from '@prisma/client';
 import { CreateOrderDto, UpdateOrderStatusDto } from './dto';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsGateway: NotificationsGateway,
+    private emailService: EmailService,
+  ) {}
 
   async create(userId: string, dto: CreateOrderDto) {
     // Get user's cart
@@ -183,6 +189,36 @@ export class OrdersService {
       console.log(`🛒 Cart cleared for ${payment.paymentMethod} payment`);
     } else {
       console.log(`🛒 Cart will be cleared after payment confirmation`);
+    }
+
+    // Send real-time notification to admin/staff
+    try {
+      const orderWithUser = await this.prisma.order.findUnique({
+        where: { id: order.id },
+        include: { user: true },
+      });
+      
+      this.notificationsGateway.notifyNewOrder(orderWithUser);
+      console.log(`🔔 New order notification sent: ${order.orderNumber}`);
+    } catch (error) {
+      console.error('Failed to send notification:', error.message);
+    }
+
+    // Send order confirmation email
+    try {
+      const orderForEmail = await this.prisma.order.findUnique({
+        where: { id: order.id },
+        include: {
+          user: true,
+          items: true,
+          address: true,
+          deliverySlot: true,
+        },
+      });
+      
+      await this.emailService.sendOrderConfirmation(orderForEmail);
+    } catch (error) {
+      console.error('Failed to send order confirmation email:', error.message);
     }
 
     return order;

@@ -2,20 +2,41 @@ import { Injectable, NotFoundException, BadRequestException, Inject } from '@nes
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateProductDto, UpdateProductDto, UpdateInventoryDto, InventoryAction } from './dto';
+import { CreateProductDto, UpdateProductDto, UpdateInventoryDto, InventoryAction, CreateStaffDto, UpdateStaffDto } from './dto';
+import { AuditService } from '../audit/audit.service';
 import { Readable } from 'stream';
 import * as csvParser from 'csv-parser';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AdminService {
   constructor(
     private prisma: PrismaService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private auditService: AuditService,
   ) {}
 
   // ============================================
   // PRODUCT MANAGEMENT
   // ============================================
+
+  async getProduct(productId: string) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        category: true,
+        images: { orderBy: { sortOrder: 'asc' } },
+        inventory: true,
+        variants: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    return product;
+  }
 
   async createProduct(dto: CreateProductDto) {
     // Generate slug from name
@@ -309,6 +330,9 @@ export class AdminService {
       data: { quantity: newQuantity },
       include: { product: true },
     });
+
+    // Clear product cache after inventory update
+    await this.clearProductCache(productId, inventory.product.slug);
 
     return {
       inventory: updated,
@@ -1288,5 +1312,245 @@ export class AdminService {
     });
 
     return { message: 'Slot deleted successfully' };
+  }
+
+  // ============================================
+  // STAFF MANAGEMENT
+  // ============================================
+
+  async createStaff(dto: CreateStaffDto, adminId: string) {
+    // Check if email already exists
+    const existing = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existing) {
+      throw new BadRequestException('Email already in use');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    // Create staff user
+    const staff = await this.prisma.user.create({
+      data: {
+        email: dto.email,
+        password: hashedPassword,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        phone: dto.phone,
+        role: dto.role,
+        emailVerified: true, // Staff accounts are pre-verified
+        isActive: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+
+    // Audit log
+    await this.auditService.log({
+      userId: adminId,
+      action: 'CREATE_STAFF',
+      entity: 'User',
+      entityId: staff.id,
+      changes: {
+        email: staff.email,
+        role: staff.role,
+        name: `${staff.firstName} ${staff.lastName}`,
+      },
+    });
+
+    console.log(`👤 Staff created: ${staff.email} (${staff.role})`);
+
+    return staff;
+  }
+
+  async getAllStaff(page = 1, limit = 50) {
+    const skip = (page - 1) * limit;
+
+    const [staff, total] = await Promise.all([
+      this.prisma.user.findMany({
+        where: {
+          role: {
+            in: ['STAFF', 'PICKER', 'DRIVER'],
+          },
+        },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.user.count({
+        where: {
+          role: {
+            in: ['STAFF', 'PICKER', 'DRIVER'],
+          },
+        },
+      }),
+    ]);
+
+    return {
+      staff,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getStaffById(id: string) {
+    const staff = await this.prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        emailVerified: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!staff) {
+      throw new NotFoundException('Staff member not found');
+    }
+
+    if (!['STAFF', 'PICKER', 'DRIVER'].includes(staff.role)) {
+      throw new BadRequestException('User is not a staff member');
+    }
+
+    return staff;
+  }
+
+  async updateStaff(id: string, dto: UpdateStaffDto, adminId: string) {
+    const staff = await this.getStaffById(id);
+
+    // If email is being updated, check if it's already in use
+    if (dto.email && dto.email !== staff.email) {
+      const existing = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
+
+      if (existing) {
+        throw new BadRequestException('Email already in use');
+      }
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: {
+        email: dto.email,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        phone: dto.phone,
+        role: dto.role,
+        isActive: dto.isActive,
+      },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        updatedAt: true,
+      },
+    });
+
+    // Audit log
+    await this.auditService.log({
+      userId: adminId,
+      action: 'UPDATE_STAFF',
+      entity: 'User',
+      entityId: id,
+      changes: {
+        before: staff,
+        after: dto,
+      },
+    });
+
+    console.log(`👤 Staff updated: ${updated.email}`);
+
+    return updated;
+  }
+
+  async deleteStaff(id: string, adminId: string) {
+    const staff = await this.getStaffById(id);
+
+    // Soft delete
+    await this.prisma.user.update({
+      where: { id },
+      data: {
+        isActive: false,
+        deletedAt: new Date(),
+      },
+    });
+
+    // Audit log
+    await this.auditService.log({
+      userId: adminId,
+      action: 'DELETE_STAFF',
+      entity: 'User',
+      entityId: id,
+      changes: {
+        email: staff.email,
+        role: staff.role,
+      },
+    });
+
+    console.log(`👤 Staff deleted: ${staff.email}`);
+
+    return { message: 'Staff member deleted successfully' };
+  }
+
+  async resetStaffPassword(id: string, newPassword: string, adminId: string) {
+    const staff = await this.getStaffById(id);
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await this.prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+
+    // Audit log
+    await this.auditService.log({
+      userId: adminId,
+      action: 'RESET_STAFF_PASSWORD',
+      entity: 'User',
+      entityId: id,
+      changes: {
+        email: staff.email,
+      },
+    });
+
+    console.log(`🔐 Password reset for staff: ${staff.email}`);
+
+    return { message: 'Password reset successfully' };
   }
 }

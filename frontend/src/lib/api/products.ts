@@ -41,6 +41,11 @@ export const productsApi = {
   },
 
   // Admin functions
+  getAdminProduct: async (id: string): Promise<Product> => {
+    const { data } = await apiClient.get<Product>(`/admin/products/${id}`);
+    return data;
+  },
+
   createProduct: async (productData: any): Promise<Product> => {
     const { data } = await apiClient.post<Product>('/admin/products', productData);
     return data;

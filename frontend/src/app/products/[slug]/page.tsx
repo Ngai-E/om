@@ -7,6 +7,8 @@ import { ArrowLeft, ShoppingCart, Plus, Minus } from 'lucide-react';
 import { useProductBySlug } from '@/lib/hooks/use-products';
 import { useAddToCart } from '@/lib/hooks/use-cart';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useGuestCartStore } from '@/lib/store/guest-cart-store';
+import { useCartStore } from '@/lib/store/cart-store';
 import { ProductReviews } from '@/components/products/product-reviews';
 
 export default function ProductDetailPage() {
@@ -19,14 +21,19 @@ export default function ProductDetailPage() {
   const [activeTab, setActiveTab] = useState<'description' | 'details' | 'reviews'>('description');
   const { data: product, isLoading } = useProductBySlug(slug);
   const addToCart = useAddToCart();
+  const guestCart = useGuestCartStore();
+  const { setItemCount } = useCartStore();
 
   const handleAddToCart = async () => {
+    if (!product) return;
+
     if (!isAuthenticated) {
-      router.push('/login');
+      // Add to guest cart (localStorage)
+      guestCart.addItem(product.id, quantity);
+      setItemCount(guestCart.getItemCount());
+      router.push('/cart');
       return;
     }
-
-    if (!product) return;
 
     try {
       await addToCart.mutateAsync({

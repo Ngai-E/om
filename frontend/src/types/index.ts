@@ -32,6 +32,20 @@ export interface Product {
   tags: string[];
   images: ProductImage[];
   inventory?: Inventory;
+  variants?: ProductVariant[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  name: string;
+  sku?: string;
+  price: string;
+  compareAtPrice?: string;
+  stock: number;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }

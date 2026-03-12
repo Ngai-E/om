@@ -7,6 +7,8 @@ import type { Product } from '@/types';
 import { useAddToCart } from '@/lib/hooks/use-cart';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useWishlistStore } from '@/lib/store/wishlist-store';
+import { useGuestCartStore } from '@/lib/store/guest-cart-store';
+import { useCartStore } from '@/lib/store/cart-store';
 import { useRouter } from 'next/navigation';
 import { Toast } from '@/components/ui/toast';
 import { StockBadge } from './stock-badge';
@@ -20,6 +22,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { addItem, removeItem, isInWishlist } = useWishlistStore();
   const addToCart = useAddToCart();
+  const guestCart = useGuestCartStore();
+  const { setItemCount } = useCartStore();
   const [showToast, setShowToast] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
   const inWishlist = isInWishlist(product.id);
@@ -28,7 +32,14 @@ export function ProductCard({ product }: ProductCardProps) {
     e.preventDefault();
     
     if (!isAuthenticated) {
-      router.push('/login');
+      // Add to guest cart (localStorage)
+      guestCart.addItem(product.id, 1);
+      setItemCount(guestCart.getItemCount());
+      
+      // Show success feedback
+      setJustAdded(true);
+      setShowToast(true);
+      setTimeout(() => setJustAdded(false), 2000);
       return;
     }
 

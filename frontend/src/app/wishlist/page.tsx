@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { useWishlistStore } from '@/lib/store/wishlist-store';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useAddToCart } from '@/lib/hooks/use-cart';
+import { useGuestCartStore } from '@/lib/store/guest-cart-store';
+import { useCartStore } from '@/lib/store/cart-store';
 import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
 
@@ -14,6 +16,8 @@ export default function WishlistPage() {
   const { items, removeItem, clearWishlist } = useWishlistStore();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const addToCart = useAddToCart();
+  const guestCart = useGuestCartStore();
+  const { setItemCount } = useCartStore();
 
   // Fetch all products and filter by wishlist IDs
   const { data: productsData, isLoading } = useQuery({
@@ -27,7 +31,9 @@ export default function WishlistPage() {
 
   const handleAddToCart = async (productId: string) => {
     if (!isAuthenticated) {
-      router.push('/login');
+      // Add to guest cart (localStorage)
+      guestCart.addItem(productId, 1);
+      setItemCount(guestCart.getItemCount());
       return;
     }
 
