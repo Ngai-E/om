@@ -4,25 +4,26 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* Brand Colors - OMEGA */
+    --background: 0 0% 100%; /* White #ffffff */
+    --foreground: 150 94% 21%; /* Dark Green #036637 */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 150 94% 21%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 174 100% 29%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 25 95% 53%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 45 93% 47%;
+    --popover-foreground: 150 94% 21%;
+    --primary: 150 94% 21%; /* Primary Green #036637 */
+    --primary-foreground: 0 0% 100%; /* White */
+    --secondary: 20 100% 59%; /* Orange #FF7730 */
+    --secondary-foreground: 0 0% 100%; /* White */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 20 100% 59%; /* Orange accent #FF7730 */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 174 100% 29%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 150 94% 21%; /* Primary Green */
     --radius: 0.5rem;
   }
 }

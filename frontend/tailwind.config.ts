@@ -57,7 +57,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        sans: ["Arial", "Helvetica", "sans-serif"],
+        heading: ["Mondwild", "Arial", "sans-serif"],
       },
     },
   },

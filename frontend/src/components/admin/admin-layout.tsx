@@ -2,6 +2,7 @@
 
 import { ReactNode, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   Package, 
@@ -122,11 +123,15 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       `}>
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
-          <Link href="/admin" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold">
-              Ω
-            </div>
-            <span className="font-bold text-lg">OMEGA Admin</span>
+          <Link href="/admin" className="flex items-center gap-3">
+            <Image
+              src="/omega-logo.png"
+              alt="OMEGA Logo"
+              width={100}
+              height={100}
+              className="object-contain"
+              priority
+            />
           </Link>
           
           {/* Close button for mobile */}
