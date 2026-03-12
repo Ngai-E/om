@@ -89,10 +89,10 @@ export default function OrderDetailPage() {
                 {order.items?.map((item: any) => (
                   <div key={item.id} className="flex items-center justify-between py-3 border-b last:border-0">
                     <div className="flex items-center gap-4">
-                      {item.product?.imageUrl && (
+                      {item.product?.images && item.product.images.length > 0 && (
                         <img
-                          src={item.product.imageUrl}
-                          alt={item.product.name}
+                          src={item.product.images[0].url}
+                          alt={item.product.images[0].altText || item.product.name}
                           className="w-16 h-16 object-cover rounded"
                         />
                       )}

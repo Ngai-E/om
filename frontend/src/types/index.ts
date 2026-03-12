@@ -102,6 +102,7 @@ export interface Order {
   user?: User;
   status: OrderStatus;
   fulfillmentType: 'DELIVERY' | 'COLLECTION';
+  paymentMethod?: 'CARD' | 'CASH_ON_DELIVERY' | 'PAY_IN_STORE';
   subtotal: string;
   deliveryFee: string;
   total: string;

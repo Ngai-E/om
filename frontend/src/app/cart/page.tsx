@@ -197,10 +197,10 @@ export default function CartPage() {
               {guestCartProducts.map((item) => (
                 <div key={item.product.id} className="bg-card border rounded-lg p-4">
                   <div className="flex gap-4">
-                    {item.product.imageUrl && (
+                    {item.product.images && item.product.images.length > 0 && (
                       <img
-                        src={item.product.imageUrl}
-                        alt={item.product.name}
+                        src={item.product.images[0].url}
+                        alt={item.product.images[0].altText || item.product.name}
                         className="w-24 h-24 object-cover rounded"
                       />
                     )}
@@ -312,7 +312,7 @@ export default function CartPage() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            {cart.items.map((item) => (
+            {cart?.items.map((item) => (
               <div
                 key={item.id}
                 className="bg-card border rounded-lg p-4 flex gap-4"
@@ -400,12 +400,12 @@ export default function CartPage() {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
                   <span className="font-medium">
-                    £{parseFloat(cart.subtotal.toString()).toFixed(2)}
+                    £{parseFloat(cart?.subtotal?.toString() || '0').toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Items</span>
-                  <span className="font-medium">{cart.itemCount}</span>
+                  <span className="font-medium">{cart?.itemCount || 0}</span>
                 </div>
               </div>
 
@@ -413,7 +413,7 @@ export default function CartPage() {
                 <div className="flex justify-between text-lg font-bold">
                   <span>Total</span>
                   <span className="text-primary">
-                    £{parseFloat(cart.subtotal.toString()).toFixed(2)}
+                    £{parseFloat(cart?.subtotal?.toString() || '0').toFixed(2)}
                   </span>
                 </div>
               </div>

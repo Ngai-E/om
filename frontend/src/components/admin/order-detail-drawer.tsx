@@ -293,10 +293,10 @@ export function OrderDetailDrawer({ isOpen, onClose, orderId }: OrderDetailDrawe
                   <div className="divide-y">
                     {order.items?.map((item: any) => (
                       <div key={item.id} className="p-4 flex items-start gap-4">
-                        {item.product?.imageUrl && (
+                        {item.product?.images && item.product.images.length > 0 && (
                           <img
-                            src={item.product.imageUrl}
-                            alt={item.productName}
+                            src={item.product.images[0].url}
+                            alt={item.product.images[0].altText || item.productName}
                             className="w-16 h-16 object-cover rounded-lg"
                           />
                         )}
