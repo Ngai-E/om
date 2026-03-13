@@ -170,7 +170,7 @@ export function DeliverySlotsTab() {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold text-gray-900">Delivery Time Slots</h3>
-          <p className="text-sm text-gray-600">Manage delivery time windows and capacity</p>
+          <p className="text-sm text-gray-600">Manage delivery time windows and capacity for specific dates</p>
         </div>
         <div className="flex items-center gap-3">
           {/* Date Filter */}
@@ -190,6 +190,19 @@ export function DeliverySlotsTab() {
             <Plus className="w-4 h-4" />
             Add Slot
           </button>
+        </div>
+      </div>
+
+      {/* Info Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm font-medium text-blue-900">
+            💡 Tip: Use the "Weekly Templates" tab to create recurring slots automatically
+          </p>
+          <p className="text-xs text-blue-700 mt-1">
+            Templates generate slots based on day of week. This tab is for one-time or specific date slots.
+          </p>
         </div>
       </div>
 

@@ -62,14 +62,50 @@ export class OrdersService {
       }
     }
 
-    // Verify delivery slot if provided
-    if (dto.deliverySlotId) {
-      const slot = await this.prisma.deliverySlot.findUnique({
+    // Handle delivery slot - create if needed or verify existing
+    let actualDeliverySlotId = dto.deliverySlotId;
+    
+    if (dto.fulfillmentType === FulfillmentType.DELIVERY && dto.deliverySlotId) {
+      // Check if it's an existing slot
+      const existingSlot = await this.prisma.deliverySlot.findUnique({
         where: { id: dto.deliverySlotId },
       });
 
-      if (!slot || !slot.isActive) {
-        throw new BadRequestException('Invalid delivery slot');
+      if (existingSlot) {
+        // Use existing slot
+        if (!existingSlot.isActive) {
+          throw new BadRequestException('Delivery slot is not active');
+        }
+        actualDeliverySlotId = existingSlot.id;
+      } else if (dto.slotDate && dto.slotStartTime && dto.slotEndTime) {
+        // Find or create slot from template data
+        const slotDate = new Date(dto.slotDate);
+        
+        // Try to find existing slot with same date/time
+        let slot = await this.prisma.deliverySlot.findFirst({
+          where: {
+            date: slotDate,
+            startTime: dto.slotStartTime,
+            endTime: dto.slotEndTime,
+          },
+        });
+
+        // If not found, create it
+        if (!slot) {
+          slot = await this.prisma.deliverySlot.create({
+            data: {
+              date: slotDate,
+              startTime: dto.slotStartTime,
+              endTime: dto.slotEndTime,
+              capacity: 10, // Default capacity
+              isActive: true,
+            },
+          });
+        }
+        
+        actualDeliverySlotId = slot.id;
+      } else {
+        throw new BadRequestException('Invalid delivery slot - slot not found and insufficient data to create one');
       }
     }
 
@@ -114,7 +150,7 @@ export class OrdersService {
         deliveryFee,
         total,
         addressId: dto.addressId,
-        deliverySlotId: dto.deliverySlotId,
+        deliverySlotId: actualDeliverySlotId,
         notes: dto.notes,
         items: {
           create: cart.items.map((item) => {
@@ -171,25 +207,13 @@ export class OrdersService {
       }
     }
 
-    // DON'T clear cart here - it will be cleared when payment is confirmed
-    // For card payments: cleared via webhook (checkout.session.completed or payment_intent.succeeded)
-    // For cash/in-store: cleared immediately below
-    
-    // Only clear cart for non-card payment methods (cash on delivery, pay in store)
-    // Card payments will be cleared via webhook after successful payment
-    const payment = await this.prisma.payment.findFirst({
-      where: { orderId: order.id },
+    // Clear cart after order creation
+    // For card payments: cart will be cleared via webhook after payment confirmation
+    // For cash/in-store: clear cart immediately
+    await this.prisma.cartItem.deleteMany({
+      where: { cartId: cart.id },
     });
-
-    if (payment && payment.paymentMethod !== 'CARD') {
-      // Clear cart immediately for non-card payments
-      await this.prisma.cartItem.deleteMany({
-        where: { cartId: cart.id },
-      });
-      console.log(`🛒 Cart cleared for ${payment.paymentMethod} payment`);
-    } else {
-      console.log(`🛒 Cart will be cleared after payment confirmation`);
-    }
+    console.log(`🛒 Cart cleared after order creation`);
 
     // Send real-time notification to admin/staff
     try {

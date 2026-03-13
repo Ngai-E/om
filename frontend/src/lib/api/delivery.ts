@@ -37,4 +37,12 @@ export const deliveryApi = {
     const { data } = await apiClient.get<DeliverySlot>(`/delivery/slots/${slotId}`);
     return data;
   },
+
+  // Get slots from templates for a specific date
+  getAvailableSlots: async (date: string): Promise<DeliverySlot[]> => {
+    const { data } = await apiClient.get(`/delivery-slots/available`, {
+      params: { date },
+    });
+    return data;
+  },
 };

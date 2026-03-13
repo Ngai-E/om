@@ -64,4 +64,19 @@ export const productsApi = {
     const { data: response } = await apiClient.patch(`/admin/products/${id}/inventory`, data);
     return response;
   },
+
+  // Variant functions
+  createVariant: async (productId: string, variantData: any): Promise<any> => {
+    const { data } = await apiClient.post(`/admin/products/${productId}/variants`, variantData);
+    return data;
+  },
+
+  updateVariant: async (productId: string, variantId: string, variantData: any): Promise<any> => {
+    const { data } = await apiClient.put(`/admin/products/${productId}/variants/${variantId}`, variantData);
+    return data;
+  },
+
+  deleteVariant: async (productId: string, variantId: string): Promise<void> => {
+    await apiClient.delete(`/admin/products/${productId}/variants/${variantId}`);
+  },
 };

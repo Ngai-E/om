@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Trash2, Plus, Minus, ShoppingBag } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, X } from 'lucide-react';
 import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/lib/hooks/use-cart';
 import { useRouter } from 'next/navigation';
 import { cartApi } from '@/lib/api/cart';
+import { settingsApi } from '@/lib/api/settings';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useGuestCartStore } from '@/lib/store/guest-cart-store';
@@ -25,8 +26,24 @@ export default function CartPage() {
   const guestCart = useGuestCartStore();
   const [guestCartProducts, setGuestCartProducts] = useState<Array<{ product: Product; quantity: number }>>([]);
   const [loadingGuestProducts, setLoadingGuestProducts] = useState(false);
+  const [guestCheckoutEnabled, setGuestCheckoutEnabled] = useState(true);
+  const [showClearModal, setShowClearModal] = useState(false);
   
   const [isClearing, setIsClearing] = useState(false);
+
+  // Fetch guest checkout setting
+  useEffect(() => {
+    const fetchGuestCheckoutSetting = async () => {
+      try {
+        const enabled = await settingsApi.getGuestCheckoutEnabled();
+        setGuestCheckoutEnabled(enabled);
+      } catch (error) {
+        console.error('Failed to fetch guest checkout setting:', error);
+        setGuestCheckoutEnabled(true); // Default to enabled if fetch fails
+      }
+    };
+    fetchGuestCheckoutSetting();
+  }, []);
 
   // Fetch product details for guest cart items
   useEffect(() => {
@@ -87,10 +104,9 @@ export default function CartPage() {
   };
 
   const handleClearCart = async () => {
-    if (!confirm('Are you sure you want to clear your cart?')) return;
-    
     if (!isAuthenticated) {
       guestCart.clearCart();
+      setShowClearModal(false);
       return;
     }
     
@@ -98,6 +114,7 @@ export default function CartPage() {
       setIsClearing(true);
       await cartApi.clearCart();
       queryClient.invalidateQueries({ queryKey: ['cart'] });
+      setShowClearModal(false);
     } catch (error) {
       console.error('Failed to clear cart:', error);
     } finally {
@@ -264,12 +281,24 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <Link
-                  href="/checkout/guest"
-                  className="block w-full bg-primary text-primary-foreground py-3 rounded-lg text-center font-semibold hover:opacity-90 transition mb-3"
-                >
-                  Proceed to Checkout
-                </Link>
+                {guestCheckoutEnabled ? (
+                  <Link
+                    href="/checkout/guest"
+                    className="block w-full bg-primary text-primary-foreground py-3 rounded-lg text-center font-semibold hover:opacity-90 transition mb-3"
+                  >
+                    Proceed to Checkout
+                  </Link>
+                ) : (
+                  <div className="mb-3">
+                    <div className="w-full bg-muted text-muted-foreground py-3 rounded-lg text-center font-semibold mb-2 cursor-not-allowed">
+                      Guest Checkout Disabled
+                    </div>
+                    <p className="text-sm text-center text-muted-foreground">
+                      Please <Link href="/login" className="text-primary hover:underline">log in</Link> or{' '}
+                      <Link href="/register" className="text-primary hover:underline">create an account</Link> to continue
+                    </p>
+                  </div>
+                )}
 
                 <Link
                   href="/products"
@@ -279,7 +308,7 @@ export default function CartPage() {
                 </Link>
 
                 <button
-                  onClick={handleClearCart}
+                  onClick={() => setShowClearModal(true)}
                   disabled={isClearing}
                   className="w-full mt-4 text-destructive hover:underline text-sm flex items-center gap-1 justify-center disabled:opacity-50"
                 >
@@ -300,7 +329,7 @@ export default function CartPage() {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">Shopping Cart</h1>
           <button
-            onClick={handleClearCart}
+            onClick={() => setShowClearModal(true)}
             disabled={isClearing}
             className="text-destructive hover:underline text-sm flex items-center gap-1 disabled:opacity-50"
           >
@@ -435,6 +464,49 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+
+      {/* Clear Cart Confirmation Modal */}
+      {showClearModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <Trash2 className="w-6 h-6 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                  Clear Cart?
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Are you sure you want to remove all items from your cart? This action cannot be undone.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowClearModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowClearModal(false)}
+                className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleClearCart}
+                disabled={isClearing}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50"
+              >
+                {isClearing ? 'Clearing...' : 'Clear Cart'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

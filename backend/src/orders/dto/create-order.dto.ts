@@ -1,4 +1,4 @@
-import { IsString, IsEnum, IsOptional, IsUUID } from 'class-validator';
+import { IsString, IsEnum, IsOptional, IsUUID, ValidateIf } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { FulfillmentType } from '@prisma/client';
 
@@ -12,10 +12,26 @@ export class CreateOrderDto {
   @IsEnum(FulfillmentType)
   fulfillmentType: FulfillmentType;
 
-  @ApiProperty({ example: 'delivery-slot-uuid', description: 'Delivery slot ID (required for delivery)', required: false })
+  @ApiProperty({ example: 'delivery-slot-uuid', description: 'Delivery slot ID or template ID (required for delivery)', required: false })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   deliverySlotId?: string;
+
+  // Optional: slot details for creating from template
+  @ApiProperty({ example: '2026-03-14', required: false })
+  @IsOptional()
+  @IsString()
+  slotDate?: string;
+
+  @ApiProperty({ example: '09:00', required: false })
+  @IsOptional()
+  @IsString()
+  slotStartTime?: string;
+
+  @ApiProperty({ example: '11:00', required: false })
+  @IsOptional()
+  @IsString()
+  slotEndTime?: string;
 
   @ApiProperty({ example: 'Please ring the doorbell', required: false })
   @IsOptional()

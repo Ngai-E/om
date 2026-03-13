@@ -11,6 +11,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
 import { useAdminProduct, useCategories } from '@/lib/hooks/use-products';
 import { AdminLayout } from '@/components/admin/admin-layout';
+import { VariantModal } from '@/components/admin/variant-modal';
 import { useToast } from '@/lib/hooks/use-toast';
 import { SuccessToast } from '@/components/ui/success-toast';
 import { ErrorToast } from '@/components/ui/error-toast';
@@ -40,6 +41,8 @@ export default function EditProductPage() {
   const { data: categories } = useCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showVariantModal, setShowVariantModal] = useState(false);
+  const [editingVariant, setEditingVariant] = useState<any>(null);
   const { toast, success, error, hideToast } = useToast();
 
   const {
@@ -168,6 +171,50 @@ export default function EditProductPage() {
       error('Failed to delete product');
     } finally {
       setShowDeleteConfirm(false);
+    }
+  };
+
+  // Variant handlers
+  const handleAddVariant = () => {
+    setEditingVariant(null);
+    setShowVariantModal(true);
+  };
+
+  const handleEditVariant = (variant: any) => {
+    setEditingVariant(variant);
+    setShowVariantModal(true);
+  };
+
+  const handleSaveVariant = async (variantData: any) => {
+    try {
+      if (editingVariant) {
+        // Update existing variant
+        await productsApi.updateVariant(productId, editingVariant.id, variantData);
+        success('Variant updated successfully');
+      } else {
+        // Create new variant
+        await productsApi.createVariant(productId, variantData);
+        success('Variant added successfully');
+      }
+      // Refresh product data
+      queryClient.invalidateQueries({ queryKey: ['admin-product', productId] });
+      setShowVariantModal(false);
+      setEditingVariant(null);
+    } catch (err: any) {
+      error(err.message || 'Failed to save variant');
+      throw err;
+    }
+  };
+
+  const handleDeleteVariant = async (variantId: string) => {
+    if (!confirm('Are you sure you want to delete this variant?')) return;
+
+    try {
+      await productsApi.deleteVariant(productId, variantId);
+      success('Variant deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ['admin-product', productId] });
+    } catch (err: any) {
+      error('Failed to delete variant');
     }
   };
 
@@ -386,6 +433,7 @@ export default function EditProductPage() {
               </div>
               <button
                 type="button"
+                onClick={handleAddVariant}
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition"
               >
                 <Plus className="w-4 h-4" />
@@ -428,6 +476,7 @@ export default function EditProductPage() {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
+                        onClick={() => handleEditVariant(variant)}
                         className="p-2 hover:bg-muted rounded-lg transition"
                         title="Edit variant"
                       >
@@ -435,6 +484,7 @@ export default function EditProductPage() {
                       </button>
                       <button
                         type="button"
+                        onClick={() => handleDeleteVariant(variant.id)}
                         className="p-2 hover:bg-destructive/10 text-destructive rounded-lg transition"
                         title="Delete variant"
                       >
@@ -480,6 +530,18 @@ export default function EditProductPage() {
           onClose={hideToast}
         />
       )}
+
+      {/* Variant Modal */}
+      <VariantModal
+        isOpen={showVariantModal}
+        onClose={() => {
+          setShowVariantModal(false);
+          setEditingVariant(null);
+        }}
+        onSubmit={handleSaveVariant}
+        variant={editingVariant}
+        productId={productId}
+      />
     </AdminLayout>
   );
 }

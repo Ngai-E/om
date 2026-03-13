@@ -17,6 +17,95 @@ export class AdminService {
   ) {}
 
   // ============================================
+  // DASHBOARD & STATS
+  // ============================================
+
+  async getBadgeCounts() {
+    // Count pending orders (RECEIVED status - newly placed orders)
+    const pendingOrders = await this.prisma.order.count({
+      where: {
+        status: 'RECEIVED',
+      },
+    });
+
+    // Count low stock items (inventory quantity <= 10)
+    const lowStockItems = await this.prisma.inventory.count({
+      where: {
+        quantity: {
+          lte: 10,
+        },
+      },
+    });
+
+    return {
+      pendingOrders,
+      lowStockItems,
+    };
+  }
+
+  async getAuditLogs(
+    page: number = 1,
+    limit: number = 50,
+    search?: string,
+    entity?: string,
+    action?: string,
+    userId?: string,
+  ) {
+    const skip = (page - 1) * limit;
+    
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        { action: { contains: search, mode: 'insensitive' } },
+        { entity: { contains: search, mode: 'insensitive' } },
+        { entityId: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (entity) {
+      where.entity = entity;
+    }
+
+    if (action) {
+      where.action = { contains: action, mode: 'insensitive' };
+    }
+
+    if (userId) {
+      where.userId = userId;
+    }
+
+    const [logs, total] = await Promise.all([
+      this.prisma.auditLog.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              role: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.auditLog.count({ where }),
+    ]);
+
+    return {
+      logs,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
+  // ============================================
   // PRODUCT MANAGEMENT
   // ============================================
 
@@ -340,6 +429,70 @@ export class AdminService {
       newQuantity,
       change: newQuantity - inventory.quantity,
     };
+  }
+
+  // ============================================
+  // PRODUCT VARIANTS
+  // ============================================
+
+  async createVariant(productId: string, variantData: any) {
+    const variant = await this.prisma.productVariant.create({
+      data: {
+        productId,
+        name: variantData.name,
+        sku: variantData.sku || `${productId}-${Date.now()}`,
+        price: variantData.price,
+        compareAtPrice: variantData.compareAtPrice,
+        stock: variantData.stock,
+        isActive: variantData.isActive,
+      },
+    });
+
+    // Clear product cache
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { slug: true },
+    });
+    if (product) {
+      await this.clearProductCache(productId, product.slug);
+    }
+
+    return variant;
+  }
+
+  async updateVariant(productId: string, variantId: string, variantData: any) {
+    const variant = await this.prisma.productVariant.update({
+      where: { id: variantId },
+      data: variantData,
+    });
+
+    // Clear product cache
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { slug: true },
+    });
+    if (product) {
+      await this.clearProductCache(productId, product.slug);
+    }
+
+    return variant;
+  }
+
+  async deleteVariant(productId: string, variantId: string) {
+    await this.prisma.productVariant.delete({
+      where: { id: variantId },
+    });
+
+    // Clear product cache
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { slug: true },
+    });
+    if (product) {
+      await this.clearProductCache(productId, product.slug);
+    }
+
+    return { message: 'Variant deleted successfully' };
   }
 
   async importProductsFromCSV(file: Express.Multer.File) {

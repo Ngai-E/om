@@ -20,7 +20,9 @@ const addressSchema = z.object({
   line2: z.string().optional(),
   city: z.string().min(1, 'City is required'),
   county: z.string().min(1, 'County is required'),
-  postcode: z.string().min(5, 'Valid postcode is required'),
+  postcode: z.string()
+    .min(2, 'Postcode is required')
+    .regex(/^[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}$|^[A-Z]{1,2}\d{1,2}$/i, 'Invalid UK postcode format'),
   isDefault: z.boolean().optional(),
 });
 

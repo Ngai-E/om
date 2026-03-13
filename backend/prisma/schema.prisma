@@ -412,6 +412,32 @@ model DeliverySlot {
   @@map("delivery_slots")
 }
 
+model DeliverySlotTemplate {
+  id        String   @id @default(cuid())
+  dayOfWeek Int // 0=Sunday, 1=Monday, etc.
+  startTime String // "09:00"
+  endTime   String // "11:00"
+  capacity  Int      @default(10)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("delivery_slot_templates")
+}
+
+model DeliverySlotOverride {
+  id         String   @id @default(cuid())
+  date       DateTime // Specific date
+  startTime  String
+  endTime    String
+  capacity   Int
+  isDisabled Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("delivery_slot_overrides")
+}
+
 // ============================================
 // SYSTEM SETTINGS
 // ============================================

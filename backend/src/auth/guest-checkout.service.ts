@@ -27,18 +27,14 @@ export class GuestCheckoutService {
       },
     });
 
-    // If user exists and has a password, they're a registered user
-    if (user && user.password) {
+    // If user exists and is NOT a guest (has password and not guest), they're a registered user
+    if (user && user.password && !user.isGuest) {
       throw new BadRequestException(
         'An account with this email/phone already exists. Please log in.',
       );
     }
 
-    // Generate a default password (first 8 chars of email + last 4 of phone)
-    const defaultPassword = `${dto.email.substring(0, 8)}${dto.phone.slice(-4)}`;
-    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
-
-    // If guest user exists, update their info and convert to registered
+    // If guest user exists, update their info but KEEP them as guest
     if (user && user.isGuest) {
       user = await this.prisma.user.update({
         where: { id: user.id },
@@ -46,9 +42,9 @@ export class GuestCheckoutService {
           firstName: dto.firstName,
           lastName: dto.lastName,
           phone: dto.phone,
-          password: hashedPassword,
-          isGuest: false,
-          emailVerified: true, // Auto-activate account
+          email: dto.email,
+          isGuest: true, // Keep as guest
+          emailVerified: false, // Guests don't need verification
         },
         include: {
           addresses: {
@@ -57,19 +53,18 @@ export class GuestCheckoutService {
         },
       });
 
-      console.log(`🔄 Updated and activated guest user: ${user.email}`);
-      console.log(`🔑 Default password: ${defaultPassword}`);
+      console.log(`🔄 Updated guest user: ${user.email}`);
     } else {
-      // Create new registered user (not guest anymore)
+      // Create new GUEST user (no password)
       user = await this.prisma.user.create({
         data: {
           email: dto.email,
           firstName: dto.firstName,
           lastName: dto.lastName,
           phone: dto.phone,
-          password: hashedPassword,
-          isGuest: false, // Create as registered user
-          emailVerified: true, // Auto-activate account
+          password: null, // No password for guests
+          isGuest: true, // Create as guest
+          emailVerified: false, // Guests don't need verification
           role: 'CUSTOMER',
         },
         include: {
@@ -77,8 +72,7 @@ export class GuestCheckoutService {
         },
       });
 
-      console.log(`👤 Created and activated new user: ${user.email}`);
-      console.log(`🔑 Default password: ${defaultPassword}`);
+      console.log(`👤 Created new guest user: ${user.email}`);
     }
 
     // Check if address already exists
@@ -121,7 +115,6 @@ export class GuestCheckoutService {
         addresses: user.addresses,
       },
       address,
-      defaultPassword, // Return password for email notification
     };
   }
 

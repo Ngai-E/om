@@ -5,9 +5,10 @@ import { AdminLayout } from '@/components/admin/admin-layout';
 import { Truck, Clock, MapPin, Plus, Edit2, Trash2, Users } from 'lucide-react';
 import { DeliveryZonesTab } from '@/components/admin/delivery/delivery-zones-tab';
 import { DeliverySlotsTab } from '@/components/admin/delivery/delivery-slots-tab';
+import { DeliveryTemplatesTab } from '@/components/admin/delivery/delivery-templates-tab';
 import { DriversTab } from '@/components/admin/delivery/drivers-tab';
 
-type TabType = 'zones' | 'slots' | 'drivers';
+type TabType = 'zones' | 'slots' | 'templates' | 'drivers';
 
 export default function DeliveryManagementPage() {
   const [activeTab, setActiveTab] = useState<TabType>('zones');
@@ -15,6 +16,7 @@ export default function DeliveryManagementPage() {
   const tabs = [
     { id: 'zones' as TabType, label: 'Delivery Zones', icon: MapPin },
     { id: 'slots' as TabType, label: 'Time Slots', icon: Clock },
+    { id: 'templates' as TabType, label: 'Weekly Templates', icon: Clock },
     { id: 'drivers' as TabType, label: 'Drivers', icon: Users, badge: 'Coming Soon' },
   ];
 
@@ -63,6 +65,7 @@ export default function DeliveryManagementPage() {
           <div className="p-6">
             {activeTab === 'zones' && <DeliveryZonesTab />}
             {activeTab === 'slots' && <DeliverySlotsTab />}
+            {activeTab === 'templates' && <DeliveryTemplatesTab />}
             {activeTab === 'drivers' && <DriversTab />}
           </div>
         </div>

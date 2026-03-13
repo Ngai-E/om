@@ -99,9 +99,9 @@ export default function GuestCheckoutPage() {
       // Show success message
       success('Order placed successfully!');
 
-      // Redirect to order confirmation
+      // Redirect to order confirmation with orderId
       setTimeout(() => {
-        router.push(`/order-confirmation?orderNumber=${order.orderNumber}&email=${formData.email}`);
+        router.push(`/order-confirmation?orderId=${order.id}`);
       }, 1000);
 
     } catch (err: any) {

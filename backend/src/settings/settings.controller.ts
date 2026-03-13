@@ -33,6 +33,14 @@ export class SettingsController {
     };
   }
 
+  @Get('guest-checkout')
+  @ApiOperation({ summary: 'Get guest checkout enabled status (public)' })
+  @ApiResponse({ status: 200, description: 'Guest checkout status retrieved' })
+  async getGuestCheckoutStatus() {
+    const enabled = await this.settingsService.getGuestCheckoutEnabled();
+    return { enabled };
+  }
+
   @Get('payment-method')
   @ApiOperation({ summary: 'Get current payment method' })
   @ApiResponse({ status: 200, description: 'Payment method retrieved' })

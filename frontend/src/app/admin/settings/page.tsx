@@ -1,12 +1,14 @@
 'use client';
 
+import Link from 'next/link';
 import { AdminLayout } from '@/components/admin/admin-layout';
-import { Settings, Store, Bell, CreditCard, Users, Shield, Mail, ShoppingCart } from 'lucide-react';
+import { Settings, Store, Bell, CreditCard, Users, Shield, Mail, ShoppingCart, Database } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { useSettingsStore } from '@/lib/store/settings-store';
 import { PaymentsTab } from '@/components/admin/settings/payments-tab';
+import { SystemCleanupSection } from '@/components/admin/settings/system-cleanup-section';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api/client';
 
@@ -40,10 +42,16 @@ export default function SettingsPage() {
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
-      // Update the settings store
+      // Update the settings store (persists to localStorage)
       updateSettings(formData);
       await new Promise(resolve => setTimeout(resolve, 500));
-      success('Settings saved successfully!');
+      success('Settings saved successfully! Changes will appear on the homepage immediately.');
+      
+      // Force a small delay to ensure localStorage is updated
+      setTimeout(() => {
+        // Trigger a storage event to update other tabs/windows
+        window.dispatchEvent(new Event('storage'));
+      }, 100);
     } catch (err) {
       error('Failed to save settings');
     } finally {
@@ -99,6 +107,7 @@ export default function SettingsPage() {
     { id: 'payments', label: 'Payments', icon: CreditCard },
     { id: 'users', label: 'User Roles', icon: Users },
     { id: 'security', label: 'Security', icon: Shield },
+    { id: 'system', label: 'System', icon: Database },
   ];
 
   return (
@@ -184,12 +193,19 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium mb-2">Promotional Banner</label>
                   <input
                     type="text"
-                    value={formData.promoBanner}
+                    value={formData.promoBanner || ''}
                     onChange={(e) => setFormData({ ...formData, promoBanner: e.target.value })}
                     placeholder="e.g., 🎉 Weekly Deal: 20% off all Grains & Staples"
                     className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
-                  <p className="text-xs text-gray-500 mt-1">This banner appears on your homepage</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    This banner appears on your homepage
+                    {formData.promoBanner && (
+                      <span className="ml-2 text-green-600 font-medium">
+                        ✓ Currently showing: "{formData.promoBanner.substring(0, 50)}{formData.promoBanner.length > 50 ? '...' : ''}"
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
             </div>
@@ -222,7 +238,14 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-3">
+              <Link
+                href="/"
+                target="_blank"
+                className="px-6 py-2 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-medium"
+              >
+                Preview Homepage
+              </Link>
               <button 
                 onClick={handleSaveSettings}
                 disabled={isSaving}
@@ -450,6 +473,13 @@ export default function SettingsPage() {
                 {isSaving ? 'Saving...' : 'Save Security Settings'}
               </button>
             </div>
+          </div>
+        )}
+
+        {/* System Tab */}
+        {activeTab === 'system' && (
+          <div className="space-y-6">
+            <SystemCleanupSection />
           </div>
         )}
       </div>

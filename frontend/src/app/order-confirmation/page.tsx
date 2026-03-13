@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, Package, Truck, Home, ArrowRight, Loader2 } from 'lucide-react';
+import { CheckCircle, Package, Truck, Home, ArrowRight, Loader2, Printer } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { adminApi } from '@/lib/api/admin';
 
@@ -89,8 +89,8 @@ function OrderConfirmationContent() {
   const isPaid = order.payment?.status === 'SUCCEEDED';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center p-4 print:bg-white print:p-0">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full print:shadow-none print:max-w-full">
         {/* Success Icon */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
@@ -104,6 +104,31 @@ function OrderConfirmationContent() {
               ? 'Thank you for your payment. Your order is confirmed!'
               : 'Your order has been placed and is awaiting payment confirmation.'}
           </p>
+        </div>
+
+        {/* Customer Information */}
+        <div className="bg-gray-50 rounded-xl p-6 mb-6">
+          <h3 className="font-bold text-gray-900 mb-4">Customer Information</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Name</p>
+              <p className="font-semibold text-gray-900">
+                {order.user?.firstName && order.user?.lastName 
+                  ? `${order.user.firstName} ${order.user.lastName}`
+                  : order.user?.email || 'Guest'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Email</p>
+              <p className="font-semibold text-gray-900">{order.user?.email || 'N/A'}</p>
+            </div>
+            {order.user?.phone && (
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Phone</p>
+                <p className="font-semibold text-gray-900">{order.user.phone}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Order Details */}
@@ -225,7 +250,14 @@ function OrderConfirmationContent() {
         </div>
 
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 print:hidden">
+          <button
+            onClick={() => window.print()}
+            className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-semibold"
+          >
+            <Printer className="w-5 h-5" />
+            Print Receipt
+          </button>
           <Link
             href="/"
             className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold"
@@ -243,7 +275,7 @@ function OrderConfirmationContent() {
         </div>
 
         {/* Auto-redirect notice */}
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center print:hidden">
           <p className="text-sm text-gray-500">
             Redirecting to homepage in {countdown} seconds...
           </p>

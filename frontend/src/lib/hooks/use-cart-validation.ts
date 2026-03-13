@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/client';
+import { useEffect } from 'react';
 
 export interface CartValidation {
   isValid: boolean;
@@ -16,6 +17,19 @@ export interface CartValidation {
 }
 
 export function useCartValidation(addressId?: string) {
+  const queryClient = useQueryClient();
+  
+  // Invalidate cart validation when cart changes
+  useEffect(() => {
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      if (event?.query.queryKey[0] === 'cart') {
+        queryClient.invalidateQueries({ queryKey: ['cart-validation'] });
+      }
+    });
+    
+    return () => unsubscribe();
+  }, [queryClient]);
+
   return useQuery<CartValidation>({
     queryKey: ['cart-validation', addressId],
     queryFn: async () => {
@@ -25,5 +39,6 @@ export function useCartValidation(addressId?: string) {
     },
     enabled: true, // Always enabled to show validation
     refetchOnWindowFocus: false,
+    staleTime: 0, // Always consider stale so it refetches
   });
 }

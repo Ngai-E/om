@@ -6,15 +6,17 @@ import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { accountApi } from '@/lib/api/account';
 import { ordersApi } from '@/lib/api/orders';
+import { deliveryApi } from '@/lib/api/delivery';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
-import { MapPin, Clock, CreditCard, Truck, Store, AlertCircle, ShoppingBag, TrendingUp } from 'lucide-react';
+import { MapPin, Clock, CreditCard, Truck, Store, AlertCircle, ShoppingBag, TrendingUp, Package } from 'lucide-react';
 import { useCart } from '@/lib/hooks/use-cart';
 import { useCreateOrder } from '@/lib/hooks/use-orders';
 import { useQuery } from '@tanstack/react-query';
 import { useDeliverySlots } from '@/lib/hooks/use-delivery';
 import { StripePaymentElement } from '@/components/checkout/stripe-payment-element';
 import { useCartValidation } from '@/lib/hooks/use-cart-validation';
+import { DeliverySlotPicker } from '@/components/checkout/delivery-slot-picker';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -27,6 +29,7 @@ export default function CheckoutPage() {
   const [fulfillmentType, setFulfillmentType] = useState<'DELIVERY' | 'COLLECTION'>('DELIVERY');
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [selectedSlotId, setSelectedSlotId] = useState<string>('');
+  const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH_ON_DELIVERY' | 'PAY_IN_STORE'>('CASH_ON_DELIVERY');
 
   // Fetch enabled payment methods
@@ -49,10 +52,11 @@ export default function CheckoutPage() {
 
   // Fetch delivery slots if delivery selected
   const selectedAddress = addresses?.find(a => a.id === selectedAddressId);
-  const { data: slotsData } = useDeliverySlots(
-    selectedAddress?.deliveryZone?.id,
-    new Date().toISOString().split('T')[0]
-  );
+  const { data: slotsData } = useQuery({
+    queryKey: ['available-slots', new Date().toISOString().split('T')[0]],
+    queryFn: () => deliveryApi.getAvailableSlots(new Date().toISOString().split('T')[0]),
+    enabled: fulfillmentType === 'DELIVERY' && !!selectedAddressId,
+  });
 
   // Validate cart against delivery zone requirements
   const { data: cartValidation } = useCartValidation(
@@ -87,8 +91,19 @@ export default function CheckoutPage() {
             error('Please select delivery address and time slot');
             return;
           }
+          
+          if (!selectedSlot) {
+            error('Please select a delivery time slot');
+            return;
+          }
+          
           orderData.addressId = selectedAddressId;
           orderData.deliverySlotId = selectedSlotId;
+          orderData.slotDate = selectedSlot.date;
+          orderData.slotStartTime = selectedSlot.startTime;
+          orderData.slotEndTime = selectedSlot.endTime;
+          
+          console.log('Order data being sent:', orderData);
         }
 
         const order = await createOrder.mutateAsync(orderData);
@@ -115,8 +130,16 @@ export default function CheckoutPage() {
       };
 
       if (fulfillmentType === 'DELIVERY') {
+        if (!selectedSlot) {
+          error('Please select a delivery time slot');
+          return;
+        }
+        
         orderData.addressId = selectedAddressId;
         orderData.deliverySlotId = selectedSlotId;
+        orderData.slotDate = selectedSlot.date;
+        orderData.slotStartTime = selectedSlot.startTime;
+        orderData.slotEndTime = selectedSlot.endTime;
       }
 
       const order = await createOrder.mutateAsync(orderData);
@@ -297,58 +320,14 @@ export default function CheckoutPage() {
                   Delivery Time
                 </h2>
 
-                {slotsData && slotsData.slots.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-2 lg:gap-3">
-                    {slotsData.slots.map((slot) => {
-                      const slotsLeft = slot.capacity - slot.currentOrders;
-                      const isLowCapacity = slotsLeft <= 3 && slotsLeft > 0;
-                      
-                      return (
-                        <button
-                          key={slot.id}
-                          onClick={() => setSelectedSlotId(slot.id)}
-                          disabled={!slot.available}
-                          className={`p-2 lg:p-3 border-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                            selectedSlotId === slot.id
-                              ? 'border-primary bg-primary/5'
-                              : !slot.available
-                              ? 'border-red-200 bg-red-50'
-                              : isLowCapacity
-                              ? 'border-orange-200 bg-orange-50 hover:border-orange-400'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <p className="font-semibold text-xs lg:text-sm">{slot.displayTime}</p>
-                          {!slot.available ? (
-                            <p className="text-xs text-red-600 font-medium">Fully Booked</p>
-                          ) : isLowCapacity ? (
-                            <p className="text-xs text-orange-600 font-medium">
-                              Only {slotsLeft} left!
-                            </p>
-                          ) : (
-                            <p className="text-xs text-green-600">
-                              {slotsLeft} available
-                            </p>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground mb-2">No delivery slots available for your area</p>
-                    {!selectedAddress?.deliveryZone && (
-                      <p className="text-sm text-destructive">
-                        Your address is not in a delivery zone. Please contact support.
-                      </p>
-                    )}
-                    {selectedAddress?.deliveryZone && (
-                      <p className="text-sm text-muted-foreground">
-                        Delivery zone: {selectedAddress.deliveryZone.name}
-                      </p>
-                    )}
-                  </div>
-                )}
+                <DeliverySlotPicker
+                  onSlotSelect={(slot) => {
+                    setSelectedSlotId(slot.id);
+                    setSelectedSlot(slot);
+                  }}
+                  selectedSlotId={selectedSlotId}
+                  minHoursAhead={24}
+                />
               </div>
             )}
 
@@ -359,50 +338,84 @@ export default function CheckoutPage() {
                   <AlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
                   <div className="flex-1">
                     <h3 className="font-bold text-orange-900 mb-2">
-                      Minimum Order Not Met
+                      {cartValidation.minOrderValue !== undefined 
+                        ? 'Minimum Order Not Met' 
+                        : 'Delivery Not Available'}
                     </h3>
                     <p className="text-orange-800 mb-4">
-                      {cartValidation.message}
+                      {cartValidation.minOrderValue !== undefined
+                        ? cartValidation.message
+                        : `We don't currently deliver to this area. You can collect your order from our store instead!`}
                     </p>
                     
-                    <div className="bg-white rounded-lg p-4 mb-4">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-gray-600">Current Subtotal</p>
-                          <p className="text-lg font-bold text-gray-900">
-                            £{cartValidation.subtotal.toFixed(2)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-gray-600">Minimum Required</p>
-                          <p className="text-lg font-bold text-orange-600">
-                            £{cartValidation.minOrderValue?.toFixed(2)}
-                          </p>
+                    {cartValidation.minOrderValue !== undefined && (
+                      <div className="bg-white rounded-lg p-4 mb-4">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <p className="text-gray-600">Current Subtotal</p>
+                            <p className="text-lg font-bold text-gray-900">
+                              £{cartValidation.subtotal.toFixed(2)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-600">Minimum Required</p>
+                            <p className="text-lg font-bold text-orange-600">
+                              £{cartValidation.minOrderValue.toFixed(2)}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
-                    <div className="flex items-center gap-2 p-3 bg-orange-100 rounded-lg mb-4">
-                      <TrendingUp className="w-5 h-5 text-orange-700" />
-                      <p className="text-sm font-semibold text-orange-900">
-                        Add £{cartValidation.amountNeeded?.toFixed(2)} more to proceed with delivery
-                      </p>
-                    </div>
+                    {cartValidation.amountNeeded !== undefined && cartValidation.amountNeeded > 0 && (
+                      <div className="flex items-center gap-2 p-3 bg-orange-100 rounded-lg mb-4">
+                        <TrendingUp className="w-5 h-5 text-orange-700" />
+                        <p className="text-sm font-semibold text-orange-900">
+                          Add £{cartValidation.amountNeeded.toFixed(2)} more to proceed with delivery
+                        </p>
+                      </div>
+                    )}
 
-                    <div className="flex gap-3">
-                      <Link
-                        href="/products"
-                        className="flex-1 inline-flex items-center justify-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-700 transition"
-                      >
-                        <ShoppingBag className="w-4 h-4" />
-                        Add More Items
-                      </Link>
-                      <button
-                        onClick={() => setFulfillmentType('COLLECTION')}
-                        className="flex-1 px-4 py-2 border-2 border-orange-600 text-orange-600 rounded-lg font-semibold hover:bg-orange-50 transition"
-                      >
-                        Switch to Collection
-                      </button>
+                    <div className="space-y-3">
+                      {/* For zone issues, show address options */}
+                      {cartValidation.minOrderValue === undefined && (
+                        <div className="grid grid-cols-2 gap-3">
+                          <Link
+                            href="/account/addresses/new"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+                          >
+                            <MapPin className="w-4 h-4" />
+                            Try Different Address
+                          </Link>
+                          <button
+                            onClick={() => setFulfillmentType('COLLECTION')}
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+                          >
+                            <Package className="w-4 h-4" />
+                            Collect from Store
+                          </button>
+                        </div>
+                      )}
+
+                      {/* For minimum order issues, show add items option */}
+                      {cartValidation.minOrderValue !== undefined && (
+                        <div className="flex gap-3">
+                          <Link
+                            href="/products"
+                            className="flex-1 inline-flex items-center justify-center gap-2 bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-700 transition"
+                          >
+                            <ShoppingBag className="w-4 h-4" />
+                            Add £{cartValidation.amountNeeded?.toFixed(2)} More
+                          </Link>
+                          <button
+                            onClick={() => setFulfillmentType('COLLECTION')}
+                            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 border-2 border-orange-600 text-orange-600 hover:bg-orange-50 rounded-lg font-semibold transition"
+                          >
+                            <Package className="w-4 h-4" />
+                            Or Collect Instead
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

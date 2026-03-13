@@ -272,6 +272,8 @@ export class DeliveryService {
         canProceed: false,
         message: 'This address is not in a delivery zone. Please contact support or choose collection.',
         subtotal,
+        minOrderValue: undefined,
+        amountNeeded: undefined,
       };
     }
 

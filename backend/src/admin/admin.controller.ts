@@ -34,6 +34,38 @@ export class AdminController {
   constructor(private adminService: AdminService) {}
 
   // ============================================
+  // DASHBOARD & STATS
+  // ============================================
+
+  @Get('badge-counts')
+  @Roles('ADMIN', 'STAFF')
+  @ApiOperation({ summary: 'Get badge counts for admin navigation' })
+  @ApiResponse({ status: 200, description: 'Badge counts retrieved' })
+  async getBadgeCounts() {
+    return this.adminService.getBadgeCounts();
+  }
+
+  @Get('audit-logs')
+  @ApiOperation({ summary: 'Get audit logs with filters (Admin only)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'entity', required: false, type: String })
+  @ApiQuery({ name: 'action', required: false, type: String })
+  @ApiQuery({ name: 'userId', required: false, type: String })
+  @ApiResponse({ status: 200, description: 'Audit logs retrieved' })
+  async getAuditLogs(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
+    @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit?: number,
+    @Query('search') search?: string,
+    @Query('entity') entity?: string,
+    @Query('action') action?: string,
+    @Query('userId') userId?: string,
+  ) {
+    return this.adminService.getAuditLogs(page, limit, search, entity, action, userId);
+  }
+
+  // ============================================
   // PRODUCT MANAGEMENT
   // ============================================
 
@@ -124,6 +156,63 @@ export class AdminController {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="products-export-${new Date().toISOString().split('T')[0]}.csv"`);
     res.send(csv);
+  }
+
+  // ============================================
+  // PRODUCT VARIANTS
+  // ============================================
+
+  @Post('products/:id/variants')
+  @Roles('ADMIN', 'STAFF')
+  @ApiOperation({ summary: 'Create product variant' })
+  @ApiParam({ name: 'id', description: 'Product ID' })
+  @ApiResponse({ status: 201, description: 'Variant created' })
+  async createVariant(
+    @Param('id') productId: string,
+    @Body() variantData: {
+      name: string;
+      sku?: string;
+      price: number;
+      compareAtPrice?: number;
+      stock: number;
+      isActive: boolean;
+    },
+  ) {
+    return this.adminService.createVariant(productId, variantData);
+  }
+
+  @Put('products/:id/variants/:variantId')
+  @Roles('ADMIN', 'STAFF')
+  @ApiOperation({ summary: 'Update product variant' })
+  @ApiParam({ name: 'id', description: 'Product ID' })
+  @ApiParam({ name: 'variantId', description: 'Variant ID' })
+  @ApiResponse({ status: 200, description: 'Variant updated' })
+  async updateVariant(
+    @Param('id') productId: string,
+    @Param('variantId') variantId: string,
+    @Body() variantData: {
+      name?: string;
+      sku?: string;
+      price?: number;
+      compareAtPrice?: number;
+      stock?: number;
+      isActive?: boolean;
+    },
+  ) {
+    return this.adminService.updateVariant(productId, variantId, variantData);
+  }
+
+  @Delete('products/:id/variants/:variantId')
+  @Roles('ADMIN', 'STAFF')
+  @ApiOperation({ summary: 'Delete product variant' })
+  @ApiParam({ name: 'id', description: 'Product ID' })
+  @ApiParam({ name: 'variantId', description: 'Variant ID' })
+  @ApiResponse({ status: 200, description: 'Variant deleted' })
+  async deleteVariant(
+    @Param('id') productId: string,
+    @Param('variantId') variantId: string,
+  ) {
+    return this.adminService.deleteVariant(productId, variantId);
   }
 
   // ============================================

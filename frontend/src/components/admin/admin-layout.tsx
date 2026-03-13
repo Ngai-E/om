@@ -18,9 +18,12 @@ import {
   ChevronRight,
   LayoutDashboard,
   Menu,
-  X
+  X,
+  Shield
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/lib/api/client';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -46,7 +49,22 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     }
   };
 
-  // Navigation items with counts (would come from API)
+  // Fetch badge counts from API
+  const { data: badgeCounts } = useQuery({
+    queryKey: ['admin-badge-counts'],
+    queryFn: async () => {
+      try {
+        const { data } = await apiClient.get('/admin/badge-counts');
+        return data;
+      } catch (error) {
+        // Return defaults if API fails
+        return { pendingOrders: 0, lowStockItems: 0 };
+      }
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  // Navigation items with dynamic counts
   const navItems = [
     { 
       icon: LayoutDashboard, 
@@ -57,10 +75,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: Package, 
       label: 'Orders', 
       href: '/admin/orders',
-      badge: 12,
+      badge: badgeCounts?.pendingOrders || undefined,
       subItems: [
         { label: 'All Orders', href: '/admin/orders' },
-        { label: 'Pending Payment', href: '/admin/orders?status=pending', badge: 3 },
+        { label: 'Pending Payment', href: '/admin/orders?status=pending', badge: badgeCounts?.pendingOrders || undefined },
         { label: 'Today', href: '/admin/orders?date=today' },
       ]
     },
@@ -78,7 +96,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: BarChart3, 
       label: 'Inventory', 
       href: '/admin/inventory',
-      badge: 5, // Low stock items
+      badge: badgeCounts?.lowStockItems || undefined,
       badgeColor: 'bg-orange-500'
     },
     { 
@@ -95,6 +113,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: Settings, 
       label: 'Settings', 
       href: '/admin/settings',
+      adminOnly: true
+    },
+    { 
+      icon: Shield, 
+      label: 'Audit Logs', 
+      href: '/admin/audit-logs',
       adminOnly: true
     },
   ];
