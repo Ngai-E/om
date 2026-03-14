@@ -6,6 +6,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { adminApi } from '@/lib/api/admin';
+import apiClient from '@/lib/api/client';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface DeliverySlot {
   id: string;
@@ -23,6 +25,7 @@ export function DeliverySlotsTab() {
   const [showModal, setShowModal] = useState(false);
   const [editingSlot, setEditingSlot] = useState<DeliverySlot | null>(null);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string | null }>({ show: false, id: null });
   const [formData, setFormData] = useState({
     date: '',
     startTime: '',
@@ -31,11 +34,33 @@ export function DeliverySlotsTab() {
     isActive: true,
   });
 
-  // Fetch slots from API
+  // Fetch manually created slots from API
   const { data: slots = [], isLoading } = useQuery({
     queryKey: ['delivery-slots', selectedDate],
     queryFn: () => adminApi.getDeliverySlots(selectedDate),
   });
+
+  // Fetch template-generated slots
+  const { data: templateSlots = [] } = useQuery({
+    queryKey: ['template-slots', selectedDate],
+    queryFn: async () => {
+      const { data } = await apiClient.get(`/delivery-slots/available?date=${selectedDate}`);
+      return data;
+    },
+    enabled: !!selectedDate,
+  });
+
+  // Combine manual slots and template slots
+  const allSlots = [
+    ...slots,
+    ...templateSlots.map((ts: any) => ({
+      ...ts,
+      id: ts.id,
+      date: selectedDate,
+      isTemplate: true, // Mark as template-generated
+      bookedCount: ts.currentOrders || 0,
+    }))
+  ].sort((a, b) => a.startTime.localeCompare(b.startTime));
 
   // Create mutation
   const createSlot = useMutation({
@@ -127,14 +152,22 @@ export function DeliverySlotsTab() {
     }
   };
 
-  const handleDelete = (id: string, bookedCount: number) => {
-    if (bookedCount > 0) {
-      error(`Cannot delete slot with ${bookedCount} existing bookings`);
+  const handleDelete = (id: string) => {
+    const slot = slots.find((s: DeliverySlot) => s.id === id);
+    const booked = slot?.bookedCount || 0;
+    
+    if (booked > 0) {
+      error(`Cannot delete slot with ${booked} booked order(s)`);
       return;
     }
     
-    if (confirm('Are you sure you want to delete this time slot?')) {
-      deleteSlotMutation.mutate(id);
+    setDeleteConfirm({ show: true, id });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm.id) {
+      deleteSlotMutation.mutate(deleteConfirm.id);
+      setDeleteConfirm({ show: false, id: null });
     }
   };
 
@@ -222,13 +255,13 @@ export function DeliverySlotsTab() {
             </tr>
           </thead>
           <tbody>
-            {slots.map((slot: DeliverySlot) => {
+            {allSlots.map((slot: any) => {
               const booked = slot.bookedCount || 0;
               const available = slot.capacity - booked;
               const percentage = (booked / slot.capacity) * 100;
 
               return (
-                <tr key={slot.id} className="border-b hover:bg-gray-50 transition">
+                <tr key={slot.id} className={`border-b hover:bg-gray-50 transition ${slot.isTemplate ? 'bg-blue-50/30' : ''}`}>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-gray-400" />
@@ -243,6 +276,11 @@ export function DeliverySlotsTab() {
                       <span className="text-sm text-gray-700 font-medium">
                         {slot.startTime} - {slot.endTime}
                       </span>
+                      {slot.isTemplate && (
+                        <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                          Template
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="p-4 text-center">
@@ -320,11 +358,13 @@ export function DeliverySlotsTab() {
           </tbody>
         </table>
 
-        {slots.length === 0 && (
+        {allSlots.length === 0 && (
           <div className="p-12 text-center">
             <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 font-medium">No delivery slots for this date</p>
-            <p className="text-sm text-gray-400 mt-1">Add your first time slot to get started</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Create a weekly template or add a specific slot for this date.
+            </p>
           </div>
         )}
       </div>
@@ -335,7 +375,7 @@ export function DeliverySlotsTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Slots</p>
-              <p className="text-2xl font-bold text-gray-900">{slots.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{allSlots.length}</p>
             </div>
             <Clock className="w-8 h-8 text-blue-500" />
           </div>
@@ -345,7 +385,7 @@ export function DeliverySlotsTab() {
             <div>
               <p className="text-sm text-gray-600">Total Capacity</p>
               <p className="text-2xl font-bold text-gray-900">
-                {slots.reduce((sum: number, slot: DeliverySlot) => sum + slot.capacity, 0)}
+                {allSlots.reduce((sum: number, slot: any) => sum + slot.capacity, 0)}
               </p>
             </div>
             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
@@ -358,7 +398,7 @@ export function DeliverySlotsTab() {
             <div>
               <p className="text-sm text-gray-600">Total Booked</p>
               <p className="text-2xl font-bold text-orange-600">
-                {slots.reduce((sum: number, slot: DeliverySlot) => sum + (slot.bookedCount || 0), 0)}
+                {allSlots.reduce((sum: number, slot: any) => sum + (slot.bookedCount || 0), 0)}
               </p>
             </div>
             <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
@@ -518,6 +558,18 @@ export function DeliverySlotsTab() {
           onClose={hideToast}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.show}
+        onClose={() => setDeleteConfirm({ show: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Delete Time Slot?"
+        message="Are you sure you want to delete this delivery time slot? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

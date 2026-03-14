@@ -6,6 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '@/lib/api/admin';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface OrderDetailDrawerProps {
   isOpen: boolean;
@@ -13,14 +14,15 @@ interface OrderDetailDrawerProps {
   orderId: string;
 }
 
-export function OrderDetailDrawer({ isOpen, onClose, orderId }: OrderDetailDrawerProps) {
+export function OrderDetailDrawer({ orderId, isOpen, onClose }: OrderDetailDrawerProps) {
   const queryClient = useQueryClient();
-  const { toast, success, error, hideToast } = useToast();
+  const { toast, success, error, hideToast} = useToast();
   const [selectedStatus, setSelectedStatus] = useState('');
   const [refundReason, setRefundReason] = useState('');
   const [refundAmount, setRefundAmount] = useState('');
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [showDriverModal, setShowDriverModal] = useState(false);
+  const [showMarkPaidConfirm, setShowMarkPaidConfirm] = useState(false);
 
   // Fetch order details
   const { data: order, isLoading } = useQuery({
@@ -84,9 +86,12 @@ export function OrderDetailDrawer({ isOpen, onClose, orderId }: OrderDetailDrawe
   });
 
   const handleMarkPaid = () => {
-    if (confirm('Mark this order as paid?')) {
-      markPaid.mutate();
-    }
+    setShowMarkPaidConfirm(true);
+  };
+
+  const confirmMarkPaid = () => {
+    markPaid.mutate();
+    setShowMarkPaidConfirm(false);
   };
 
   // Process refund
@@ -719,6 +724,18 @@ export function OrderDetailDrawer({ isOpen, onClose, orderId }: OrderDetailDrawe
           onClose={hideToast}
         />
       )}
+
+      {/* Mark Paid Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showMarkPaidConfirm}
+        onClose={() => setShowMarkPaidConfirm(false)}
+        onConfirm={confirmMarkPaid}
+        title="Mark Order as Paid?"
+        message="Are you sure you want to mark this order as paid? This will update the payment status."
+        confirmText="Mark as Paid"
+        cancelText="Cancel"
+        variant="info"
+      />
     </>
   );
 }

@@ -15,6 +15,7 @@ import { VariantModal } from '@/components/admin/variant-modal';
 import { useToast } from '@/lib/hooks/use-toast';
 import { SuccessToast } from '@/components/ui/success-toast';
 import { ErrorToast } from '@/components/ui/error-toast';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -41,6 +42,7 @@ export default function EditProductPage() {
   const { data: categories } = useCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteVariantConfirm, setDeleteVariantConfirm] = useState<{ show: boolean; id: string | null }>({ show: false, id: null });
   const [showVariantModal, setShowVariantModal] = useState(false);
   const [editingVariant, setEditingVariant] = useState<any>(null);
   const { toast, success, error, hideToast } = useToast();
@@ -207,14 +209,20 @@ export default function EditProductPage() {
   };
 
   const handleDeleteVariant = async (variantId: string) => {
-    if (!confirm('Are you sure you want to delete this variant?')) return;
+    setDeleteVariantConfirm({ show: true, id: variantId });
+  };
+
+  const confirmDeleteVariant = async () => {
+    if (!deleteVariantConfirm.id) return;
 
     try {
-      await productsApi.deleteVariant(productId, variantId);
+      await productsApi.deleteVariant(productId, deleteVariantConfirm.id);
       success('Variant deleted successfully');
       queryClient.invalidateQueries({ queryKey: ['admin-product', productId] });
+      setDeleteVariantConfirm({ show: false, id: null });
     } catch (err: any) {
       error('Failed to delete variant');
+      setDeleteVariantConfirm({ show: false, id: null });
     }
   };
 
@@ -541,6 +549,18 @@ export default function EditProductPage() {
         onSubmit={handleSaveVariant}
         variant={editingVariant}
         productId={productId}
+      />
+
+      {/* Delete Variant Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteVariantConfirm.show}
+        onClose={() => setDeleteVariantConfirm({ show: false, id: null })}
+        onConfirm={confirmDeleteVariant}
+        title="Delete Variant?"
+        message="Are you sure you want to delete this product variant? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
       />
     </AdminLayout>
   );

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, UnauthorizedException } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -19,7 +19,7 @@ export class CleanupController {
     const DEVELOPER_CODE = process.env.CLEANUP_SECRET_CODE;
 
     if (!DEVELOPER_CODE || code !== DEVELOPER_CODE) {
-      throw new UnauthorizedException('Invalid cleanup code');
+      throw new BadRequestException('Invalid cleanup code. Please check your secret code and try again.');
     }
 
     // Count all customers (non-admin users)
@@ -65,7 +65,7 @@ export class CleanupController {
     const DEVELOPER_CODE = process.env.CLEANUP_SECRET_CODE;
 
     if (!DEVELOPER_CODE || code !== DEVELOPER_CODE) {
-      throw new UnauthorizedException('Invalid cleanup code');
+      throw new BadRequestException('Invalid cleanup code. Please check your secret code and try again.');
     }
 
     const results = {

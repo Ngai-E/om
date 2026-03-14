@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { MapPin, Plus, Edit, Trash2, Star, ArrowLeft } from 'lucide-react';
 import { useAddresses, useDeleteAddress, useSetDefaultAddress } from '@/lib/hooks/use-account';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Toast } from '@/components/ui/toast';
 
 export default function AddressesPage() {
@@ -12,17 +13,24 @@ export default function AddressesPage() {
   const setDefault = useSetDefaultAddress();
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string | null }>({ show: false, id: null });
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this address?')) return;
+    setDeleteConfirm({ show: true, id });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirm.id) return;
 
     try {
-      await deleteAddress.mutateAsync(id);
+      await deleteAddress.mutateAsync(deleteConfirm.id);
       setToastMessage('Address deleted successfully');
       setShowToast(true);
+      setDeleteConfirm({ show: false, id: null });
     } catch (error) {
       setToastMessage('Failed to delete address');
       setShowToast(true);
+      setDeleteConfirm({ show: false, id: null });
     }
   };
 
@@ -148,6 +156,18 @@ export default function AddressesPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.show}
+        onClose={() => setDeleteConfirm({ show: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Delete Address?"
+        message="Are you sure you want to delete this address? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

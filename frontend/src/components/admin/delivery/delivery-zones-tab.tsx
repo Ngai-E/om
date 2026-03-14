@@ -5,6 +5,7 @@ import { Plus, Edit2, Trash2, MapPin, X } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { adminApi } from '@/lib/api/admin';
 
 interface DeliveryZone {
@@ -22,6 +23,7 @@ export function DeliveryZonesTab() {
   const { toast, success, error, hideToast } = useToast();
   const [showModal, setShowModal] = useState(false);
   const [editingZone, setEditingZone] = useState<DeliveryZone | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string | null }>({ show: false, id: null });
   const [formData, setFormData] = useState({
     name: '',
     postcodePrefix: '',
@@ -125,8 +127,13 @@ export function DeliveryZonesTab() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this delivery zone?')) {
-      deleteZoneMutation.mutate(id);
+    setDeleteConfirm({ show: true, id });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm.id) {
+      deleteZoneMutation.mutate(deleteConfirm.id);
+      setDeleteConfirm({ show: false, id: null });
     }
   };
 
@@ -379,6 +386,18 @@ export function DeliveryZonesTab() {
           onClose={hideToast}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.show}
+        onClose={() => setDeleteConfirm({ show: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Delete Delivery Zone?"
+        message="Are you sure you want to delete this delivery zone? Addresses in this zone will no longer be eligible for delivery."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }

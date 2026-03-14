@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Edit2, Trash2, Clock, X, Calendar, AlertCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Clock, X, Calendar, AlertCircle, Download, Upload } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { apiClient } from '@/lib/api/client';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 interface DeliveryTemplate {
   id: string;
@@ -24,6 +25,7 @@ export function DeliveryTemplatesTab() {
   const [showModal, setShowModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<DeliveryTemplate | null>(null);
   const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; id: string | null }>({ show: false, id: null });
   const [formData, setFormData] = useState({
     dayOfWeek: 1,
     startTime: '',
@@ -176,9 +178,65 @@ export function DeliveryTemplatesTab() {
   };
 
   const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this template? This will not affect existing slots.')) {
-      deleteTemplate.mutate(id);
+    setDeleteConfirm({ show: true, id });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm.id) {
+      deleteTemplate.mutate(deleteConfirm.id);
+      setDeleteConfirm({ show: false, id: null });
     }
+  };
+
+  const handleExport = () => {
+    const exportData = templates.map((t: DeliveryTemplate) => ({
+      dayOfWeek: t.dayOfWeek,
+      startTime: t.startTime,
+      endTime: t.endTime,
+      capacity: t.capacity,
+      isActive: t.isActive,
+    }));
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `delivery-templates-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    success('Templates exported successfully');
+  };
+
+  const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const importData = JSON.parse(e.target?.result as string);
+        
+        if (!Array.isArray(importData)) {
+          error('Invalid file format');
+          return;
+        }
+
+        // Create all templates
+        const promises = importData.map((template: any) => 
+          apiClient.post('/delivery-slots/templates', template)
+        );
+
+        await Promise.all(promises);
+        queryClient.invalidateQueries({ queryKey: ['delivery-templates'] });
+        success(`Imported ${importData.length} template(s) successfully`);
+      } catch (err) {
+        error('Failed to import templates. Please check the file format.');
+      }
+    };
+    reader.readAsText(file);
+    
+    // Reset input
+    event.target.value = '';
   };
 
   // Group templates by day
@@ -198,13 +256,37 @@ export function DeliveryTemplatesTab() {
           <h3 className="text-lg font-bold text-gray-900">Weekly Delivery Templates</h3>
           <p className="text-sm text-gray-600">Create recurring time slots that auto-generate each week</p>
         </div>
-        <button
-          onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
-        >
-          <Plus className="w-4 h-4" />
-          Add Template
-        </button>
+        <div className="flex items-center gap-2">
+          <input
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            className="hidden"
+            id="import-templates"
+          />
+          <label
+            htmlFor="import-templates"
+            className="flex items-center gap-2 px-4 py-2 border-2 border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition font-medium cursor-pointer"
+          >
+            <Upload className="w-4 h-4" />
+            Import
+          </label>
+          <button
+            onClick={handleExport}
+            disabled={templates.length === 0}
+            className="flex items-center gap-2 px-4 py-2 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-4 h-4" />
+            Export
+          </button>
+          <button
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Add Template
+          </button>
+        </div>
       </div>
 
       {/* Info Banner */}
@@ -440,6 +522,18 @@ export function DeliveryTemplatesTab() {
           onClose={hideToast}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.show}
+        onClose={() => setDeleteConfirm({ show: false, id: null })}
+        onConfirm={confirmDelete}
+        title="Delete Template?"
+        message="Are you sure you want to delete this template? This will not affect existing slots that have already been created."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+      />
     </div>
   );
 }
