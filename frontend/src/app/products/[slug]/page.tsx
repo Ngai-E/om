@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, ShoppingCart, Plus, Minus } from 'lucide-react';
@@ -18,18 +18,38 @@ export default function ProductDetailPage() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   
   const [quantity, setQuantity] = useState(1);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'description' | 'details' | 'reviews'>('description');
   const { data: product, isLoading } = useProductBySlug(slug);
   const addToCart = useAddToCart();
   const guestCart = useGuestCartStore();
   const { setItemCount } = useCartStore();
 
+  // Get selected variant or use product defaults
+  const selectedVariant = product?.variants?.find(v => v.id === selectedVariantId);
+  const hasVariants = product?.variants && product.variants.length > 0;
+
+  // Debug: Log product variants
+  useEffect(() => {
+    if (product) {
+      console.log('Product loaded:', product.name);
+      console.log('Has variants:', hasVariants);
+      console.log('Variants:', product.variants);
+    }
+  }, [product, hasVariants]);
+
   const handleAddToCart = async () => {
     if (!product) return;
 
+    // If product has variants but none selected, show error
+    if (hasVariants && !selectedVariantId) {
+      alert('Please select a variant before adding to cart');
+      return;
+    }
+
     if (!isAuthenticated) {
       // Add to guest cart (localStorage)
-      guestCart.addItem(product.id, quantity);
+      guestCart.addItem(product.id, quantity, selectedVariantId || undefined);
       setItemCount(guestCart.getItemCount());
       router.push('/cart');
       return;
@@ -38,11 +58,14 @@ export default function ProductDetailPage() {
     try {
       await addToCart.mutateAsync({
         productId: product.id,
+        variantId: selectedVariantId || undefined,
         quantity,
       });
       router.push('/cart');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to add to cart:', error);
+      const errorMessage = error?.response?.data?.message || 'Failed to add to cart. Please try again.';
+      alert(errorMessage);
     }
   };
 
@@ -80,8 +103,13 @@ export default function ProductDetailPage() {
     );
   }
 
-  const inStock = product.inventory && product.inventory.quantity > 0;
-  const maxQuantity = product.inventory?.quantity || 0;
+  // Check stock based on whether a variant is selected
+  const inStock = selectedVariant 
+    ? selectedVariant.stock > 0 
+    : (product.inventory && product.inventory.quantity > 0);
+  const maxQuantity = selectedVariant 
+    ? selectedVariant.stock 
+    : (product.inventory?.quantity || 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -141,9 +169,47 @@ export default function ProductDetailPage() {
               </p>
             )}
 
+            {/* Variant Selector */}
+            {hasVariants && (
+              <div className="mb-6">
+                <label className="block text-sm font-medium mb-2">
+                  Select Variant <span className="text-destructive">*</span>
+                </label>
+                <select
+                  value={selectedVariantId || ''}
+                  onChange={(e) => {
+                    console.log('Variant selected:', e.target.value);
+                    setSelectedVariantId(e.target.value || null);
+                  }}
+                  className="w-full px-4 py-3 border-2 border-primary/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                >
+                  <option value="">Choose a variant...</option>
+                  {product.variants?.map((variant) => (
+                    <option key={variant.id} value={variant.id}>
+                      {variant.name} - £{parseFloat(variant.price).toFixed(2)} 
+                      {variant.stock > 0 ? ` (${variant.stock} in stock)` : ' (Out of stock)'}
+                    </option>
+                  ))}
+                </select>
+                {!selectedVariantId && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Please select a variant to continue
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Stock Status */}
             <div className="mb-6">
-              {inStock ? (
+              {selectedVariant ? (
+                selectedVariant.stock > 0 ? (
+                  <p className="text-sm text-green-600">
+                    ✓ In stock ({selectedVariant.stock} available)
+                  </p>
+                ) : (
+                  <p className="text-sm text-destructive">✗ Out of stock</p>
+                )
+              ) : inStock ? (
                 <p className="text-sm text-green-600">
                   ✓ In stock ({product.inventory?.quantity} available)
                 </p>
@@ -181,11 +247,15 @@ export default function ProductDetailPage() {
             {/* Add to Cart Button */}
             <button
               onClick={handleAddToCart}
-              disabled={!inStock || addToCart.isPending}
+              disabled={!inStock || addToCart.isPending || (hasVariants && !selectedVariantId)}
               className="w-full bg-primary text-primary-foreground py-4 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               <ShoppingCart className="w-5 h-5" />
-              {addToCart.isPending ? 'Adding...' : 'Add to Cart'}
+              {addToCart.isPending 
+                ? 'Adding...' 
+                : hasVariants && !selectedVariantId 
+                  ? 'Select a Variant' 
+                  : 'Add to Cart'}
             </button>
 
             {/* Product Tags */}

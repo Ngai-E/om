@@ -31,6 +31,13 @@ export function ProductCard({ product }: ProductCardProps) {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     
+    // If product has variants, redirect to product page for selection
+    const hasVariants = product.variants && product.variants.length > 0;
+    if (hasVariants) {
+      router.push(`/products/${product.slug}`);
+      return;
+    }
+    
     if (!isAuthenticated) {
       // Add to guest cart (localStorage)
       guestCart.addItem(product.id, 1);
@@ -58,6 +65,7 @@ export function ProductCard({ product }: ProductCardProps) {
     }
   };
 
+  const hasVariants = product.variants && product.variants.length > 0;
   const inStock = product.inventory && product.inventory.quantity > 0;
   const lowStock = product.inventory && product.inventory.quantity < product.inventory.lowStockThreshold;
 
@@ -139,7 +147,13 @@ export function ProductCard({ product }: ProductCardProps) {
                   ? 'bg-gray-400 text-white'
                   : 'bg-primary text-primary-foreground hover:opacity-90'
               }`}
-              title={!inStock ? 'Out of stock' : 'Add to cart'}
+              title={
+                !inStock 
+                  ? 'Out of stock' 
+                  : hasVariants 
+                    ? 'Select variant' 
+                    : 'Add to cart'
+              }
             >
               {justAdded ? (
                 <Check className="w-5 h-5" />

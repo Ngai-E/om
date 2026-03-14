@@ -177,7 +177,7 @@ export class AdminService {
         slug,
         description: dto.description,
         price: dto.price,
-        compareAtPrice: dto.compareAtPrice,
+        compareAtPrice: dto.compareAtPrice || null,
         categoryId,
         unitSize: dto.unitSize || dto.unit || undefined,
         sku: dto.sku || undefined,
@@ -273,7 +273,7 @@ export class AdminService {
     if (dto.name) updateData.name = dto.name;
     if (dto.description !== undefined) updateData.description = dto.description;
     if (dto.price !== undefined) updateData.price = dto.price;
-    if (dto.compareAtPrice !== undefined) updateData.compareAtPrice = dto.compareAtPrice;
+    if (dto.compareAtPrice !== undefined) updateData.compareAtPrice = dto.compareAtPrice || null;
     if (dto.unit) updateData.unitSize = dto.unit;
     if (dto.unitSize) updateData.unitSize = dto.unitSize;
     if (dto.sku !== undefined) updateData.sku = dto.sku;
@@ -441,9 +441,9 @@ export class AdminService {
         productId,
         name: variantData.name,
         sku: variantData.sku || `${productId}-${Date.now()}`,
-        price: variantData.price,
-        compareAtPrice: variantData.compareAtPrice,
-        stock: variantData.stock,
+        price: parseFloat(variantData.price),
+        compareAtPrice: variantData.compareAtPrice ? parseFloat(variantData.compareAtPrice) : null,
+        stock: parseInt(variantData.stock),
         isActive: variantData.isActive,
       },
     });
@@ -461,9 +461,21 @@ export class AdminService {
   }
 
   async updateVariant(productId: string, variantId: string, variantData: any) {
+    // Handle type conversions and empty strings
+    const updateData: any = {};
+    
+    if (variantData.name !== undefined) updateData.name = variantData.name;
+    if (variantData.sku !== undefined) updateData.sku = variantData.sku;
+    if (variantData.price !== undefined) updateData.price = parseFloat(variantData.price);
+    if (variantData.compareAtPrice !== undefined) {
+      updateData.compareAtPrice = variantData.compareAtPrice ? parseFloat(variantData.compareAtPrice) : null;
+    }
+    if (variantData.stock !== undefined) updateData.stock = parseInt(variantData.stock);
+    if (variantData.isActive !== undefined) updateData.isActive = variantData.isActive;
+    
     const variant = await this.prisma.productVariant.update({
       where: { id: variantId },
-      data: variantData,
+      data: updateData,
     });
 
     // Clear product cache

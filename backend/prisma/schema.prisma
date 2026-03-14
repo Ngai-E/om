@@ -53,18 +53,44 @@ enum Role {
 }
 
 model CustomerProfile {
-  id                String    @id @default(uuid())
-  userId            String    @unique
-  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String        @id @default(uuid())
+  userId            String        @unique
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   dateOfBirth       DateTime?
-  marketingOptIn    Boolean   @default(false)
-  smsOptIn          Boolean   @default(false)
-  preferredLanguage String    @default("en")
-  loyaltyPoints     Int       @default(0) // Phase 2
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  marketingOptIn    Boolean       @default(false)
+  smsOptIn          Boolean       @default(false)
+  preferredLanguage String        @default("en")
+  loyaltyPoints     Int           @default(0) // Phase 2
+  
+  // Risk Management
+  riskLevel         RiskLevel     @default(LOW)
+  isBlocked         Boolean       @default(false)
+  blockedReason     String?
+  blockedAt         DateTime?
+  blockedBy         String?       // Admin user ID who blocked
+  adminNotes        String?       // Internal notes about customer
+  tags              String[]      @default([]) // Custom tags for categorization
+  
+  // Metrics
+  totalOrders       Int           @default(0)
+  totalSpent        Float         @default(0)
+  cancelledOrders   Int           @default(0)
+  returnedOrders    Int           @default(0)
+  lastOrderDate     DateTime?
+  
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
+  @@index([riskLevel])
+  @@index([isBlocked])
   @@map("customer_profiles")
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 
 model Address {

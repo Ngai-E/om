@@ -3,15 +3,16 @@ import { persist } from 'zustand/middleware';
 
 export interface GuestCartItem {
   productId: string;
+  variantId?: string;
   quantity: number;
   addedAt: string;
 }
 
 interface GuestCartState {
   items: GuestCartItem[];
-  addItem: (productId: string, quantity: number) => void;
-  updateItem: (productId: string, quantity: number) => void;
-  removeItem: (productId: string) => void;
+  addItem: (productId: string, quantity: number, variantId?: string) => void;
+  updateItem: (productId: string, quantity: number, variantId?: string) => void;
+  removeItem: (productId: string, variantId?: string) => void;
   clearCart: () => void;
   getItemCount: () => number;
 }
@@ -21,15 +22,17 @@ export const useGuestCartStore = create<GuestCartState>()(
     (set, get) => ({
       items: [],
       
-      addItem: (productId: string, quantity: number) => {
+      addItem: (productId: string, quantity: number, variantId?: string) => {
         set((state) => {
-          const existingItem = state.items.find((item) => item.productId === productId);
+          const existingItem = state.items.find((item) => 
+            item.productId === productId && item.variantId === variantId
+          );
           
           if (existingItem) {
             // Update existing item
             return {
               items: state.items.map((item) =>
-                item.productId === productId
+                item.productId === productId && item.variantId === variantId
                   ? { ...item, quantity: item.quantity + quantity }
                   : item
               ),
@@ -41,6 +44,7 @@ export const useGuestCartStore = create<GuestCartState>()(
                 ...state.items,
                 {
                   productId,
+                  variantId,
                   quantity,
                   addedAt: new Date().toISOString(),
                 },
@@ -50,17 +54,21 @@ export const useGuestCartStore = create<GuestCartState>()(
         });
       },
       
-      updateItem: (productId: string, quantity: number) => {
+      updateItem: (productId: string, quantity: number, variantId?: string) => {
         set((state) => ({
           items: state.items.map((item) =>
-            item.productId === productId ? { ...item, quantity } : item
+            item.productId === productId && item.variantId === variantId 
+              ? { ...item, quantity } 
+              : item
           ),
         }));
       },
       
-      removeItem: (productId: string) => {
+      removeItem: (productId: string, variantId?: string) => {
         set((state) => ({
-          items: state.items.filter((item) => item.productId !== productId),
+          items: state.items.filter((item) => 
+            !(item.productId === productId && item.variantId === variantId)
+          ),
         }));
       },
       

@@ -1,6 +1,6 @@
 import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { SettingsService, PaymentMethod, PaymentMethodsConfig, PaymentType } from './settings.service';
+import { SettingsService, PaymentMethod, PaymentMethodsConfig, PaymentType, ImageUploadService } from './settings.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -20,8 +20,13 @@ export class SettingsController {
     const enabledPaymentTypes = await this.settingsService.getEnabledPaymentTypes();
     const guestCheckoutEnabled = await this.settingsService.getGuestCheckoutEnabled();
     const emailNotificationsEnabled = await this.settingsService.getEmailNotificationsEnabled();
+    const allowImageUpload = await this.settingsService.getAllowImageUpload();
+    const allowImageLink = await this.settingsService.getAllowImageLink();
+    const imageUploadService = await this.settingsService.getImageUploadService();
+    const imgbbApiKey = await this.settingsService.getImgbbApiKey();
+    const cloudinaryConfig = await this.settingsService.getCloudinaryConfig();
     
-    // Return only public settings
+    // Return only public settings (hide sensitive API keys/secrets)
     return {
       payment_method: settings.payment_method || PaymentMethod.STRIPE_CHECKOUT,
       payment_methods_config: paymentMethodsConfig,
@@ -30,6 +35,11 @@ export class SettingsController {
       currency: settings.currency || 'GBP',
       guest_checkout_enabled: guestCheckoutEnabled,
       email_notifications_enabled: emailNotificationsEnabled,
+      allow_image_upload: allowImageUpload,
+      allow_image_link: allowImageLink,
+      image_upload_service: imageUploadService,
+      imgbb_api_key: imgbbApiKey ? '***' : null, // Hide actual key
+      cloudinary_configured: !!cloudinaryConfig, // Just show if configured
     };
   }
 
@@ -125,6 +135,107 @@ export class SettingsController {
     return {
       message: `Email notifications ${body.enabled ? 'enabled' : 'disabled'} successfully`,
       email_notifications_enabled: body.enabled,
+    };
+  }
+
+  @Put('image-upload')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle image upload (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Image upload setting updated' })
+  async updateImageUpload(
+    @Body() body: { enabled: boolean },
+    @CurrentUser() user: any,
+  ) {
+    await this.settingsService.setAllowImageUpload(body.enabled, user.id);
+    return {
+      message: `Image upload ${body.enabled ? 'enabled' : 'disabled'} successfully`,
+      allow_image_upload: body.enabled,
+    };
+  }
+
+  @Put('image-link')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle image link insertion (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Image link setting updated' })
+  async updateImageLink(
+    @Body() body: { enabled: boolean },
+    @CurrentUser() user: any,
+  ) {
+    await this.settingsService.setAllowImageLink(body.enabled, user.id);
+    return {
+      message: `Image link ${body.enabled ? 'enabled' : 'disabled'} successfully`,
+      allow_image_link: body.enabled,
+    };
+  }
+
+  @Put('image-upload-service')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set image upload service (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Image upload service updated' })
+  async updateImageUploadService(
+    @Body() body: { service: ImageUploadService },
+    @CurrentUser() user: any,
+  ) {
+    await this.settingsService.setImageUploadService(body.service, user.id);
+    return {
+      message: `Image upload service set to ${body.service}`,
+      image_upload_service: body.service,
+    };
+  }
+
+  @Put('imgbb-api-key')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set ImgBB API key (Admin only)' })
+  @ApiResponse({ status: 200, description: 'ImgBB API key updated' })
+  async updateImgbbApiKey(
+    @Body() body: { apiKey: string },
+    @CurrentUser() user: any,
+  ) {
+    await this.settingsService.setImgbbApiKey(body.apiKey, user.id);
+    return {
+      message: 'ImgBB API key updated successfully',
+    };
+  }
+
+  @Put('cloudinary-config')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Set Cloudinary configuration (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Cloudinary config updated' })
+  async updateCloudinaryConfig(
+    @Body() body: { cloudName: string; apiKey: string; apiSecret: string },
+    @CurrentUser() user: any,
+  ) {
+    await this.settingsService.setCloudinaryConfig(body, user.id);
+    return {
+      message: 'Cloudinary configuration updated successfully',
+    };
+  }
+
+  @Get('upload-config')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get image upload configuration with actual keys (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Upload config retrieved' })
+  async getUploadConfig() {
+    const service = await this.settingsService.getImageUploadService();
+    const imgbbApiKey = await this.settingsService.getImgbbApiKey();
+    const cloudinaryConfig = await this.settingsService.getCloudinaryConfig();
+    
+    return {
+      service,
+      imgbbApiKey,
+      cloudinaryConfig,
     };
   }
 

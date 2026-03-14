@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
+import { settingsApi } from '@/lib/api/settings';
 import { useAdminProduct, useCategories } from '@/lib/hooks/use-products';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { VariantModal } from '@/components/admin/variant-modal';
@@ -16,6 +17,7 @@ import { useToast } from '@/lib/hooks/use-toast';
 import { SuccessToast } from '@/components/ui/success-toast';
 import { ErrorToast } from '@/components/ui/error-toast';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useQuery } from '@tanstack/react-query';
 
 const productSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -40,12 +42,21 @@ export default function EditProductPage() {
   
   const { data: product, isLoading: productLoading } = useAdminProduct(productId);
   const { data: categories } = useCategories();
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsApi.getSettings(),
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteVariantConfirm, setDeleteVariantConfirm] = useState<{ show: boolean; id: string | null }>({ show: false, id: null });
   const [showVariantModal, setShowVariantModal] = useState(false);
   const [editingVariant, setEditingVariant] = useState<any>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<string>('');
   const { toast, success, error, hideToast } = useToast();
+
+  const allowImageUpload = settings?.allow_image_upload ?? true;
+  const allowImageLink = settings?.allow_image_link ?? true;
 
   const {
     register,
@@ -118,6 +129,52 @@ export default function EditProductPage() {
 
   const trackInventory = watch('trackInventory');
   const imageUrl = watch('imageUrl');
+
+  // Handle file upload
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadedFile(file);
+    
+    // Create local preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setUploadPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to service if configured
+    try {
+      // Fetch actual upload config with API keys
+      const uploadConfig = await settingsApi.getUploadConfig();
+      
+      if (!uploadConfig.service) {
+        error('Upload service not configured');
+        return;
+      }
+
+      const { uploadImage } = await import('@/lib/utils/image-upload');
+      
+      const config = {
+        service: uploadConfig.service,
+        imgbbApiKey: uploadConfig.imgbbApiKey || undefined,
+        cloudinaryConfig: uploadConfig.cloudinaryConfig || undefined,
+      };
+
+      const result = await uploadImage(file, config);
+      
+      // Update the form with the uploaded URL
+      reset({
+        ...watch(),
+        imageUrl: result.url,
+      });
+      
+      success('Image uploaded successfully!');
+    } catch (err: any) {
+      error(err.message || 'Failed to upload image');
+    }
+  };
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
@@ -304,21 +361,59 @@ export default function EditProductPage() {
                 </select>
               </div>
 
+              {/* Product Image */}
               <div>
-                <label className="block text-sm font-medium mb-2">Image URL</label>
-                <input
-                  {...register('imageUrl')}
-                  type="url"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-                {imageUrl && (
+                <label className="block text-sm font-medium mb-2">Product Image</label>
+                
+                {/* Image Link Input */}
+                {allowImageLink && (
+                  <div className="mb-3">
+                    <label className="block text-xs text-gray-600 mb-1">Image URL</label>
+                    <input
+                      {...register('imageUrl')}
+                      type="url"
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                )}
+
+                {/* File Upload */}
+                {allowImageUpload && (
+                  <div className="mb-3">
+                    <label className="block text-xs text-gray-600 mb-1">
+                      {allowImageLink ? 'Or upload an image' : 'Upload Image'}
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Note: File upload requires hosting service configuration
+                    </p>
+                  </div>
+                )}
+
+                {/* Preview */}
+                {(imageUrl || uploadPreview) && (
                   <div className="mt-3">
                     <p className="text-sm font-medium mb-2">Preview:</p>
                     <img
-                      src={imageUrl}
+                      src={uploadPreview || imageUrl}
                       alt="Preview"
-                      className="w-32 h-32 rounded object-cover"
+                      className="w-32 h-32 rounded object-cover border"
                     />
+                  </div>
+                )}
+
+                {/* Warning if both disabled */}
+                {!allowImageLink && !allowImageUpload && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ Image upload and link options are disabled in settings.
+                    </p>
                   </div>
                 )}
               </div>

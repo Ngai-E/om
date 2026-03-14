@@ -3,6 +3,7 @@ import type { Cart } from '@/types';
 
 export interface AddToCartData {
   productId: string;
+  variantId?: string;
   quantity: number;
 }
 

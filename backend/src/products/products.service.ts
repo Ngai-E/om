@@ -12,6 +12,7 @@ export class ProductsService {
 
   async findAll(filters?: {
     categoryId?: string;
+    categorySlug?: string;
     search?: string;
     minPrice?: number;
     maxPrice?: number;
@@ -30,8 +31,21 @@ export class ProductsService {
       where.isActive = true;
     }
 
+    // Handle category filtering by ID or slug
     if (filters?.categoryId) {
       where.categoryId = filters.categoryId;
+    } else if (filters?.categorySlug) {
+      // Find category by slug first
+      console.log('[ProductsService] Looking up category by slug:', filters.categorySlug);
+      const category = await this.prisma.category.findUnique({
+        where: { slug: filters.categorySlug },
+      });
+      if (category) {
+        console.log('[ProductsService] Found category:', category.name, 'ID:', category.id);
+        where.categoryId = category.id;
+      } else {
+        console.log('[ProductsService] ⚠️  Category not found for slug:', filters.categorySlug);
+      }
     }
 
     if (filters?.search) {
@@ -87,6 +101,10 @@ export class ProductsService {
           category: true,
           images: { orderBy: { sortOrder: 'asc' } },
           inventory: true,
+          variants: {
+            where: { isActive: true },
+            orderBy: { createdAt: 'asc' },
+          },
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -148,6 +166,10 @@ export class ProductsService {
         category: true,
         images: { orderBy: { sortOrder: 'asc' } },
         inventory: true,
+        variants: {
+          where: { isActive: true },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
 
@@ -187,6 +209,10 @@ export class ProductsService {
         category: true,
         images: { orderBy: { sortOrder: 'asc' } },
         inventory: true,
+        variants: {
+          where: { isActive: true },
+          orderBy: { createdAt: 'asc' },
+        },
       },
     });
 

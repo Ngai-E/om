@@ -10,6 +10,7 @@ export class ProductsController {
   @Get()
   @ApiOperation({ summary: 'Get all products with filters' })
   @ApiQuery({ name: 'categoryId', required: false, description: 'Filter by category ID' })
+  @ApiQuery({ name: 'category', required: false, description: 'Filter by category slug' })
   @ApiQuery({ name: 'search', required: false, description: 'Search in product name and description' })
   @ApiQuery({ name: 'minPrice', required: false, description: 'Minimum price filter' })
   @ApiQuery({ name: 'maxPrice', required: false, description: 'Maximum price filter' })
@@ -21,6 +22,7 @@ export class ProductsController {
   @ApiResponse({ status: 200, description: 'Products retrieved successfully' })
   async findAll(
     @Query('categoryId') categoryId?: string,
+    @Query('category') categorySlug?: string,
     @Query('search') search?: string,
     @Query('minPrice') minPrice?: number,
     @Query('maxPrice') maxPrice?: number,
@@ -32,6 +34,7 @@ export class ProductsController {
   ) {
     return this.productsService.findAll({
       categoryId,
+      categorySlug,
       search,
       minPrice: minPrice ? Number(minPrice) : undefined,
       maxPrice: maxPrice ? Number(maxPrice) : undefined,

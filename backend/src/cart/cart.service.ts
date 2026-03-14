@@ -18,6 +18,7 @@ export class CartService {
                 inventory: true,
               },
             },
+            variant: true, // Include variant data
           },
         },
       },
@@ -42,6 +43,7 @@ export class CartService {
                   inventory: true,
                 },
               },
+              variant: true, // Include variant data
             },
           },
         },
@@ -55,30 +57,67 @@ export class CartService {
     // Verify product exists and is available
     const product = await this.prisma.product.findUnique({
       where: { id: dto.productId },
-      include: { inventory: true },
+      include: { 
+        inventory: true,
+        variants: true,
+      },
     });
 
     if (!product || !product.isActive || product.deletedAt) {
       throw new NotFoundException('Product not found');
     }
 
-    // Check inventory
-    if (product.inventory?.isTracked && product.inventory.quantity < dto.quantity) {
-      throw new BadRequestException('Insufficient stock');
+    // Check if product has variants - if so, variantId is required
+    const hasVariants = product.variants && product.variants.length > 0;
+    if (hasVariants && !dto.variantId) {
+      throw new BadRequestException('This product requires a variant selection');
+    }
+
+    // If variantId is provided, verify it exists and belongs to this product
+    let variant = null;
+    if (dto.variantId) {
+      variant = await this.prisma.productVariant.findFirst({
+        where: { 
+          id: dto.variantId,
+          productId: dto.productId,
+          isActive: true,
+        },
+      });
+
+      if (!variant) {
+        throw new NotFoundException('Product variant not found');
+      }
+
+      // Check variant stock
+      if (variant.stock < dto.quantity) {
+        throw new BadRequestException('Insufficient stock for this variant');
+      }
+    } else {
+      // Check product inventory (for non-variant products)
+      if (product.inventory?.isTracked && product.inventory.quantity < dto.quantity) {
+        throw new BadRequestException('Insufficient stock');
+      }
     }
 
     // Get or create cart
     const cart = await this.getOrCreateCart(userId);
 
-    // Check if item already exists in cart
-    const existingItem = cart.items.find((item) => item.productId === dto.productId);
+    // Check if item already exists in cart (same product AND variant)
+    const existingItem = cart.items.find((item) => 
+      item.productId === dto.productId && 
+      item.variantId === (dto.variantId || null)
+    );
 
     if (existingItem) {
       // Update quantity
       const newQuantity = existingItem.quantity + dto.quantity;
 
       // Check inventory for new quantity
-      if (product.inventory?.isTracked && product.inventory.quantity < newQuantity) {
+      if (variant) {
+        if (variant.stock < newQuantity) {
+          throw new BadRequestException('Insufficient stock for this variant');
+        }
+      } else if (product.inventory?.isTracked && product.inventory.quantity < newQuantity) {
         throw new BadRequestException('Insufficient stock');
       }
 
@@ -94,6 +133,7 @@ export class CartService {
         data: {
           cartId: cart.id,
           productId: dto.productId,
+          variantId: dto.variantId || null,
           quantity: dto.quantity,
         },
       });

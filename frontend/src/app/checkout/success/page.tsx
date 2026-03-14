@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CheckCircle, Package, ArrowRight } from 'lucide-react';
+import { CheckCircle, Package, ArrowRight, Printer } from 'lucide-react';
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -20,6 +20,10 @@ function SuccessContent() {
       sessionStorage.removeItem('orderNumber');
     }
   }, []);
+
+  const handlePrint = () => {
+    window.print();
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -60,21 +64,40 @@ function SuccessContent() {
 
         {/* Action Buttons */}
         <div className="space-y-3">
+          <button
+            onClick={handlePrint}
+            className="w-full inline-flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition print:hidden"
+          >
+            <Printer className="w-4 h-4" />
+            Print Receipt
+          </button>
           <Link
             href="/orders"
-            className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+            className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition print:hidden"
           >
             View My Orders
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
             href="/products"
-            className="w-full inline-block px-6 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition"
+            className="w-full inline-block px-6 py-3 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition print:hidden"
           >
             Continue Shopping
           </Link>
         </div>
       </div>
+
+      {/* Print Styles */}
+      <style jsx global>{`
+        @media print {
+          body {
+            background: white !important;
+          }
+          .print\\:hidden {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -7,8 +7,9 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
+import { settingsApi } from '@/lib/api/settings';
 import { useCategories } from '@/lib/hooks/use-products';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { useToast } from '@/lib/hooks/use-toast';
@@ -37,8 +38,17 @@ export default function NewProductPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { data: categories } = useCategories();
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsApi.getSettings(),
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<string>('');
   const { toast, success, error, hideToast } = useToast();
+
+  const allowImageUpload = settings?.allow_image_upload ?? true;
+  const allowImageLink = settings?.allow_image_link ?? true;
 
   const {
     register,
@@ -80,6 +90,54 @@ export default function NewProductPage() {
 
   const trackInventory = watch('trackInventory');
   const imageUrl = watch('imageUrl');
+
+  // Handle file upload
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadedFile(file);
+    
+    // Create local preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setUploadPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload to service if configured
+    try {
+      // Fetch actual upload config with API keys
+      const uploadConfig = await settingsApi.getUploadConfig();
+      
+      if (!uploadConfig.service) {
+        error('Upload service not configured');
+        return;
+      }
+
+      const { uploadImage } = await import('@/lib/utils/image-upload');
+      
+      const config = {
+        service: uploadConfig.service,
+        imgbbApiKey: uploadConfig.imgbbApiKey || undefined,
+        cloudinaryConfig: uploadConfig.cloudinaryConfig || undefined,
+      };
+
+      const result = await uploadImage(file, config);
+      
+      // Update the imageUrl field
+      const currentValues = watch();
+      Object.keys(currentValues).forEach(key => {
+        if (key === 'imageUrl') {
+          (document.querySelector('input[type="url"]') as HTMLInputElement).value = result.url;
+        }
+      });
+      
+      success('Image uploaded successfully!');
+    } catch (err: any) {
+      error(err.message || 'Failed to upload image');
+    }
+  };
 
   const onSubmit = async (data: any) => {
     setIsSubmitting(true);
@@ -171,36 +229,66 @@ export default function NewProductPage() {
                 )}
               </div>
 
+              {/* Product Image */}
               <div>
-                <label className="block text-sm font-medium mb-2">Image URL</label>
-                <input
-                  {...register('imageUrl')}
-                  type="url"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="https://example.com/image.jpg"
-                />
-                {errors.imageUrl && (
-                  <p className="text-sm text-destructive mt-1">{errors.imageUrl.message}</p>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  Enter a direct URL to the product image
-                </p>
+                <label className="block text-sm font-medium mb-2">Product Image</label>
                 
-                {/* Image Preview */}
-                {imageUrl && (
+                {/* Image Link Input */}
+                {allowImageLink && (
+                  <div className="mb-3">
+                    <label className="block text-xs text-gray-600 mb-1">Image URL</label>
+                    <input
+                      {...register('imageUrl')}
+                      type="url"
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    {errors.imageUrl && (
+                      <p className="text-sm text-destructive mt-1">{errors.imageUrl.message}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* File Upload */}
+                {allowImageUpload && (
+                  <div className="mb-3">
+                    <label className="block text-xs text-gray-600 mb-1">
+                      {allowImageLink ? 'Or upload an image' : 'Upload Image'}
+                    </label>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Note: File upload requires hosting service configuration
+                    </p>
+                  </div>
+                )}
+
+                {/* Preview */}
+                {(imageUrl || uploadPreview) && (
                   <div className="mt-3">
                     <p className="text-sm font-medium mb-2">Preview:</p>
-                    <div className="w-32 h-32 border rounded-lg overflow-hidden bg-muted">
-                      <img
-                        src={imageUrl}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '';
-                          (e.target as HTMLImageElement).alt = 'Invalid image URL';
-                        }}
-                      />
-                    </div>
+                    <img
+                      src={uploadPreview || imageUrl}
+                      alt="Preview"
+                      className="w-32 h-32 rounded object-cover border"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = '';
+                        (e.target as HTMLImageElement).alt = 'Invalid image URL';
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* Warning if both disabled */}
+                {!allowImageLink && !allowImageUpload && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ Image upload and link options are disabled in settings.
+                    </p>
                   </div>
                 )}
               </div>

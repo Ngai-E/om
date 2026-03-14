@@ -12,6 +12,11 @@ export enum PaymentType {
   PAY_IN_STORE = 'pay_in_store',
 }
 
+export enum ImageUploadService {
+  IMGBB = 'imgbb',
+  CLOUDINARY = 'cloudinary',
+}
+
 export interface PaymentMethodsConfig {
   card: {
     enabled: boolean;
@@ -164,6 +169,82 @@ export class SettingsService {
     );
   }
 
+  async getAllowImageUpload(): Promise<boolean> {
+    const enabled = await this.getSetting('allow_image_upload');
+    return enabled === 'true' || enabled === null; // Default to true
+  }
+
+  async setAllowImageUpload(enabled: boolean, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'allow_image_upload',
+      enabled.toString(),
+      'Allow users to upload images for products',
+      updatedBy,
+    );
+  }
+
+  async getAllowImageLink(): Promise<boolean> {
+    const enabled = await this.getSetting('allow_image_link');
+    return enabled === 'true' || enabled === null; // Default to true
+  }
+
+  async setAllowImageLink(enabled: boolean, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'allow_image_link',
+      enabled.toString(),
+      'Allow users to insert image links for products',
+      updatedBy,
+    );
+  }
+
+  async getImageUploadService(): Promise<ImageUploadService> {
+    const service = await this.getSetting('image_upload_service');
+    return (service as ImageUploadService) || ImageUploadService.IMGBB;
+  }
+
+  async setImageUploadService(service: ImageUploadService, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'image_upload_service',
+      service,
+      'Image upload service (imgbb or cloudinary)',
+      updatedBy,
+    );
+  }
+
+  async getImgbbApiKey(): Promise<string | null> {
+    return await this.getSetting('imgbb_api_key');
+  }
+
+  async setImgbbApiKey(apiKey: string, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'imgbb_api_key',
+      apiKey,
+      'ImgBB API key for image uploads',
+      updatedBy,
+    );
+  }
+
+  async getCloudinaryConfig(): Promise<{ cloudName: string; apiKey: string; apiSecret: string } | null> {
+    const config = await this.getSetting('cloudinary_config');
+    if (config) {
+      try {
+        return JSON.parse(config);
+      } catch (error) {
+        console.error('Failed to parse Cloudinary config:', error);
+      }
+    }
+    return null;
+  }
+
+  async setCloudinaryConfig(config: { cloudName: string; apiKey: string; apiSecret: string }, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'cloudinary_config',
+      JSON.stringify(config),
+      'Cloudinary configuration for image uploads',
+      updatedBy,
+    );
+  }
+
   async initializeDefaults(): Promise<void> {
     const defaults = [
       {
@@ -190,6 +271,21 @@ export class SettingsService {
         key: 'email_notifications_enabled',
         value: 'true',
         description: 'Send email notifications to customers for order updates',
+      },
+      {
+        key: 'allow_image_upload',
+        value: 'true',
+        description: 'Allow users to upload images for products',
+      },
+      {
+        key: 'allow_image_link',
+        value: 'true',
+        description: 'Allow users to insert image links for products',
+      },
+      {
+        key: 'image_upload_service',
+        value: ImageUploadService.IMGBB,
+        description: 'Image upload service (imgbb or cloudinary)',
       },
     ];
 

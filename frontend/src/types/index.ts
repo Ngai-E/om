@@ -89,6 +89,8 @@ export interface CartItem {
   cartId: string;
   productId: string;
   product: Product;
+  variantId?: string;
+  variant?: ProductVariant;
   quantity: number;
   createdAt: string;
   updatedAt: string;

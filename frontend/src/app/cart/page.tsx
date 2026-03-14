@@ -31,6 +31,12 @@ export default function CartPage() {
   
   const [isClearing, setIsClearing] = useState(false);
 
+  // Check if any cart items have products with variants but no variant selected
+  const hasInvalidVariants = cart?.items.some(item => {
+    const hasVariants = item.product.variants && item.product.variants.length > 0;
+    return hasVariants && !item.variantId;
+  }) || false;
+
   // Fetch guest checkout setting
   useEffect(() => {
     const fetchGuestCheckoutSetting = async () => {
@@ -447,9 +453,18 @@ export default function CartPage() {
                 </div>
               </div>
 
+              {hasInvalidVariants && (
+                <div className="mb-3 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+                  <p className="text-sm text-destructive font-medium">
+                    ⚠️ Some products require variant selection. Please remove them or contact support.
+                  </p>
+                </div>
+              )}
+
               <button
                 onClick={() => router.push('/checkout')}
-                className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition mb-3"
+                disabled={hasInvalidVariants}
+                className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Proceed to Checkout
               </button>

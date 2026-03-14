@@ -23,8 +23,10 @@ export class OrdersService {
             product: {
               include: {
                 inventory: true,
+                variants: true,
               },
             },
+            variant: true,
           },
         },
       },
@@ -34,9 +36,21 @@ export class OrdersService {
       throw new BadRequestException('Cart is empty');
     }
 
-    // Validate inventory for all items
+    // Validate cart items
     for (const item of cart.items) {
-      if (item.product.inventory?.isTracked && item.product.inventory.quantity < item.quantity) {
+      // Check if product has variants but no variant selected
+      const hasVariants = item.product.variants && item.product.variants.length > 0;
+      if (hasVariants && !item.variantId) {
+        throw new BadRequestException(`Please select a variant for ${item.product.name}`);
+      }
+
+      // Validate inventory
+      if (item.variant) {
+        // Check variant stock
+        if (item.variant.stock < item.quantity) {
+          throw new BadRequestException(`Insufficient stock for ${item.product.name} - ${item.variant.name}`);
+        }
+      } else if (item.product.inventory?.isTracked && item.product.inventory.quantity < item.quantity) {
         throw new BadRequestException(`Insufficient stock for ${item.product.name}`);
       }
     }
