@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Resend } from 'resend';
+import * as nodemailer from 'nodemailer';
 import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class EmailService {
-  private resend: Resend;
+  private transporter: nodemailer.Transporter;
   private fromEmail: string;
   private isEnabled: boolean;
 
@@ -18,8 +18,17 @@ export class EmailService {
     this.isEnabled = !!apiKey;
 
     if (this.isEnabled) {
-      this.resend = new Resend(apiKey);
-      console.log('✅ Email service enabled');
+      // Configure Resend SMTP
+      this.transporter = nodemailer.createTransport({
+        host: 'smtp.resend.com',
+        port: 465,
+        secure: true, // use SSL
+        auth: {
+          user: 'resend',
+          pass: apiKey,
+        },
+      });
+      console.log('✅ Email service enabled (Resend SMTP)');
     } else {
       console.log('⚠️  Email service disabled (no RESEND_API_KEY)');
     }
@@ -77,7 +86,7 @@ export class EmailService {
         </div>
       `;
 
-      await this.resend.emails.send({
+      await this.transporter.sendMail({
         from: this.fromEmail,
         to: order.user.email,
         subject: `Order Confirmation - ${order.orderNumber}`,
@@ -180,7 +189,7 @@ export class EmailService {
 
       const message = statusMessages[newStatus] || `Your order status has been updated to ${newStatus}`;
 
-      await this.resend.emails.send({
+      await this.transporter.sendMail({
         from: this.fromEmail,
         to: order.user.email,
         subject: `Order Update - ${order.orderNumber}`,

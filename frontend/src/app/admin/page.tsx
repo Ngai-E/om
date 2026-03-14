@@ -140,10 +140,10 @@ export default function AdminDashboardPage() {
           <div className="bg-white border rounded-lg p-6">
             <h3 className="font-bold text-lg mb-4">Delivery Slots Utilization</h3>
             <div className="space-y-4">
-              {deliverySlots.map((slot) => {
+              {deliverySlots.map((slot, index) => {
                 const percentage = (slot.used / slot.capacity) * 100;
                 return (
-                  <div key={slot.time}>
+                  <div key={`${slot.time}-${index}`}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-gray-700">{slot.time}</span>
                       <span className="text-sm font-bold text-gray-900">
