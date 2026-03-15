@@ -39,9 +39,8 @@ export class PromotionsController {
 
   @Get('eligible')
   @UseGuards(JwtAuthGuard)
-  async getEligiblePromotions(@Request() req) {
-    const userId = req.user.userId;
-    return this.promotionsService.getEligiblePromotionsForUser(userId);
+  async getEligiblePromotions(@CurrentUser() user) {
+    return this.promotionsService.getEligiblePromotionsForUser(user.id);
   }
 
   @Get('code/:code')
