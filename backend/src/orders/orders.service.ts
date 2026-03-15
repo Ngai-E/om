@@ -4,6 +4,7 @@ import { FulfillmentType } from '@prisma/client';
 import { CreateOrderDto, UpdateOrderStatusDto } from './dto';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { EmailService } from '../email/email.service';
+import { PromotionsService } from '../promotions/promotions.service';
 
 @Injectable()
 export class OrdersService {
@@ -11,6 +12,7 @@ export class OrdersService {
     private prisma: PrismaService,
     private notificationsGateway: NotificationsGateway,
     private emailService: EmailService,
+    private promotionsService: PromotionsService,
   ) {}
 
   async create(userId: string, dto: CreateOrderDto) {
@@ -151,7 +153,23 @@ export class OrdersService {
       }
     }
 
-    const total = subtotal + deliveryFee;
+    // Apply promotions
+    const isFirstOrder = await this.isFirstOrder(userId);
+    const promotionContext = {
+      userId,
+      subtotal,
+      deliveryFee,
+      fulfillmentType: dto.fulfillmentType,
+      isFirstOrder,
+      isGuest: !userId,
+      promoCode: dto.promoCode,
+    };
+
+    const promotionResult = await this.promotionsService.applyPromotions(promotionContext);
+    const discountTotal = promotionResult.totalDiscount;
+
+    // Calculate final total
+    const total = subtotal + deliveryFee - discountTotal;
 
     // Create order
     const order = await this.prisma.order.create({
@@ -162,6 +180,7 @@ export class OrdersService {
         fulfillmentType: dto.fulfillmentType,
         subtotal,
         deliveryFee,
+        discountTotal,
         total,
         addressId: dto.addressId,
         deliverySlotId: actualDeliverySlotId,
@@ -177,6 +196,15 @@ export class OrdersService {
               subtotal: itemSubtotal,
             };
           }),
+        },
+        promotionRedemptions: {
+          create: promotionResult.redemptions.map(r => ({
+            promotionId: r.promotionId,
+            userId: userId || null,
+            discountAmount: r.discountAmount,
+            appliedToSubtotal: r.appliedToSubtotal,
+            appliedToDelivery: r.appliedToDelivery,
+          })),
         },
         statusHistory: {
           create: {
@@ -420,5 +448,15 @@ export class OrdersService {
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
     return `ORD-${timestamp}-${random}`;
+  }
+
+  private async isFirstOrder(userId?: string): Promise<boolean> {
+    if (!userId) return true; // Guest orders count as first order
+
+    const orderCount = await this.prisma.order.count({
+      where: { userId },
+    });
+
+    return orderCount === 0;
   }
 }

@@ -295,10 +295,14 @@ model Order {
   createdAt         DateTime            @default(now())
   updatedAt         DateTime            @updatedAt
 
+  // Promotions & Discounts
+  discountTotal     Decimal             @db.Decimal(10, 2) @default(0)
+  
   // Relations
   items         OrderItem[]
   payment       Payment?
   statusHistory OrderStatusHistory[]
+  promotionRedemptions PromotionRedemption[]
 
   @@index([orderNumber])
   @@index([userId])
@@ -477,6 +481,101 @@ model SystemSettings {
   updatedBy             String? // User ID who last updated
 
   @@map("system_settings")
+}
+
+// ============================================
+// PROMOTIONS & DISCOUNTS
+// ============================================
+
+model Promotion {
+  id          String           @id @default(uuid())
+  name        String
+  description String?
+  imageUrl    String? // Promotion banner image
+  code        String?          @unique // Optional promo code (null = automatic)
+  
+  // Status & Scheduling
+  status      PromotionStatus  @default(DRAFT)
+  startAt     DateTime?
+  endAt       DateTime?
+  
+  // Budget Controls
+  budgetType              BudgetType @default(NONE)
+  maxTotalDiscountAmount  Decimal?   @db.Decimal(10, 2) // Max £ to give away
+  maxTotalRedemptions     Int? // Max number of uses
+  maxRedemptionsPerUser   Int? // Max uses per customer
+  
+  // Eligibility Rules
+  minSubtotal             Decimal?        @db.Decimal(10, 2)
+  firstOrderOnly          Boolean         @default(false)
+  allowedFulfillment      FulfillmentType? // null = any
+  allowGuests             Boolean         @default(true)
+  
+  // Discount Definition
+  discountType       DiscountType
+  discountValue      Decimal      @db.Decimal(10, 2) // 10 = 10% or £10
+  maxDiscountPerOrder Decimal?    @db.Decimal(10, 2) // Cap per order
+  
+  // Discount Application Target
+  applyToSubtotal    Boolean @default(true)
+  applyToDeliveryFee Boolean @default(false)
+  
+  // Stacking
+  allowStacking      Boolean @default(false)
+  priority           Int     @default(0) // Higher = evaluated first
+  
+  // Metadata
+  createdBy   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  redemptions PromotionRedemption[]
+  
+  @@index([status])
+  @@index([code])
+  @@index([startAt, endAt])
+  @@map("promotions")
+}
+
+model PromotionRedemption {
+  id              String   @id @default(uuid())
+  promotionId     String
+  promotion       Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId          String?  // Null for guest orders
+  
+  discountAmount  Decimal  @db.Decimal(10, 2)
+  appliedToSubtotal Decimal @db.Decimal(10, 2) @default(0)
+  appliedToDelivery Decimal @db.Decimal(10, 2) @default(0)
+  
+  createdAt       DateTime @default(now())
+  
+  @@index([promotionId])
+  @@index([orderId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("promotion_redemptions")
+}
+
+enum PromotionStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+enum BudgetType {
+  NONE
+  TOTAL_DISCOUNT
+  TOTAL_USES
+  BOTH
+}
+
+enum DiscountType {
+  PERCENT
+  FIXED
 }
 
 // ============================================

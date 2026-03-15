@@ -47,4 +47,9 @@ export class CreatePhoneOrderDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @ApiProperty({ example: 'FIRST10', description: 'Promo code to apply', required: false })
+  @IsOptional()
+  @IsString()
+  promoCode?: string;
 }

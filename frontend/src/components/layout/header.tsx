@@ -154,6 +154,12 @@ export function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4">
+            <Link
+              href="/promotions"
+              className="text-sm px-3 py-2 text-primary hover:bg-primary/10 rounded-lg transition font-medium"
+            >
+              🎉 Promotions
+            </Link>
             {isAuthenticated ? (
               <>
                 {(user?.role === 'ADMIN' || user?.role === 'STAFF') && (
@@ -286,6 +292,13 @@ export function Header() {
               className="block px-4 py-3 hover:bg-gray-100 rounded-lg"
             >
               Beverages
+            </Link>
+            <Link
+              href="/promotions"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block px-4 py-3 hover:bg-gray-100 rounded-lg text-primary font-medium"
+            >
+              🎉 Promotions
             </Link>
             
             {isAuthenticated ? (

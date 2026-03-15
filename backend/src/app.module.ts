@@ -17,6 +17,7 @@ import { SettingsModule } from './settings/settings.module';
 import { UploadModule } from './upload/upload.module';
 import { AuditModule } from './audit/audit.module';
 import { EmailModule } from './email/email.module';
+import { PromotionsModule } from './promotions/promotions.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -58,6 +59,7 @@ import { AppController } from './app.controller';
     NotificationsModule,
     SettingsModule,
     UploadModule,
+    PromotionsModule,
   ],
   controllers: [AppController],
 })

@@ -228,4 +228,158 @@ export class EmailService {
       console.error('Failed to send status update email:', error);
     }
   }
+
+  async sendPromotionEarned(user: any, promotion: any) {
+    if (!this.isEnabled) return;
+
+    const emailNotificationsEnabled = await this.settingsService.getEmailNotificationsEnabled();
+    if (!emailNotificationsEnabled) return;
+
+    try {
+      await this.transporter.sendMail({
+        from: this.fromEmail,
+        to: user.email,
+        subject: `🎉 You've Earned a Special Offer!`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="margin: 0; font-size: 28px;">🎉 Special Offer Unlocked!</h1>
+              </div>
+              
+              <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+                <p style="font-size: 18px; margin-bottom: 20px;">Hi ${user.firstName},</p>
+                
+                <p style="font-size: 16px; margin-bottom: 25px;">
+                  Great news! You've earned an exclusive promotion:
+                </p>
+                
+                <div style="background: white; border-left: 4px solid #667eea; padding: 20px; margin: 25px 0; border-radius: 5px;">
+                  <h2 style="margin: 0 0 10px 0; color: #667eea; font-size: 24px;">${promotion.name}</h2>
+                  <p style="margin: 0 0 15px 0; font-size: 16px; color: #666;">${promotion.description || ''}</p>
+                  
+                  <div style="background: #667eea; color: white; display: inline-block; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; margin: 10px 0;">
+                    ${promotion.discountType === 'PERCENT' ? `${promotion.discountValue}% OFF` : `£${promotion.discountValue} OFF`}
+                  </div>
+                  
+                  ${promotion.code ? `
+                    <div style="margin-top: 15px; padding: 15px; background: #f0f4ff; border-radius: 5px;">
+                      <p style="margin: 0 0 5px 0; font-size: 12px; color: #666; text-transform: uppercase;">Promo Code</p>
+                      <p style="margin: 0; font-size: 24px; font-weight: bold; font-family: monospace; color: #667eea;">${promotion.code}</p>
+                    </div>
+                  ` : ''}
+                </div>
+                
+                <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                  <p style="margin: 0; font-size: 14px; color: #856404;">
+                    <strong>How to use:</strong><br>
+                    ${promotion.code ? `Enter code <strong>${promotion.code}</strong> at checkout` : 'Discount will be applied automatically at checkout'}
+                    ${promotion.minSubtotal ? `<br>Minimum order: £${promotion.minSubtotal}` : ''}
+                    ${promotion.endAt ? `<br>Valid until: ${new Date(promotion.endAt).toLocaleDateString('en-GB')}` : ''}
+                  </p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                  <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/products" 
+                     style="background: #667eea; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                    Shop Now
+                  </a>
+                </div>
+                
+                <p style="margin-top: 30px; font-size: 14px; color: #666; text-align: center;">
+                  Happy shopping!<br>
+                  The Omega Afro Shop Team
+                </p>
+              </div>
+            </body>
+          </html>
+        `,
+      });
+
+      console.log(`📧 Promotion earned email sent to ${user.email}`);
+    } catch (error) {
+      console.error('Failed to send promotion earned email:', error);
+    }
+  }
+
+  async sendPromotionExpiring(user: any, promotion: any, daysRemaining: number) {
+    if (!this.isEnabled) return;
+
+    const emailNotificationsEnabled = await this.settingsService.getEmailNotificationsEnabled();
+    if (!emailNotificationsEnabled) return;
+
+    try {
+      await this.transporter.sendMail({
+        from: this.fromEmail,
+        to: user.email,
+        subject: `⏰ Your ${promotion.name} Expires in ${daysRemaining} Days!`,
+        html: `
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="margin: 0; font-size: 28px;">⏰ Don't Miss Out!</h1>
+              </div>
+              
+              <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+                <p style="font-size: 18px; margin-bottom: 20px;">Hi ${user.firstName},</p>
+                
+                <p style="font-size: 16px; margin-bottom: 25px;">
+                  Your exclusive promotion is expiring soon!
+                </p>
+                
+                <div style="background: white; border-left: 4px solid #f5576c; padding: 20px; margin: 25px 0; border-radius: 5px;">
+                  <h2 style="margin: 0 0 10px 0; color: #f5576c; font-size: 24px;">${promotion.name}</h2>
+                  <p style="margin: 0 0 15px 0; font-size: 16px; color: #666;">${promotion.description || ''}</p>
+                  
+                  <div style="background: #f5576c; color: white; display: inline-block; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; margin: 10px 0;">
+                    ${promotion.discountType === 'PERCENT' ? `${promotion.discountValue}% OFF` : `£${promotion.discountValue} OFF`}
+                  </div>
+                  
+                  ${promotion.code ? `
+                    <div style="margin-top: 15px; padding: 15px; background: #fff5f5; border-radius: 5px;">
+                      <p style="margin: 0 0 5px 0; font-size: 12px; color: #666; text-transform: uppercase;">Promo Code</p>
+                      <p style="margin: 0; font-size: 24px; font-weight: bold; font-family: monospace; color: #f5576c;">${promotion.code}</p>
+                    </div>
+                  ` : ''}
+                </div>
+                
+                <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                  <p style="margin: 0; font-size: 16px; color: #856404;">
+                    <strong>⏰ Expires in ${daysRemaining} ${daysRemaining === 1 ? 'day' : 'days'}!</strong><br>
+                    ${promotion.endAt ? `Valid until: ${new Date(promotion.endAt).toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}` : ''}
+                  </p>
+                </div>
+                
+                <div style="text-align: center; margin-top: 30px;">
+                  <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/products" 
+                     style="background: #f5576c; color: white; padding: 15px 40px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
+                    Use Now Before It Expires!
+                  </a>
+                </div>
+                
+                <p style="margin-top: 30px; font-size: 14px; color: #666; text-align: center;">
+                  Don't let this offer slip away!<br>
+                  The Omega Afro Shop Team
+                </p>
+              </div>
+            </body>
+          </html>
+        `,
+      });
+
+      console.log(`📧 Promotion expiring email sent to ${user.email}`);
+    } catch (error) {
+      console.error('Failed to send promotion expiring email:', error);
+    }
+  }
 }

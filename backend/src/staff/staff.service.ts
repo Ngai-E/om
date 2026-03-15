@@ -2,12 +2,14 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePhoneOrderDto } from './dto';
 import { StripeService } from '../payments/stripe.service';
+import { PromotionsService } from '../promotions/promotions.service';
 
 @Injectable()
 export class StaffService {
   constructor(
     private prisma: PrismaService,
     private stripeService: StripeService,
+    private promotionsService: PromotionsService,
   ) {}
 
   /**
@@ -93,7 +95,23 @@ export class StaffService {
       }
     }
 
-    const total = subtotal + deliveryFee;
+    // Apply promotions
+    const isFirstOrder = await this.isFirstOrder(user.id);
+    const promotionContext = {
+      userId: user.id,
+      subtotal,
+      deliveryFee,
+      fulfillmentType: dto.fulfillmentType,
+      isFirstOrder,
+      isGuest: false,
+      promoCode: dto.promoCode,
+    };
+
+    const promotionResult = await this.promotionsService.applyPromotions(promotionContext);
+    const discountTotal = promotionResult.totalDiscount;
+
+    // Calculate final total
+    const total = subtotal + deliveryFee - discountTotal;
 
     // Create order
     const order = await this.prisma.order.create({
@@ -104,6 +122,7 @@ export class StaffService {
         fulfillmentType: dto.fulfillmentType,
         subtotal,
         deliveryFee,
+        discountTotal,
         total,
         isPhoneOrder: true, // Mark as phone order
         addressId: dto.addressId || undefined, // Convert empty string to undefined
@@ -112,6 +131,15 @@ export class StaffService {
         staffNotes: `Phone order created by staff ID: ${staffId}`,
         items: {
           create: orderItems,
+        },
+        promotionRedemptions: {
+          create: promotionResult.redemptions.map(r => ({
+            promotionId: r.promotionId,
+            userId: user.id,
+            discountAmount: r.discountAmount,
+            appliedToSubtotal: r.appliedToSubtotal,
+            appliedToDelivery: r.appliedToDelivery,
+          })),
         },
         statusHistory: {
           create: {
@@ -416,5 +444,13 @@ export class StaffService {
     const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 6).toUpperCase();
     return `ORD-${timestamp}-${random}`;
+  }
+
+  private async isFirstOrder(userId: string): Promise<boolean> {
+    const orderCount = await this.prisma.order.count({
+      where: { userId },
+    });
+
+    return orderCount === 0;
   }
 }

@@ -17,6 +17,7 @@ import { useDeliverySlots } from '@/lib/hooks/use-delivery';
 import { StripePaymentElement } from '@/components/checkout/stripe-payment-element';
 import { useCartValidation } from '@/lib/hooks/use-cart-validation';
 import { DeliverySlotPicker } from '@/components/checkout/delivery-slot-picker';
+import { PromoCodeSelector } from '@/components/checkout/promo-code-selector';
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function CheckoutPage() {
   const [selectedSlotId, setSelectedSlotId] = useState<string>('');
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH_ON_DELIVERY' | 'PAY_IN_STORE'>('CASH_ON_DELIVERY');
+  const [promoCode, setPromoCode] = useState<string>('');
 
   // Fetch enabled payment methods
   const { data: paymentSettings } = useQuery({
@@ -84,6 +86,7 @@ export default function CheckoutPage() {
         const orderData: any = {
           fulfillmentType,
           notes: '',
+          promoCode: promoCode || undefined,
         };
 
         if (fulfillmentType === 'DELIVERY') {
@@ -127,6 +130,7 @@ export default function CheckoutPage() {
       const orderData: any = {
         fulfillmentType,
         notes: '',
+        promoCode: promoCode || undefined,
       };
 
       if (fulfillmentType === 'DELIVERY') {
@@ -548,6 +552,15 @@ export default function CheckoutPage() {
                     <span className="font-semibold whitespace-nowrap">£{(parseFloat(item.product.price) * item.quantity).toFixed(2)}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* Promo Code Selector */}
+              <div className="mb-4 lg:mb-6">
+                <PromoCodeSelector
+                  selectedCode={promoCode}
+                  onSelectCode={setPromoCode}
+                  onClearCode={() => setPromoCode('')}
+                />
               </div>
 
               <div className="border-t pt-3 lg:pt-4 space-y-2 mb-4 lg:mb-6">
