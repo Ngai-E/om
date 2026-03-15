@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { promotionsApi, CreatePromotionDto } from '@/lib/api/promotions';
-import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Save, AlertCircle, Upload } from 'lucide-react';
 import Link from 'next/link';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +15,20 @@ export default function NewPromotionPage() {
   const queryClient = useQueryClient();
   const { toast, success, error: showError, hideToast } = useToast();
   const [error, setError] = useState<string | null>(null);
+  const [uploadPreview, setUploadPreview] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Fetch settings for image upload config
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings`);
+      return response.json();
+    },
+  });
+
+  const allowImageUpload = settings?.allow_image_upload ?? true;
+  const allowImageLink = settings?.allow_image_link ?? true;
 
   const [formData, setFormData] = useState<CreatePromotionDto>({
     name: '',
@@ -97,6 +111,43 @@ export default function NewPromotionPage() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      showError('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      showError('Image size must be less than 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const uploadConfig = {
+        service: settings?.image_upload_service || 'imgbb',
+        imgbbApiKey: settings?.imgbb_api_key,
+        cloudinaryConfig: settings?.cloudinary_config,
+      };
+
+      const { uploadImage } = await import('@/lib/utils/image-upload');
+      const result = await uploadImage(file, uploadConfig);
+      
+      updateField('imageUrl', result.url);
+      setUploadPreview(result.url);
+      success('Image uploaded successfully!');
+    } catch (err: any) {
+      showError(err.message || 'Failed to upload image');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <AdminLayout>
     <div className="max-w-4xl mx-auto">
@@ -176,15 +227,55 @@ export default function NewPromotionPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Image URL
+                Promotion Image
               </label>
-              <input
-                type="url"
-                value={formData.imageUrl}
-                onChange={(e) => updateField('imageUrl', e.target.value)}
-                placeholder="https://example.com/promo-image.jpg"
-                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
+              
+              {allowImageLink && (
+                <div className="mb-3">
+                  <label className="block text-xs text-gray-600 mb-1">
+                    {allowImageUpload ? 'Enter image URL' : 'Image URL'}
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.imageUrl}
+                    onChange={(e) => updateField('imageUrl', e.target.value)}
+                    placeholder="https://example.com/promo-image.jpg"
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+              )}
+
+              {allowImageUpload && (
+                <div className="mb-3">
+                  <label className="block text-xs text-gray-600 mb-1">
+                    {allowImageLink ? 'Or upload an image' : 'Upload Image'}
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={isUploading}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                  {isUploading && (
+                    <p className="text-sm text-blue-600 mt-1">Uploading...</p>
+                  )}
+                </div>
+              )}
+
+              {(uploadPreview || formData.imageUrl) && (
+                <div className="mt-3">
+                  <p className="text-sm font-medium mb-2">Preview:</p>
+                  <img
+                    src={uploadPreview || formData.imageUrl}
+                    alt="Promotion preview"
+                    className="w-full max-w-md h-48 rounded object-cover border"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://via.placeholder.com/400x200?text=Invalid+Image';
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <div>

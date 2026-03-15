@@ -202,8 +202,9 @@ export class PromotionsController {
       try {
         // Check if promo code already exists
         if (promoData.code) {
-          const existing = await this.promotionsService.findByCode(promoData.code);
-          if (existing) {
+          try {
+            await this.promotionsService.findByCode(promoData.code);
+            // If we get here, the code exists
             if (skipExisting) {
               results.skipped++;
               continue;
@@ -212,6 +213,8 @@ export class PromotionsController {
               results.errors.push(`Promo code "${promoData.code}" already exists`);
               continue;
             }
+          } catch (err) {
+            // Code doesn't exist, continue with creation
           }
         }
 
