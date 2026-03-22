@@ -45,6 +45,14 @@ export class AdminController {
     return this.adminService.getBadgeCounts();
   }
 
+  @Get('inventory/stats')
+  @Roles('ADMIN', 'STAFF')
+  @ApiOperation({ summary: 'Get inventory statistics' })
+  @ApiResponse({ status: 200, description: 'Inventory stats retrieved' })
+  async getInventoryStats() {
+    return this.adminService.getInventoryStats();
+  }
+
   @Get('audit-logs')
   @ApiOperation({ summary: 'Get audit logs with filters (Admin only)' })
   @ApiQuery({ name: 'page', required: false, type: Number })

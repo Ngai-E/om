@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Search, AlertTriangle, Package, TrendingDown, Download, Upload, Save, X, Edit2 } from 'lucide-react';
 import { useProducts } from '@/lib/hooks/use-products';
 import { AdminLayout } from '@/components/admin/admin-layout';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
@@ -32,18 +32,46 @@ export default function InventoryManagementPage() {
     return () => clearTimeout(timer);
   }, [searchInput]);
 
-  const { data: productsData, isLoading } = useProducts({ 
-    search: searchTerm,
-    page,
-    limit: pageSize,
-    includeInactive: true,
+  const { data: productsData, isLoading } = useQuery({
+    queryKey: ['admin-products', searchTerm, page, pageSize],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: pageSize.toString(),
+      });
+      if (searchTerm) params.append('search', searchTerm);
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products?${params}`);
+      if (!res.ok) throw new Error('Failed to fetch products');
+      return res.json();
+    },
+  });
+
+  const { data: statsData } = useQuery({
+    queryKey: ['inventory-stats'],
+    queryFn: async () => {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/inventory/stats`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) throw new Error('Failed to fetch inventory stats');
+      return res.json();
+    },
   });
 
   const updateInventory = useMutation({
     mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) =>
-      productsApi.updateInventory(productId, { quantity, action: 'SET' }),
+      fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}/inventory`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ quantity, action: 'SET' }),
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-products', searchTerm, page, pageSize] });
+      queryClient.invalidateQueries({ queryKey: ['inventory-stats'] });
       success('Inventory updated successfully');
       setEditingId(null);
     },
@@ -181,10 +209,10 @@ export default function InventoryManagementPage() {
     })
     .sort((a, b) => a.stock - b.stock);
 
-  // Count low/out of stock variants (exclude default 100 stock from "In Stock" CSV imports)
-  const lowStockCount = inventoryItems.filter(item => item.stock > 0 && item.stock <= 10).length;
-  const outOfStockCount = inventoryItems.filter(item => item.stock === 0).length;
-  const totalItems = inventoryItems.length;
+  // Get stats from API
+  const totalItems = statsData?.totalItems || 0;
+  const lowStockCount = statsData?.lowStockCount || 0;
+  const outOfStockCount = statsData?.outOfStockCount || 0;
 
   return (
     <AdminLayout>

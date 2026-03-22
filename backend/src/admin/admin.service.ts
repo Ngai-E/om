@@ -28,14 +28,34 @@ export class AdminService {
       },
     });
 
-    // Count low stock items (inventory quantity <= 10)
-    const lowStockItems = await this.prisma.inventory.count({
-      where: {
-        quantity: {
-          lte: 10,
+    // Get variant-aware low stock count
+    const products = await this.prisma.product.findMany({
+      where: { isActive: true },
+      include: {
+        variants: {
+          where: { isActive: true },
         },
+        inventory: true,
       },
     });
+
+    let lowStockItems = 0;
+
+    for (const product of products) {
+      if (product.variants && product.variants.length > 0) {
+        // Count variants with low stock (including out of stock for badge alert)
+        for (const variant of product.variants) {
+          if (variant.stock <= 10) {
+            lowStockItems++;
+          }
+        }
+      } else {
+        // Count products without variants
+        if (product.inventory && product.inventory.quantity <= 10) {
+          lowStockItems++;
+        }
+      }
+    }
 
     return {
       pendingOrders,
@@ -1999,5 +2019,57 @@ export class AdminService {
     console.log(`🔐 Password reset for staff: ${staff.email}`);
 
     return { message: 'Password reset successfully' };
+  }
+
+  // ============================================
+  // INVENTORY STATS
+  // ============================================
+
+  async getInventoryStats() {
+    // Get all products with their variants
+    const products = await this.prisma.product.findMany({
+      where: { isActive: true },
+      include: {
+        variants: {
+          where: { isActive: true },
+        },
+        inventory: true,
+      },
+    });
+
+    let totalItems = 0;
+    let lowStockCount = 0;
+    let outOfStockCount = 0;
+
+    for (const product of products) {
+      if (product.variants && product.variants.length > 0) {
+        // For products with variants, count each variant
+        for (const variant of product.variants) {
+          totalItems++;
+          if (variant.stock === 0) {
+            outOfStockCount++;
+          } else if (variant.stock <= 10) {
+            lowStockCount++;
+          }
+        }
+      } else {
+        // For products without variants, count the product itself
+        totalItems++;
+        if (product.inventory) {
+          const stock = product.inventory.quantity;
+          if (stock === 0) {
+            outOfStockCount++;
+          } else if (stock <= 10) {
+            lowStockCount++;
+          }
+        }
+      }
+    }
+
+    return {
+      totalItems,
+      lowStockCount,
+      outOfStockCount,
+    };
   }
 }
