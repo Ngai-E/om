@@ -112,12 +112,15 @@ export default function WishlistPage() {
         )}
 
         {/* Wishlist Grid */}
-        {!isLoading && wishlistProducts.length > 0 && (
+        {!isLoading && wishlistProductsList.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {wishlistProducts.map((product) => {
-              const inStock = !product.inventory || 
-                !product.inventory.isTracked || 
-                product.inventory.quantity > 0;
+            {wishlistProductsList.map((product) => {
+              const hasVariants = product.variants && product.variants.length > 0;
+              const inStock = hasVariants && product.variants
+                ? product.variants.some(v => v.stock > 0)
+                : (!product.inventory || 
+                   !product.inventory.isTracked || 
+                   product.inventory.quantity > 0);
 
               return (
                 <div key={product.id} className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition group">
