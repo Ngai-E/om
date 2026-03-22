@@ -200,13 +200,27 @@ export default function AuditLogsPage() {
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-gray-400" />
                           <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              {log.user.firstName} {log.user.lastName}
-                            </p>
-                            <p className="text-xs text-gray-500">{log.user.email}</p>
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${getRoleColor(log.user.role)}`}>
-                              {log.user.role}
-                            </span>
+                            {log.user ? (
+                              <>
+                                <p className="text-sm font-medium text-gray-900">
+                                  {log.user.firstName} {log.user.lastName}
+                                </p>
+                                <p className="text-xs text-gray-500">{log.user.email}</p>
+                                <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${getRoleColor(log.user.role)}`}>
+                                  {log.user.role}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <p className="text-sm font-medium text-gray-500 italic">
+                                  Deleted User
+                                </p>
+                                <p className="text-xs text-gray-400">User no longer exists</p>
+                                <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 bg-gray-100 text-gray-600">
+                                  UNKNOWN
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
                       </td>

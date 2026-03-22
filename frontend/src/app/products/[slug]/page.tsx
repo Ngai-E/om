@@ -104,9 +104,12 @@ export default function ProductDetailPage() {
   }
 
   // Check stock based on whether a variant is selected
+  // If product has variants but none selected, check if ANY variant has stock
   const inStock = selectedVariant 
     ? selectedVariant.stock > 0 
-    : (product.inventory && product.inventory.quantity > 0);
+    : hasVariants && product.variants
+      ? product.variants.some(v => v.stock > 0)
+      : (product.inventory && product.inventory.quantity > 0);
   const maxQuantity = selectedVariant 
     ? selectedVariant.stock 
     : (product.inventory?.quantity || 0);
@@ -205,6 +208,14 @@ export default function ProductDetailPage() {
                 selectedVariant.stock > 0 ? (
                   <p className="text-sm text-green-600">
                     ✓ In stock ({selectedVariant.stock} available)
+                  </p>
+                ) : (
+                  <p className="text-sm text-destructive">✗ Out of stock</p>
+                )
+              ) : hasVariants && product.variants ? (
+                inStock ? (
+                  <p className="text-sm text-green-600">
+                    ✓ In stock ({product.variants.reduce((sum, v) => sum + v.stock, 0)} total across all variants)
                   </p>
                 ) : (
                   <p className="text-sm text-destructive">✗ Out of stock</p>

@@ -19,15 +19,24 @@ export default function WishlistPage() {
   const guestCart = useGuestCartStore();
   const { setItemCount } = useCartStore();
 
-  // Fetch all products and filter by wishlist IDs
-  const { data: productsData, isLoading } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => productsApi.getProducts({ limit: 100 }),
+  // Fetch wishlist products by their IDs
+  const { data: wishlistProducts, isLoading } = useQuery({
+    queryKey: ['wishlist-products', items],
+    queryFn: async () => {
+      if (items.length === 0) return [];
+      
+      // Fetch each product individually
+      const products = await Promise.all(
+        items.map(id => productsApi.getProduct(id).catch(() => null))
+      );
+      
+      // Filter out any failed fetches (null values)
+      return products.filter((p): p is NonNullable<typeof p> => p !== null);
+    },
+    enabled: items.length > 0,
   });
 
-  const wishlistProducts = productsData?.data.filter((product) =>
-    items.includes(product.id)
-  ) || [];
+  const wishlistProductsList = wishlistProducts || [];
 
   const handleAddToCart = async (productId: string) => {
     if (!isAuthenticated) {
