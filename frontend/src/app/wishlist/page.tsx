@@ -38,7 +38,13 @@ export default function WishlistPage() {
 
   const wishlistProductsList = wishlistProducts || [];
 
-  const handleAddToCart = async (productId: string) => {
+  const handleAddToCart = async (productId: string, productSlug: string, hasVariants: boolean) => {
+    // If product has variants, redirect to product page for selection
+    if (hasVariants) {
+      router.push(`/products/${productSlug}`);
+      return;
+    }
+
     if (!isAuthenticated) {
       // Add to guest cart (localStorage)
       guestCart.addItem(productId, 1);
@@ -184,12 +190,13 @@ export default function WishlistPage() {
                   {/* Actions */}
                   <div className="px-4 pb-4 flex gap-2">
                     <button
-                      onClick={() => handleAddToCart(product.id)}
-                      disabled={!inStock || addToCart.isPending}
+                      onClick={() => handleAddToCart(product.id, product.slug, !!hasVariants)}
+                      disabled={!inStock || addToCart.isPending || (hasVariants && !inStock)}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      title={hasVariants ? 'Select variant' : 'Add to cart'}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      Add to Cart
+                      {hasVariants ? 'Select Variant' : 'Add to Cart'}
                     </button>
                     <button
                       onClick={() => removeItem(product.id)}
