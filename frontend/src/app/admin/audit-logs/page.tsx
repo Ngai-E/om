@@ -26,19 +26,19 @@ interface AuditLog {
 
 export default function AuditLogsPage() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchQuery, setSearchQuery] = useState('');
   const [entityFilter, setEntityFilter] = useState('');
   const [actionFilter, setActionFilter] = useState('');
   const [userFilter, setUserFilter] = useState('');
-  const limit = 50;
 
   // Fetch audit logs
   const { data, isLoading } = useQuery({
-    queryKey: ['audit-logs', page, searchQuery, entityFilter, actionFilter, userFilter],
+    queryKey: ['audit-logs', page, pageSize, searchQuery, entityFilter, actionFilter, userFilter],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: limit.toString(),
+        limit: pageSize.toString(),
         ...(searchQuery && { search: searchQuery }),
         ...(entityFilter && { entity: entityFilter }),
         ...(actionFilter && { action: actionFilter }),
@@ -51,7 +51,7 @@ export default function AuditLogsPage() {
 
   const logs = data?.logs || [];
   const total = data?.total || 0;
-  const totalPages = Math.ceil(total / limit);
+  const totalPages = Math.ceil(total / pageSize);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -239,41 +239,57 @@ export default function AuditLogsPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="border-t p-4 flex items-center justify-between">
-              <p className="text-sm text-gray-600">
-                Showing {(page - 1) * limit + 1} to {Math.min(page * limit, total)} of {total} logs
-              </p>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Items per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                <span className="text-sm text-muted-foreground ml-4">
+                  Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, total)} of {total} logs
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                  className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  First
+                </button>
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={page === 1}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   Previous
                 </button>
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    const pageNum = i + 1;
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setPage(pageNum)}
-                        className={`px-3 py-2 rounded-lg transition ${
-                          page === pageNum
-                            ? 'bg-green-600 text-white'
-                            : 'border hover:bg-gray-50'
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                </div>
+                <span className="px-4 py-1.5 text-sm">
+                  Page {page} of {totalPages}
+                </span>
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={page === totalPages}
-                  className="px-4 py-2 border rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
                 >
                   Next
+                </button>
+                <button
+                  onClick={() => setPage(totalPages)}
+                  disabled={page === totalPages}
+                  className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  Last
                 </button>
               </div>
             </div>

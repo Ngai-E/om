@@ -10,8 +10,12 @@ import * as compression from 'compression';
 import { json, raw } from 'express';
 import { mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
+import { initSentry } from './sentry.config';
 
 async function bootstrap() {
+  // Initialize Sentry for error monitoring
+  initSentry();
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Create uploads directory if it doesn't exist
@@ -32,6 +36,7 @@ async function bootstrap() {
   // CORS - support multiple origins
   const allowedOrigins = [
     'http://localhost:3000',
+    'http://localhost:3002',
     'https://www.omegaafro.com',
     'https://omegaafro.com',
     'https://om-ebon-omega.vercel.app',

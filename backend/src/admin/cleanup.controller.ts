@@ -15,110 +15,187 @@ export class CleanupController {
 
   @Post('preview')
   @ApiOperation({ summary: 'Preview what will be deleted (Admin only)' })
-  async previewCleanup(@Body() { code }: { code: string }) {
+  async previewCleanup(@Body() body: { 
+    code: string;
+    components?: {
+      customers?: boolean;
+      orders?: boolean;
+      carts?: boolean;
+      addresses?: boolean;
+      deliverySlots?: boolean;
+      auditLogs?: boolean;
+      products?: boolean;
+    };
+  }) {
+    const { code, components = {} } = body;
     const DEVELOPER_CODE = process.env.CLEANUP_SECRET_CODE;
 
     if (!DEVELOPER_CODE || code !== DEVELOPER_CODE) {
       throw new BadRequestException('Invalid cleanup code. Please check your secret code and try again.');
     }
 
-    // Count all customers (non-admin users)
-    const customers = await this.prisma.user.count({
-      where: { role: 'CUSTOMER' },
-    });
+    // Default all to true if not specified
+    const cleanupConfig = {
+      customers: components.customers !== false,
+      orders: components.orders !== false,
+      carts: components.carts !== false,
+      addresses: components.addresses !== false,
+      deliverySlots: components.deliverySlots !== false,
+      auditLogs: components.auditLogs !== false,
+      products: components.products !== false,
+    };
 
-    // Count all orders
-    const orders = await this.prisma.order.count();
+    const willDelete: any = {};
 
-    // Count all carts
-    const carts = await this.prisma.cart.count();
+    // Count based on selected components
+    if (cleanupConfig.customers) {
+      willDelete.customers = await this.prisma.user.count({
+        where: { role: 'CUSTOMER' },
+      });
+    }
 
-    // Count all cart items
-    const cartItems = await this.prisma.cartItem.count();
+    if (cleanupConfig.orders) {
+      willDelete.orders = await this.prisma.order.count();
+    }
 
-    // Count all addresses
-    const addresses = await this.prisma.address.count();
+    if (cleanupConfig.carts) {
+      willDelete.carts = await this.prisma.cart.count();
+      willDelete.cartItems = await this.prisma.cartItem.count();
+    }
 
-    // Count all delivery slots
-    const deliverySlots = await this.prisma.deliverySlot.count();
+    if (cleanupConfig.addresses) {
+      willDelete.addresses = await this.prisma.address.count();
+    }
 
-    // Count all audit logs
-    const auditLogs = await this.prisma.auditLog.count();
+    if (cleanupConfig.deliverySlots) {
+      willDelete.deliverySlots = await this.prisma.deliverySlot.count();
+    }
+
+    if (cleanupConfig.auditLogs) {
+      willDelete.auditLogs = await this.prisma.auditLog.count();
+    }
+
+    if (cleanupConfig.products) {
+      willDelete.products = await this.prisma.product.count();
+      willDelete.productVariants = await this.prisma.productVariant.count();
+    }
+
+    const warnings = [];
+    if (cleanupConfig.customers) warnings.push('customers');
+    if (cleanupConfig.orders) warnings.push('orders');
+    if (cleanupConfig.carts) warnings.push('carts');
+    if (cleanupConfig.addresses) warnings.push('addresses');
+    if (cleanupConfig.deliverySlots) warnings.push('delivery slots');
+    if (cleanupConfig.auditLogs) warnings.push('audit logs');
+    if (cleanupConfig.products) warnings.push('products');
 
     return {
-      willDelete: {
-        customers,
-        orders,
-        carts,
-        cartItems,
-        addresses,
-        deliverySlots,
-        auditLogs,
-      },
-      warning: '⚠️ This will delete ALL customer data! Admin and staff accounts will be preserved.',
+      willDelete,
+      selectedComponents: cleanupConfig,
+      warning: warnings.length > 0 
+        ? `⚠️ This will delete: ${warnings.join(', ')}. Admin and staff accounts will be preserved.`
+        : '⚠️ No components selected for cleanup.',
     };
   }
 
   @Post()
   @ApiOperation({ summary: 'Clean database - DANGER ZONE (Admin only)' })
-  async cleanupDatabase(@Body() { code }: { code: string }) {
+  async cleanupDatabase(@Body() body: {
+    code: string;
+    components?: {
+      customers?: boolean;
+      orders?: boolean;
+      carts?: boolean;
+      addresses?: boolean;
+      deliverySlots?: boolean;
+      auditLogs?: boolean;
+      products?: boolean;
+    };
+  }) {
+    const { code, components = {} } = body;
     const DEVELOPER_CODE = process.env.CLEANUP_SECRET_CODE;
 
     if (!DEVELOPER_CODE || code !== DEVELOPER_CODE) {
       throw new BadRequestException('Invalid cleanup code. Please check your secret code and try again.');
     }
 
-    const results = {
-      customers: 0,
-      orders: 0,
-      carts: 0,
-      cartItems: 0,
-      addresses: 0,
-      deliverySlots: 0,
-      auditLogs: 0,
+    // Default all to true if not specified
+    const cleanupConfig = {
+      customers: components.customers !== false,
+      orders: components.orders !== false,
+      carts: components.carts !== false,
+      addresses: components.addresses !== false,
+      deliverySlots: components.deliverySlots !== false,
+      auditLogs: components.auditLogs !== false,
+      products: components.products !== false,
     };
+
+    const results: any = {};
 
     // Delete in correct order to avoid foreign key constraints
 
-    // 1. Delete audit logs
-    const deletedAuditLogs = await this.prisma.auditLog.deleteMany({});
-    results.auditLogs = deletedAuditLogs.count;
+    // 1. Delete audit logs (if selected)
+    if (cleanupConfig.auditLogs) {
+      const deletedAuditLogs = await this.prisma.auditLog.deleteMany({});
+      results.auditLogs = deletedAuditLogs.count;
+    }
 
-    // 2. Delete cart items
-    const deletedCartItems = await this.prisma.cartItem.deleteMany({});
-    results.cartItems = deletedCartItems.count;
+    // 2. Delete cart items (if carts selected - references products)
+    if (cleanupConfig.carts) {
+      const deletedCartItems = await this.prisma.cartItem.deleteMany({});
+      results.cartItems = deletedCartItems.count;
 
-    // 3. Delete carts
-    const deletedCarts = await this.prisma.cart.deleteMany({});
-    results.carts = deletedCarts.count;
+      // 3. Delete carts
+      const deletedCarts = await this.prisma.cart.deleteMany({});
+      results.carts = deletedCarts.count;
+    }
 
-    // 4. Delete delivery slots
-    const deletedSlots = await this.prisma.deliverySlot.deleteMany({});
-    results.deliverySlots = deletedSlots.count;
+    // 4. Delete delivery slots (if selected)
+    if (cleanupConfig.deliverySlots) {
+      const deletedSlots = await this.prisma.deliverySlot.deleteMany({});
+      results.deliverySlots = deletedSlots.count;
+    }
 
-    // 5. Delete orders (cascade will handle order items)
-    const deletedOrders = await this.prisma.order.deleteMany({});
-    results.orders = deletedOrders.count;
+    // 5. Delete orders (if selected - cascade will handle order items)
+    if (cleanupConfig.orders) {
+      const deletedOrders = await this.prisma.order.deleteMany({});
+      results.orders = deletedOrders.count;
+    }
 
-    // 6. Delete addresses
-    const deletedAddresses = await this.prisma.address.deleteMany({});
-    results.addresses = deletedAddresses.count;
+    // 6. Delete addresses (if selected)
+    if (cleanupConfig.addresses) {
+      const deletedAddresses = await this.prisma.address.deleteMany({});
+      results.addresses = deletedAddresses.count;
+    }
 
-    // 7. Delete customer profiles
-    await this.prisma.customerProfile.deleteMany({});
+    // 7. Delete customer profiles and users (if customers selected)
+    if (cleanupConfig.customers) {
+      await this.prisma.customerProfile.deleteMany({});
 
-    // 8. Delete all CUSTOMER users (preserve ADMIN and STAFF)
-    const deletedCustomers = await this.prisma.user.deleteMany({
-      where: { role: 'CUSTOMER' },
-    });
-    results.customers = deletedCustomers.count;
+      // Delete all CUSTOMER users (preserve ADMIN and STAFF)
+      const deletedCustomers = await this.prisma.user.deleteMany({
+        where: { role: 'CUSTOMER' },
+      });
+      results.customers = deletedCustomers.count;
+    }
 
+    // 8. Delete product variants and products (if products selected)
+    if (cleanupConfig.products) {
+      const deletedVariants = await this.prisma.productVariant.deleteMany({});
+      results.productVariants = deletedVariants.count;
+
+      const deletedProducts = await this.prisma.product.deleteMany({});
+      results.products = deletedProducts.count;
+    }
+
+    const deletedItems = Object.keys(results);
     console.log('🧹 Database cleanup completed:', results);
 
     return {
-      message: 'Database cleaned successfully - ALL customer data deleted',
+      message: `Database cleaned successfully - ${deletedItems.length > 0 ? deletedItems.join(', ') + ' deleted' : 'No items deleted'}`,
       results,
-      preserved: 'Admin and staff accounts were preserved',
+      selectedComponents: cleanupConfig,
+      preserved: 'Admin and staff accounts, categories, and settings were preserved',
     };
   }
 }

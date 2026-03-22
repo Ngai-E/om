@@ -11,16 +11,18 @@ import {
   BarChart3, 
   Truck, 
   Users, 
-  Settings,
-  Search,
-  Bell,
-  LogOut,
-  ChevronRight,
-  LayoutDashboard,
-  Menu,
+  UserCog,
+  Tag, 
+  Settings, 
+  Shield, 
+  LayoutDashboard, 
+  LogOut, 
+  Menu, 
   X,
-  Shield,
-  Tag
+  ChevronDown,
+  ChevronRight,
+  Bell,
+  Search
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useQuery } from '@tanstack/react-query';
@@ -109,6 +111,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: Users, 
       label: 'Customers', 
       href: '/admin/users',
+    },
+    { 
+      icon: UserCog, 
+      label: 'Staff', 
+      href: '/admin/staff',
+      adminOnly: true
     },
     { 
       icon: Tag, 

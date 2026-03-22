@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Search, Plus, Edit, Trash2, Copy, Power, PowerOff, RefreshCw, Download, Upload } from 'lucide-react';
 import { useProducts } from '@/lib/hooks/use-products';
@@ -11,8 +11,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 
 export default function AdminProductsPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState(''); // User's input
+  const [searchTerm, setSearchTerm] = useState(''); // Debounced search term
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [isImporting, setIsImporting] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -20,11 +23,21 @@ export default function AdminProductsPage() {
   const { token } = useAuthStore();
   const { toast, success, error, hideToast } = useToast();
   
+  // Debounce search input to prevent flickering
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(searchInput);
+      setPage(1); // Reset to first page on search
+    }, 500); // 500ms delay
+    
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+  
   const { data: productsData, isLoading, refetch } = useProducts({
     search: searchTerm,
     category: selectedCategory,
-    page: 1,
-    limit: 50,
+    page,
+    limit: pageSize,
     includeInactive: true, // Admin should see all products
   });
 
@@ -170,8 +183,8 @@ export default function AdminProductsPage() {
             <input
               type="text"
               placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -316,10 +329,71 @@ export default function AdminProductsPage() {
           )}
         </div>
 
-        {/* Summary */}
-        <div className="mt-6 text-sm text-muted-foreground text-center">
-          Showing {productsData?.data.length || 0} of {productsData?.pagination?.total || 0} products
-        </div>
+        {/* Pagination Controls */}
+        {productsData?.pagination && productsData.pagination.totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Items per page:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-sm text-muted-foreground ml-4">
+                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, productsData.pagination.total)} of {productsData.pagination.total} products
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(1)}
+                disabled={page === 1}
+                className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                First
+              </button>
+              <button
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}
+                className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                Previous
+              </button>
+              <span className="px-4 py-1.5 text-sm">
+                Page {page} of {productsData.pagination.totalPages}
+              </span>
+              <button
+                onClick={() => setPage(page + 1)}
+                disabled={page === productsData.pagination.totalPages}
+                className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => setPage(productsData.pagination.totalPages)}
+                disabled={page === productsData.pagination.totalPages}
+                className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                Last
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Summary for single page */}
+        {(!productsData?.pagination || productsData.pagination.totalPages <= 1) && (
+          <div className="mt-6 text-sm text-muted-foreground text-center">
+            Showing {productsData?.data.length || 0} of {productsData?.pagination?.total || 0} products
+          </div>
+        )}
       </div>
 
       {/* Toast notifications */}

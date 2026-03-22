@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Plus, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -45,6 +45,9 @@ export default function NewProductPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [uploadPreview, setUploadPreview] = useState<string>('');
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const { toast, success, error, hideToast } = useToast();
 
   const allowImageUpload = settings?.allow_image_upload ?? true;
@@ -90,6 +93,50 @@ export default function NewProductPage() {
 
   const trackInventory = watch('trackInventory');
   const imageUrl = watch('imageUrl');
+
+  // Handle category creation
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      error('Category name is required');
+      return;
+    }
+
+    setIsCreatingCategory(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ name: newCategoryName.trim() }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Failed to create category');
+      }
+
+      const newCategory = await response.json();
+      
+      // Refresh categories list
+      await queryClient.invalidateQueries({ queryKey: ['categories'] });
+      
+      // Set the newly created category as selected
+      const categorySelect = document.querySelector('select[name="categoryId"]') as HTMLSelectElement;
+      if (categorySelect) {
+        categorySelect.value = newCategory.id;
+      }
+      
+      success('Category created successfully!');
+      setShowCategoryModal(false);
+      setNewCategoryName('');
+    } catch (err: any) {
+      error(err.message || 'Failed to create category');
+    } finally {
+      setIsCreatingCategory(false);
+    }
+  };
 
   // Handle file upload
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -213,17 +260,28 @@ export default function NewProductPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-2">Category *</label>
-                <select
-                  {...register('categoryId')}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">Select category...</option>
-                  {categories?.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex gap-2">
+                  <select
+                    {...register('categoryId')}
+                    className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="">Select category...</option>
+                    {categories?.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowCategoryModal(true)}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+                    title="Create new category"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New
+                  </button>
+                </div>
                 {errors.categoryId && (
                   <p className="text-sm text-destructive mt-1">{errors.categoryId.message}</p>
                 )}
@@ -423,6 +481,65 @@ export default function NewProductPage() {
           </div>
         </form>
       </div>
+
+      {/* Category Creation Modal */}
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Create New Category</h3>
+              <button
+                onClick={() => {
+                  setShowCategoryModal(false);
+                  setNewCategoryName('');
+                }}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Category Name *</label>
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleCreateCategory();
+                    }
+                  }}
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="e.g., Grains & Staples"
+                  autoFocus
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCreateCategory}
+                  disabled={isCreatingCategory || !newCategoryName.trim()}
+                  className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreatingCategory ? 'Creating...' : 'Create Category'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCategoryModal(false);
+                    setNewCategoryName('');
+                  }}
+                  className="px-6 py-2 border rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toast Notifications */}
       {toast?.type === 'success' && (

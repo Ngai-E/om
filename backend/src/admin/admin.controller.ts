@@ -159,6 +159,18 @@ export class AdminController {
   }
 
   // ============================================
+  // CATEGORIES
+  // ============================================
+
+  @Post('categories')
+  @ApiOperation({ summary: 'Create a new category (Admin only)' })
+  @ApiResponse({ status: 201, description: 'Category created' })
+  @ApiResponse({ status: 400, description: 'Category already exists' })
+  async createCategory(@Body() dto: { name: string; description?: string }) {
+    return this.adminService.createCategory(dto.name, dto.description);
+  }
+
+  // ============================================
   // PRODUCT VARIANTS
   // ============================================
 

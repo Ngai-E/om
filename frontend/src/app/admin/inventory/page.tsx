@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Search, AlertTriangle, Package, TrendingDown, Download, Upload, Save, X, Edit2 } from 'lucide-react';
 import { useProducts } from '@/lib/hooks/use-products';
@@ -12,16 +12,31 @@ import { Toast } from '@/components/ui/toast';
 import { getProductImageUrl } from '@/lib/utils/image';
 
 export default function InventoryManagementPage() {
+  const [searchInput, setSearchInput] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showLowStockOnly, setShowLowStockOnly] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editQuantity, setEditQuantity] = useState<number>(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
   const { toast, success, error, hideToast } = useToast();
 
+  // Debounce search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchTerm(searchInput);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   const { data: productsData, isLoading } = useProducts({ 
-    limit: 1000,
-    includeInactive: true, // Admin should see all products
+    search: searchTerm,
+    page,
+    limit: pageSize,
+    includeInactive: true,
   });
 
   const updateInventory = useMutation({
@@ -58,15 +73,26 @@ export default function InventoryManagementPage() {
     setEditQuantity(0);
   };
 
+  const toggleProductExpansion = (productId: string) => {
+    const newExpanded = new Set(expandedProducts);
+    if (newExpanded.has(productId)) {
+      newExpanded.delete(productId);
+    } else {
+      newExpanded.add(productId);
+    }
+    setExpandedProducts(newExpanded);
+  };
+
   const exportToCSV = () => {
-    const csvData = filteredProducts.map((p) => ({
-      Name: p.name,
-      Category: p.category.name,
-      'Current Stock': p.inventory?.quantity || 0,
-      'Low Stock Threshold': p.inventory?.lowStockThreshold || 0,
-      Price: parseFloat(p.price).toFixed(2),
-      Status: p.inventory?.quantity === 0 ? 'Out of Stock' : 
-              p.inventory && p.inventory.quantity <= p.inventory.lowStockThreshold ? 'Low Stock' : 'In Stock',
+    const csvData = filteredItems.map((item: any) => ({
+      Name: item.displayName,
+      Category: item.category.name,
+      SKU: item.sku || 'N/A',
+      'Current Stock': item.stock,
+      'Low Stock Threshold': 10,
+      Price: parseFloat(item.price).toFixed(2),
+      Status: item.stock === 0 ? 'Out of Stock' : 
+              item.stock <= 10 ? 'Low Stock' : 'In Stock',
     }));
 
     const headers = Object.keys(csvData[0]);
@@ -106,28 +132,59 @@ export default function InventoryManagementPage() {
   };
 
   const products = productsData?.data || [];
+  const total = productsData?.pagination?.total || 0;
+  const totalPages = productsData?.pagination?.totalPages || 0;
 
-  const filteredProducts = products
-    .filter((product) => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesLowStock = !showLowStockOnly || 
-        (product.inventory && 
-         product.inventory.isTracked && 
-         product.inventory.quantity <= product.inventory.lowStockThreshold);
-      return matchesSearch && matchesLowStock;
+  // Flatten products into variant-based inventory items
+  const inventoryItems = products.flatMap((product) => {
+    if (product.variants && product.variants.length > 0) {
+      // For products with variants, create an item for each variant
+      return product.variants.map((variant: any) => ({
+        id: variant.id,
+        type: 'variant',
+        productId: product.id,
+        productName: product.name,
+        variantName: variant.name,
+        displayName: `${product.name} - ${variant.name}`,
+        category: product.category,
+        sku: variant.sku,
+        price: variant.price,
+        stock: variant.stock,
+        imageUrl: variant.imageUrl || (product.images?.[0]?.url),
+        isActive: variant.isActive,
+      }));
+    } else {
+      // For products without variants, create a single item
+      return [{
+        id: product.id,
+        type: 'product',
+        productId: product.id,
+        productName: product.name,
+        variantName: null,
+        displayName: product.name,
+        category: product.category,
+        sku: product.sku,
+        price: product.price,
+        stock: product.inventory?.quantity || 0,
+        imageUrl: product.images?.[0]?.url,
+        isActive: product.isActive,
+        lowStockThreshold: product.inventory?.lowStockThreshold || 10,
+      }];
+    }
+  });
+
+  // Filter inventory items
+  const filteredItems = inventoryItems
+    .filter((item) => {
+      const matchesLowStock = !showLowStockOnly || item.stock <= 10;
+      return matchesLowStock;
     })
-    .sort((a, b) => {
-      if (!a.inventory || !b.inventory) return 0;
-      return a.inventory.quantity - b.inventory.quantity;
-    });
+    .sort((a, b) => a.stock - b.stock);
 
-  const lowStockCount = products.filter(
-    (p) => p.inventory && p.inventory.isTracked && p.inventory.quantity <= p.inventory.lowStockThreshold
-  ).length;
-
-  const outOfStockCount = products.filter(
-    (p) => p.inventory && p.inventory.isTracked && p.inventory.quantity === 0
-  ).length;
+  // Count low/out of stock variants (exclude default 100 stock from "In Stock" CSV imports)
+  const lowStockCount = inventoryItems.filter(item => item.stock > 0 && item.stock <= 10).length;
+  const outOfStockCount = inventoryItems.filter(item => item.stock === 0).length;
+  const totalItems = inventoryItems.length;
 
   return (
     <AdminLayout>
@@ -140,8 +197,8 @@ export default function InventoryManagementPage() {
                 <Package className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Products</p>
-                <p className="text-2xl font-bold">{products.length}</p>
+                <p className="text-sm text-muted-foreground">Total Items</p>
+                <p className="text-2xl font-bold">{totalItems}</p>
               </div>
             </div>
           </div>
@@ -179,8 +236,8 @@ export default function InventoryManagementPage() {
               <input
                 type="text"
                 placeholder="Search products..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
@@ -247,129 +304,102 @@ export default function InventoryManagementPage() {
               <table className="w-full">
                 <thead className="bg-muted/50 border-b">
                   <tr>
-                    <th className="text-left p-4 font-medium">Product</th>
+                    <th className="text-left p-4 font-medium">Product / Variant</th>
                     <th className="text-left p-4 font-medium">Category</th>
-                    <th className="text-center p-4 font-medium">Current Stock</th>
+                    <th className="text-center p-4 font-medium">Stock</th>
                     <th className="text-center p-4 font-medium">Low Stock Alert</th>
                     <th className="text-center p-4 font-medium">Status</th>
-                    <th className="text-right p-4 font-medium">Actions</th>
+                    <th className="text-right p-4 font-medium">Price</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProducts.map((product) => {
-                    const inventory = product.inventory;
-                    const isLowStock = inventory && inventory.isTracked && 
-                      inventory.quantity <= inventory.lowStockThreshold;
-                    const isOutOfStock = inventory && inventory.isTracked && 
-                      inventory.quantity === 0;
+                  {filteredItems.map((item: any) => {
+                    const isLowStock = item.stock <= 10 && item.stock > 0;
+                    const isOutOfStock = item.stock === 0;
 
                     return (
-                      <tr key={product.id} className="border-b hover:bg-muted/30 transition">
+                      <tr key={item.id} className="border-b hover:bg-muted/30 transition">
                         <td className="p-4">
                           <div className="flex items-center gap-3">
-                            {product.images && product.images[0] && (
+                            {item.imageUrl && (
                               <img
-                                src={getProductImageUrl(product)}
-                                alt={product.name}
+                                src={item.imageUrl}
+                                alt={item.displayName}
                                 className="w-12 h-12 rounded object-cover"
-                                key={product.updatedAt || product.id}
                               />
                             )}
                             <div>
-                              <p className="font-medium">{product.name}</p>
-                              <p className="text-sm text-muted-foreground">
-                                £{parseFloat(product.price).toFixed(2)}
-                              </p>
+                              <p className="font-medium">{item.displayName}</p>
+                              {item.sku && (
+                                <p className="text-xs text-muted-foreground">SKU: {item.sku}</p>
+                              )}
                             </div>
                           </div>
                         </td>
                         <td className="p-4">
-                          <span className="text-sm">{product.category.name}</span>
+                          <span className="text-sm">{item.category.name}</span>
                         </td>
                         <td className="p-4 text-center">
-                          {inventory && inventory.isTracked ? (
-                            editingId === product.id ? (
-                              <div className="flex items-center justify-center gap-2">
-                                <input
-                                  type="number"
-                                  value={editQuantity}
-                                  onChange={(e) => setEditQuantity(parseInt(e.target.value) || 0)}
-                                  className="w-20 px-2 py-1 border-2 border-green-500 rounded text-center font-semibold"
-                                  autoFocus
-                                />
-                                <button
-                                  onClick={() => handleSaveEdit(product.id)}
-                                  className="p-1 text-green-600 hover:bg-green-50 rounded"
-                                  title="Save"
-                                >
-                                  <Save className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={handleCancelEdit}
-                                  className="p-1 text-red-600 hover:bg-red-50 rounded"
-                                  title="Cancel"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            ) : (
+                          {editingId === item.id ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <input
+                                type="number"
+                                value={editQuantity}
+                                onChange={(e) => setEditQuantity(parseInt(e.target.value) || 0)}
+                                className="w-20 px-2 py-1 border-2 border-green-500 rounded text-center font-semibold"
+                                autoFocus
+                              />
                               <button
-                                onClick={() => handleStartEdit(product.id, inventory.quantity)}
-                                className="group inline-flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 transition"
+                                onClick={() => handleSaveEdit(item.productId)}
+                                className="p-1 text-green-600 hover:bg-green-50 rounded"
+                                title="Save"
                               >
-                                <span className={`font-bold text-lg ${
-                                  isOutOfStock ? 'text-red-600' : 
-                                  isLowStock ? 'text-orange-600' : 
-                                  'text-green-600'
-                                }`}>
-                                  {inventory.quantity}
-                                </span>
-                                <Edit2 className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition" />
+                                <Save className="w-4 h-4" />
                               </button>
-                            )
+                              <button
+                                onClick={handleCancelEdit}
+                                className="p-1 text-red-600 hover:bg-red-50 rounded"
+                                title="Cancel"
+                              >
+                                <X className="w-4 h-4" />
+                              </button>
+                            </div>
                           ) : (
-                            <span className="text-muted-foreground text-sm">Not tracked</span>
+                            <button
+                              onClick={() => handleStartEdit(item.id, item.stock)}
+                              className="group inline-flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 transition"
+                            >
+                              <span className={`font-bold text-lg ${
+                                isOutOfStock ? 'text-red-600' : 
+                                isLowStock ? 'text-orange-600' : 
+                                'text-green-600'
+                              }`}>
+                                {item.stock}
+                              </span>
+                              <Edit2 className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition" />
+                            </button>
                           )}
                         </td>
                         <td className="p-4 text-center">
-                          {inventory && inventory.isTracked ? (
-                            <span className="text-sm text-muted-foreground">
-                              {inventory.lowStockThreshold}
+                          <span className="text-sm text-muted-foreground">10</span>
+                        </td>
+                        <td className="p-4 text-center">
+                          {isOutOfStock ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+                              🔴 Out of Stock
+                            </span>
+                          ) : isLowStock ? (
+                            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-orange-100 text-orange-700 text-xs font-bold">
+                              🟠 Low Stock
                             </span>
                           ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </td>
-                        <td className="p-4 text-center">
-                          {inventory && inventory.isTracked ? (
-                            isOutOfStock ? (
-                              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-red-100 text-red-700 text-xs font-bold">
-                                🔴 Out of Stock
-                              </span>
-                            ) : isLowStock ? (
-                              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-orange-100 text-orange-700 text-xs font-bold">
-                                🟠 Low Stock
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-bold">
-                                🟢 Healthy
-                              </span>
-                            )
-                          ) : (
-                            <span className="text-muted-foreground text-xs">-</span>
+                            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-xs font-bold">
+                              🟢 Healthy
+                            </span>
                           )}
                         </td>
                         <td className="p-4 text-right">
-                          {inventory && inventory.isTracked ? (
-                            <button 
-                              onClick={() => handleStartEdit(product.id, inventory.quantity)}
-                              className="text-sm text-blue-600 hover:underline font-medium"
-                            >
-                              Quick Edit
-                            </button>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Not tracked</span>
-                          )}
+                          <span className="text-sm text-blue-600 font-medium">£{parseFloat(item.price).toFixed(2)}</span>
                         </td>
                       </tr>
                     );
@@ -378,11 +408,73 @@ export default function InventoryManagementPage() {
               </table>
             </div>
 
-            {filteredProducts.length === 0 && (
+            {filteredItems.length === 0 && (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">No products found</p>
+                <p className="text-muted-foreground">No inventory items found</p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Pagination Controls */}
+        {!isLoading && totalPages > 1 && (
+          <div className="bg-card border rounded-lg p-4 mt-6">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-muted-foreground">Items per page:</label>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setPage(1);
+                  }}
+                  className="px-3 py-1 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+
+              <div className="text-sm text-muted-foreground">
+                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, total)} of {total} products
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(1)}
+                  disabled={page === 1}
+                  className="px-3 py-1 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  First
+                </button>
+                <button
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                  className="px-3 py-1 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <span className="px-3 py-1 text-sm">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === totalPages}
+                  className="px-3 py-1 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
+                <button
+                  onClick={() => setPage(totalPages)}
+                  disabled={page === totalPages}
+                  className="px-3 py-1 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Last
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

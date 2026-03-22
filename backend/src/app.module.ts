@@ -18,6 +18,7 @@ import { UploadModule } from './upload/upload.module';
 import { AuditModule } from './audit/audit.module';
 import { EmailModule } from './email/email.module';
 import { PromotionsModule } from './promotions/promotions.module';
+import { LicensingModule } from './licensing/licensing.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -60,6 +61,7 @@ import { AppController } from './app.controller';
     SettingsModule,
     UploadModule,
     PromotionsModule,
+    LicensingModule,
   ],
   controllers: [AppController],
 })

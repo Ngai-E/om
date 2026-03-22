@@ -11,11 +11,20 @@ export function SystemCleanupSection() {
   const [cleanupCode, setCleanupCode] = useState('');
   const [previewData, setPreviewData] = useState<any>(null);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [components, setComponents] = useState({
+    customers: true,
+    orders: true,
+    carts: true,
+    addresses: true,
+    deliverySlots: true,
+    auditLogs: true,
+    products: true,
+  });
 
   // Preview cleanup
   const previewCleanup = useMutation({
     mutationFn: async (code: string) => {
-      const { data } = await apiClient.post('/admin/cleanup/preview', { code });
+      const { data } = await apiClient.post('/admin/cleanup/preview', { code, components });
       return data;
     },
     onSuccess: (data) => {
@@ -31,7 +40,7 @@ export function SystemCleanupSection() {
   // Execute cleanup
   const executeCleanup = useMutation({
     mutationFn: async (code: string) => {
-      const { data } = await apiClient.post('/admin/cleanup', { code });
+      const { data } = await apiClient.post('/admin/cleanup', { code, components });
       return data;
     },
     onSuccess: (data) => {
@@ -70,7 +79,7 @@ export function SystemCleanupSection() {
         <div>
           <h2 className="text-lg font-bold text-gray-900">Database Cleanup</h2>
           <p className="text-sm text-gray-600 mt-1">
-            Remove all customer data, orders, and carts. Admin accounts will be preserved.
+            Selectively remove customer data, orders, products, and more. Admin accounts will be preserved.
           </p>
         </div>
       </div>
@@ -83,8 +92,8 @@ export function SystemCleanupSection() {
             ⚠️ DANGER ZONE - This action is IRREVERSIBLE!
           </p>
           <p className="text-xs text-red-700 mt-1">
-            This will permanently delete ALL customer accounts, orders, carts, addresses, delivery slots, and audit logs.
-            Only admin and staff accounts will be preserved. Products and categories will NOT be deleted.
+            This will permanently delete selected components. Only admin and staff accounts will be preserved.
+            Choose which components to clean below.
           </p>
         </div>
       </div>
@@ -107,6 +116,78 @@ export function SystemCleanupSection() {
           </p>
         </div>
 
+        {/* Component Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Select Components to Clean
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <label className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={components.customers}
+                onChange={(e) => setComponents({ ...components, customers: e.target.checked })}
+                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              />
+              <span className="text-sm font-medium">Customers & Profiles</span>
+            </label>
+            <label className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={components.orders}
+                onChange={(e) => setComponents({ ...components, orders: e.target.checked })}
+                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              />
+              <span className="text-sm font-medium">Orders & Order Items</span>
+            </label>
+            <label className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={components.carts}
+                onChange={(e) => setComponents({ ...components, carts: e.target.checked })}
+                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              />
+              <span className="text-sm font-medium">Carts & Cart Items</span>
+            </label>
+            <label className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={components.addresses}
+                onChange={(e) => setComponents({ ...components, addresses: e.target.checked })}
+                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              />
+              <span className="text-sm font-medium">Addresses</span>
+            </label>
+            <label className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={components.deliverySlots}
+                onChange={(e) => setComponents({ ...components, deliverySlots: e.target.checked })}
+                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              />
+              <span className="text-sm font-medium">Delivery Slots</span>
+            </label>
+            <label className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={components.auditLogs}
+                onChange={(e) => setComponents({ ...components, auditLogs: e.target.checked })}
+                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              />
+              <span className="text-sm font-medium">Audit Logs</span>
+            </label>
+            <label className="flex items-center gap-2 p-3 border rounded-lg hover:bg-gray-50 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={components.products}
+                onChange={(e) => setComponents({ ...components, products: e.target.checked })}
+                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+              />
+              <span className="text-sm font-medium">Products & Variants</span>
+            </label>
+          </div>
+        </div>
+
         {/* Preview Button */}
         <button
           onClick={handlePreview}
@@ -126,34 +207,60 @@ export function SystemCleanupSection() {
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <h3 className="font-bold text-yellow-900 mb-3">Preview - What will be deleted:</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg p-3 border border-yellow-300">
-                <p className="text-xs text-gray-600">Customers</p>
-                <p className="text-2xl font-bold text-red-600">{previewData.willDelete.customers}</p>
-              </div>
-              <div className="bg-white rounded-lg p-3 border border-yellow-300">
-                <p className="text-xs text-gray-600">Orders</p>
-                <p className="text-2xl font-bold text-red-600">{previewData.willDelete.orders}</p>
-              </div>
-              <div className="bg-white rounded-lg p-3 border border-yellow-300">
-                <p className="text-xs text-gray-600">Carts</p>
-                <p className="text-2xl font-bold text-red-600">{previewData.willDelete.carts}</p>
-              </div>
-              <div className="bg-white rounded-lg p-3 border border-yellow-300">
-                <p className="text-xs text-gray-600">Cart Items</p>
-                <p className="text-2xl font-bold text-red-600">{previewData.willDelete.cartItems}</p>
-              </div>
-              <div className="bg-white rounded-lg p-3 border border-yellow-300">
-                <p className="text-xs text-gray-600">Addresses</p>
-                <p className="text-2xl font-bold text-red-600">{previewData.willDelete.addresses}</p>
-              </div>
-              <div className="bg-white rounded-lg p-3 border border-yellow-300">
-                <p className="text-xs text-gray-600">Delivery Slots</p>
-                <p className="text-2xl font-bold text-red-600">{previewData.willDelete.deliverySlots}</p>
-              </div>
-              <div className="bg-white rounded-lg p-3 border border-yellow-300">
-                <p className="text-xs text-gray-600">Audit Logs</p>
-                <p className="text-2xl font-bold text-red-600">{previewData.willDelete.auditLogs}</p>
-              </div>
+              {previewData.willDelete.customers !== undefined && (
+                <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                  <p className="text-xs text-gray-600">Customers</p>
+                  <p className="text-2xl font-bold text-red-600">{previewData.willDelete.customers}</p>
+                </div>
+              )}
+              {previewData.willDelete.orders !== undefined && (
+                <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                  <p className="text-xs text-gray-600">Orders</p>
+                  <p className="text-2xl font-bold text-red-600">{previewData.willDelete.orders}</p>
+                </div>
+              )}
+              {previewData.willDelete.carts !== undefined && (
+                <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                  <p className="text-xs text-gray-600">Carts</p>
+                  <p className="text-2xl font-bold text-red-600">{previewData.willDelete.carts}</p>
+                </div>
+              )}
+              {previewData.willDelete.cartItems !== undefined && (
+                <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                  <p className="text-xs text-gray-600">Cart Items</p>
+                  <p className="text-2xl font-bold text-red-600">{previewData.willDelete.cartItems}</p>
+                </div>
+              )}
+              {previewData.willDelete.addresses !== undefined && (
+                <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                  <p className="text-xs text-gray-600">Addresses</p>
+                  <p className="text-2xl font-bold text-red-600">{previewData.willDelete.addresses}</p>
+                </div>
+              )}
+              {previewData.willDelete.deliverySlots !== undefined && (
+                <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                  <p className="text-xs text-gray-600">Delivery Slots</p>
+                  <p className="text-2xl font-bold text-red-600">{previewData.willDelete.deliverySlots}</p>
+                </div>
+              )}
+              {previewData.willDelete.auditLogs !== undefined && (
+                <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                  <p className="text-xs text-gray-600">Audit Logs</p>
+                  <p className="text-2xl font-bold text-red-600">{previewData.willDelete.auditLogs}</p>
+                </div>
+              )}
+              {previewData.willDelete.products !== undefined && (
+                <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                  <p className="text-xs text-gray-600">Products</p>
+                  <p className="text-2xl font-bold text-red-600">{previewData.willDelete.products}</p>
+                </div>
+              )}
+              {previewData.willDelete.productVariants !== undefined && (
+                <div className="bg-white rounded-lg p-3 border border-yellow-300">
+                  <p className="text-xs text-gray-600">Product Variants</p>
+                  <p className="text-2xl font-bold text-red-600">{previewData.willDelete.productVariants}</p>
+                </div>
+              )}
             </div>
             {previewData.warning && (
               <p className="text-sm text-yellow-800 mt-3 font-medium">{previewData.warning}</p>
@@ -179,8 +286,7 @@ export function SystemCleanupSection() {
                   ⚠️ ARE YOU ABSOLUTELY SURE?
                 </p>
                 <p className="text-sm text-red-800 mb-4">
-                  This will permanently delete {previewData.willDelete.customers} customers,{' '}
-                  {previewData.willDelete.orders} orders, and all related data. This cannot be undone!
+                  This will permanently delete the selected components. This cannot be undone!
                 </p>
                 <div className="flex gap-3">
                   <button

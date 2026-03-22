@@ -203,6 +203,7 @@ model ProductVariant {
   price       Decimal    @db.Decimal(10, 2)
   compareAtPrice Decimal? @db.Decimal(10, 2)
   stock       Int        @default(0)
+  imageUrl    String?    // Optional variant-specific image
   isActive    Boolean    @default(true)
   sortOrder   Int        @default(0)
   createdAt   DateTime   @default(now())
@@ -598,4 +599,110 @@ model AuditLog {
   @@index([entity, entityId])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ============================================
+// LICENSING & PACKAGING SYSTEM
+// ============================================
+
+enum PackageTier {
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+  CUSTOM
+}
+
+enum LicenseStatus {
+  ACTIVE
+  SUSPENDED
+  EXPIRED
+  REVOKED
+}
+
+model Package {
+  id                String      @id @default(uuid())
+  name              String      @unique
+  tier              PackageTier
+  displayName       String
+  description       String?
+  price             Decimal     @db.Decimal(10, 2)
+  billingCycle      String      @default("monthly") // monthly, yearly, lifetime
+  maxOrders         Int?        // null = unlimited
+  maxUsers          Int?        // null = unlimited
+  maxProducts       Int?        // null = unlimited
+  features          Json        // { "promotions": true, "analytics": true, etc. }
+  isActive          Boolean     @default(true)
+  sortOrder         Int         @default(0)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  licenses          License[]
+
+  @@map("packages")
+}
+
+model License {
+  id                String        @id @default(uuid())
+  licenseKey        String        @unique
+  packageId         String
+  package           Package       @relation(fields: [packageId], references: [id])
+  
+  // Licensee Information
+  companyName       String
+  contactEmail      String
+  contactName       String?
+  domain            String?       // Restrict to specific domain
+  
+  // Status & Validity
+  status            LicenseStatus @default(ACTIVE)
+  issuedAt          DateTime      @default(now())
+  expiresAt         DateTime?     // null = lifetime
+  activatedAt       DateTime?
+  lastValidatedAt   DateTime?
+  
+  // Usage Tracking
+  currentOrders     Int           @default(0)
+  currentUsers      Int           @default(0)
+  currentProducts   Int           @default(0)
+  
+  // Metadata
+  notes             String?
+  issuedBy          String?       // Admin who issued
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  
+  usageLogs         LicenseUsageLog[]
+
+  @@index([licenseKey])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("licenses")
+}
+
+model LicenseUsageLog {
+  id          String   @id @default(uuid())
+  licenseId   String
+  license     License  @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+  
+  metric      String   // "orders", "users", "products", "api_calls"
+  value       Int
+  timestamp   DateTime @default(now())
+  metadata    Json?    // Additional context
+
+  @@index([licenseId, timestamp])
+  @@map("license_usage_logs")
+}
+
+model FeatureFlag {
+  id            String   @id @default(uuid())
+  key           String   @unique // e.g., "promotions", "analytics", "multi_location"
+  name          String
+  description   String?
+  category      String?  // "core", "advanced", "enterprise"
+  isEnabled     Boolean  @default(true)
+  requiredTier  String?  // Minimum tier required: "STARTER", "PROFESSIONAL", "ENTERPRISE"
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("feature_flags")
 }

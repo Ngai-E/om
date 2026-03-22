@@ -12,6 +12,7 @@ import { Toast } from '@/components/ui/toast';
 
 export default function AdminOrdersPage() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilters, setStatusFilters] = useState<string[]>([]);
   const [deliveryDate, setDeliveryDate] = useState('');
@@ -26,8 +27,8 @@ export default function AdminOrdersPage() {
   
   const queryClient = useQueryClient();
   const { data: ordersData, isLoading } = useQuery({
-    queryKey: ['admin-orders', page, phoneOrdersOnly],
-    queryFn: () => adminApi.getAllOrders(page, 20, {
+    queryKey: ['admin-orders', page, pageSize, phoneOrdersOnly],
+    queryFn: () => adminApi.getAllOrders(page, pageSize, {
       isPhoneOrder: phoneOrdersOnly ? true : undefined,
     }),
   });
@@ -327,24 +328,60 @@ export default function AdminOrdersPage() {
 
         {/* Pagination */}
         {ordersData?.pagination && ordersData.pagination.totalPages > 1 && (
-          <div className="mt-6 flex justify-center gap-2">
-            <button
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-              className="px-4 py-2 border rounded-lg hover:bg-muted transition disabled:opacity-50"
-            >
-              Previous
-            </button>
-            <span className="px-4 py-2">
-              Page {page} of {ordersData.pagination.totalPages}
-            </span>
-            <button
-              onClick={() => setPage(page + 1)}
-              disabled={page === ordersData.pagination.totalPages}
-              className="px-4 py-2 border rounded-lg hover:bg-muted transition disabled:opacity-50"
-            >
-              Next
-            </button>
+          <div className="mt-6 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Items per page:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="border rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-sm text-muted-foreground ml-4">
+                Showing {((page - 1) * pageSize) + 1} to {Math.min(page * pageSize, ordersData.pagination.total)} of {ordersData.pagination.total} orders
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage(1)}
+                disabled={page === 1}
+                className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                First
+              </button>
+              <button
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}
+                className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                Previous
+              </button>
+              <span className="px-4 py-1.5 text-sm">
+                Page {page} of {ordersData.pagination.totalPages}
+              </span>
+              <button
+                onClick={() => setPage(page + 1)}
+                disabled={page === ordersData.pagination.totalPages}
+                className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                Next
+              </button>
+              <button
+                onClick={() => setPage(ordersData.pagination.totalPages)}
+                disabled={page === ordersData.pagination.totalPages}
+                className="px-3 py-1.5 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                Last
+              </button>
+            </div>
           </div>
         )}
 

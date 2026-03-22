@@ -127,7 +127,7 @@ export class AdminService {
     return product;
   }
 
-  async createProduct(dto: CreateProductDto) {
+  async createProduct(dto: CreateProductDto, userId?: string) {
     // Generate slug from name
     const slug = dto.name
       .toLowerCase()
@@ -152,10 +152,24 @@ export class AdminService {
       });
 
       if (!category) {
-        const categorySlug = dto.category
+        let categorySlug = dto.category
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-|-$/g, '');
+        
+        // Check if slug already exists and append number if needed
+        let slugExists = await this.prisma.category.findUnique({
+          where: { slug: categorySlug },
+        });
+        
+        let counter = 1;
+        while (slugExists) {
+          categorySlug = `${dto.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${counter}`;
+          slugExists = await this.prisma.category.findUnique({
+            where: { slug: categorySlug },
+          });
+          counter++;
+        }
         
         category = await this.prisma.category.create({
           data: {
@@ -209,8 +223,22 @@ export class AdminService {
       },
     });
 
+    // Audit log
+    if (userId) {
+      await this.auditService.log({
+        userId,
+        action: 'PRODUCT_CREATE',
+        entity: 'Product',
+        entityId: product.id,
+        changes: { created: { name: dto.name, price: dto.price, categoryId } },
+      });
+    }
+
     // Clear cache for product lists (new product added)
     console.log('🗑️  Cleared product list cache (new product created)');
+
+    // Clear product cache
+    await this.clearProductCache(product.id, product.slug);
 
     return product;
   }
@@ -250,10 +278,24 @@ export class AdminService {
       });
 
       if (!category) {
-        const categorySlug = dto.category
+        let categorySlug = dto.category
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-|-$/g, '');
+        
+        // Check if slug already exists and append number if needed
+        let slugExists = await this.prisma.category.findUnique({
+          where: { slug: categorySlug },
+        });
+        
+        let counter = 1;
+        while (slugExists) {
+          categorySlug = `${dto.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${counter}`;
+          slugExists = await this.prisma.category.findUnique({
+            where: { slug: categorySlug },
+          });
+          counter++;
+        }
         
         category = await this.prisma.category.create({
           data: {
@@ -507,6 +549,187 @@ export class AdminService {
     return { message: 'Variant deleted successfully' };
   }
 
+  private parseStockQuantity(stockValue: any): number {
+    console.log('🔍 Parsing stock value:', JSON.stringify(stockValue), 'Type:', typeof stockValue);
+    
+    if (stockValue === undefined || stockValue === null || stockValue === '') {
+      console.log('❌ No stock value, returning 0');
+      return 0;
+    }
+    
+    if (typeof stockValue === 'string') {
+      const stockLower = stockValue.toLowerCase().trim();
+      console.log('📝 Stock string (lowercase):', stockLower);
+      
+      if (stockLower.includes('in stock') || stockLower === 'yes' || stockLower === 'in') {
+        console.log('✅ Detected "In Stock", returning 100');
+        return 100;
+      } else if (stockLower.includes('out') || stockLower === 'no' || stockLower.includes('limited')) {
+        console.log('⚠️  Detected "Out of Stock" or "Limited", returning 0');
+        return 0;
+      }
+      const parsed = parseInt(stockValue) || 0;
+      console.log('🔢 Parsed numeric value:', parsed);
+      return parsed;
+    }
+    
+    const parsed = parseInt(stockValue) || 0;
+    console.log('🔢 Parsed non-string value:', parsed);
+    return parsed;
+  }
+
+  private parseImages(row: any): any[] {
+    const imageUrlRaw = row.imageUrl || row.ImageUrl || row.Image || row.image;
+    const imageUrl = imageUrlRaw !== undefined ? String(imageUrlRaw).trim() : '';
+    
+    if (!imageUrl || imageUrl === '📷') {
+      return [];
+    }
+    
+    return imageUrl.split('|').map((url: string, index: number) => ({
+      url: url.trim(),
+      altText: row.name || row.Name,
+      sortOrder: index,
+    })).filter((img: any) => img.url && img.url !== '📷');
+  }
+
+  private async importSingleProduct(row: any) {
+    console.log('📦 Importing single product:', row.name || row.Name);
+    console.log('📊 Raw row data:', JSON.stringify(row));
+    const images = this.parseImages(row);
+    const stockQuantity = this.parseStockQuantity(row.stock || row.Stock);
+    console.log('✅ Final stock quantity for product:', stockQuantity);
+
+    const productData: any = {
+      name: row.name || row.Name,
+      description: row.description || row.Description || '',
+      price: parseFloat(row.price || row.Price),
+      compareAtPrice: row.compareAtPrice || row.CompareAtPrice ? parseFloat(row.compareAtPrice || row.CompareAtPrice) : undefined,
+      category: row.category || row.Category,
+      tags: row.tags || row.Tags ? (row.tags || row.Tags).split(',').map((t: string) => t.trim()).filter((t: string) => t) : [],
+      isFeatured: row.isFeatured === 'true' || row.IsFeatured === 'true',
+      isActive: row.isActive !== 'false' && row.IsActive !== 'false',
+      images,
+      inventory: {
+        quantity: stockQuantity,
+        lowStockThreshold: 10,
+        isTracked: true,
+      },
+    };
+
+    await this.createProduct(productData);
+  }
+
+  private async importProductWithVariants(baseName: string, rows: any[]) {
+    let created = 0;
+    let updated = 0;
+    let variants = 0;
+
+    // Use first row for base product data
+    const firstRow = rows[0];
+    const slug = baseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    
+    // Check if base product exists
+    let product = await this.prisma.product.findUnique({ where: { slug } });
+
+    if (!product) {
+      // Create base product
+      const images = this.parseImages(firstRow);
+      
+      const productData: any = {
+        name: baseName,
+        description: firstRow.description || firstRow.Description || '',
+        price: parseFloat(firstRow.price || firstRow.Price),
+        category: firstRow.category || firstRow.Category,
+        tags: firstRow.tags || firstRow.Tags ? (firstRow.tags || firstRow.Tags).split(',').map((t: string) => t.trim()) : [],
+        isFeatured: false,
+        isActive: true,
+        images,
+        inventory: {
+          quantity: 0,
+          lowStockThreshold: 10,
+          isTracked: true,
+        },
+      };
+
+      product = await this.createProduct(productData);
+      created = 1;
+    } else {
+      updated = 1;
+    }
+
+    // Create/update variants for each size
+    for (const row of rows) {
+      const variantName = row.detectedSize || 'Standard';
+      const stockQuantity = this.parseStockQuantity(row.stock || row.Stock);
+      const images = this.parseImages(row);
+      const imageUrl = images.length > 0 ? images[0].url : undefined;
+
+      // Check if variant exists
+      const existingVariant = await this.prisma.productVariant.findFirst({
+        where: {
+          productId: product.id,
+          name: variantName,
+        },
+      });
+
+      const variantData = {
+        name: variantName,
+        sku: row.sku || row.SKU || `${product.id}-${variantName}`,
+        price: parseFloat(row.price || row.Price),
+        compareAtPrice: row.compareAtPrice ? parseFloat(row.compareAtPrice) : undefined,
+        stock: stockQuantity,
+        imageUrl,
+        isActive: true,
+      };
+
+      if (existingVariant) {
+        await this.prisma.productVariant.update({
+          where: { id: existingVariant.id },
+          data: variantData,
+        });
+      } else {
+        await this.prisma.productVariant.create({
+          data: {
+            ...variantData,
+            productId: product.id,
+          },
+        });
+        variants++;
+      }
+    }
+
+    return { created, updated, variants };
+  }
+
+  async createCategory(name: string, description?: string) {
+    // Check if category already exists
+    const existingCategory = await this.prisma.category.findFirst({
+      where: { name },
+    });
+
+    if (existingCategory) {
+      throw new BadRequestException(`Category "${name}" already exists`);
+    }
+
+    // Generate slug from name
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+
+    // Create the category
+    const category = await this.prisma.category.create({
+      data: {
+        name,
+        slug,
+        description: description || '',
+      },
+    });
+
+    return category;
+  }
+
   async importProductsFromCSV(file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
@@ -520,105 +743,164 @@ export class AdminService {
     const errors: any[] = [];
     let createdCount = 0;
     let updatedCount = 0;
+    let variantCount = 0;
     let errorCount = 0;
 
     return new Promise((resolve, reject) => {
       const stream = Readable.from(file.buffer.toString());
+      let headerValidated = false;
       
       stream
         .pipe(csvParser())
+        .on('headers', (headers) => {
+          // Validate CSV format
+          const requiredColumns = ['Name', 'Category', 'Price'];
+          const hasRequiredColumns = requiredColumns.every(col => 
+            headers.some(h => h.toLowerCase() === col.toLowerCase())
+          );
+          
+          if (!hasRequiredColumns) {
+            reject(new BadRequestException({
+              message: 'Invalid CSV format - Missing required columns',
+              details: {
+                error: 'Missing required columns',
+                required: requiredColumns,
+                found: headers,
+                help: 'Your CSV must have these columns: Name, Category, Price',
+                optional: 'Description, Stock, Image, SKU, Barcode',
+                example: 'Name,Category,Price,Stock,Description\nProduct Name,Category Name,9.99,100,Product description'
+              }
+            }));
+            return;
+          }
+          
+          // Check for malformed header (entire row in quotes)
+          if (headers.length === 1 && headers[0].includes(',')) {
+            reject(new BadRequestException({
+              message: 'Malformed CSV file - Header row is wrapped in quotes',
+              details: {
+                error: 'Each row is wrapped in quotes instead of having separate columns',
+                found: headers[0],
+                help: 'Remove the quotes wrapping each entire row. Each column value should be separate.',
+                correct: 'Name,Category,Price,Stock,Description',
+                incorrect: '"Name,Category,Price,Stock,Description"',
+                howToFix: 'Open your CSV in a text editor and remove the quotes at the start and end of each line.'
+              }
+            }));
+            return;
+          }
+          
+          headerValidated = true;
+        })
         .on('data', (row) => {
           results.push(row);
         })
         .on('end', async () => {
-          // Process each row
-          for (let i = 0; i < results.length; i++) {
-            const row = results[i];
-            try {
-              // Parse the CSV row - handle empty/missing imageUrl field
-              const imageUrlRaw = row.imageUrl || row.ImageUrl;
-              const imageUrl = imageUrlRaw !== undefined ? String(imageUrlRaw).trim() : '';
-              const images = imageUrl 
-                ? imageUrl.split('|').map((url: string, index: number) => ({
-                    url: url.trim(),
-                    altText: row.name || row.Name,
-                    sortOrder: index,
-                  })).filter((img: any) => img.url) // Filter out empty URLs
-                : [];
-              
-              console.log(`Row ${i + 1}: imageUrl="${imageUrl}", parsed ${images.length} images`);
-
-              const productData: any = {
-                name: row.name || row.Name,
-                description: row.description || row.Description || '',
-                price: parseFloat(row.price || row.Price),
-                compareAtPrice: row.compareAtPrice || row.CompareAtPrice ? parseFloat(row.compareAtPrice || row.CompareAtPrice) : undefined,
-                category: row.category || row.Category,
-                categoryId: row.categoryId || row.CategoryId || undefined,
-                unitSize: row.unitSize || row.UnitSize || row.unit || row.Unit || undefined,
-                sku: row.sku || row.SKU || undefined,
-                barcode: row.barcode || row.Barcode || undefined,
-                tags: row.tags || row.Tags ? (row.tags || row.Tags).split(',').map((t: string) => t.trim()).filter((t: string) => t) : [],
-                isFeatured: row.isFeatured === 'true' || row.IsFeatured === 'true' || row.isFeatured === '1',
-                isActive: row.isActive !== 'false' && row.IsActive !== 'false' && row.isActive !== '0',
-                images: images, // Always pass images array (even if empty) to trigger update
-                inventory: {
-                  quantity: row.stock || row.Stock ? parseInt(row.stock || row.Stock) : 0,
-                  lowStockThreshold: row.lowStockThreshold || row.LowStockThreshold ? parseInt(row.lowStockThreshold || row.LowStockThreshold) : 10,
-                  isTracked: row.trackInventory === 'true' || row.TrackInventory === 'true' || row.trackInventory === '1' || row.trackInventory !== 'false',
-                },
-              };
-
-              // Check if product exists (by ID, SKU, or name)
-              const productId = row.id || row.Id;
-              let existingProduct = null;
-
-              if (productId) {
-                existingProduct = await this.prisma.product.findUnique({ where: { id: productId } });
-              }
-              
-              if (!existingProduct && productData.sku) {
-                existingProduct = await this.prisma.product.findUnique({ where: { sku: productData.sku } });
-              }
-
-              if (!existingProduct) {
-                const slug = productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-                existingProduct = await this.prisma.product.findUnique({ where: { slug } });
-              }
-
-              if (existingProduct) {
-                // Update existing product
-                console.log(`Updating product ${existingProduct.id} with ${productData.images?.length || 0} images`);
-                await this.updateProduct(existingProduct.id, productData);
-                updatedCount++;
-              } else {
-                // Create new product
-                console.log(`Creating new product with ${productData.images?.length || 0} images`);
-                await this.createProduct(productData);
-                createdCount++;
-              }
-            } catch (error) {
-              errorCount++;
-              errors.push({
-                row: i + 2, // +2 because of 0-index and header row
-                data: row,
-                error: error.message,
-              });
-            }
+          if (!headerValidated) {
+            reject(new BadRequestException('CSV file could not be parsed'));
+            return;
           }
 
-          resolve({
-            message: 'CSV import completed',
-            totalRows: results.length,
-            createdCount,
-            updatedCount,
-            successCount: createdCount + updatedCount,
-            errorCount,
-            errors: errors.length > 0 ? errors : undefined,
-          });
+          try {
+            // Group products by base name for variant detection
+            const productGroups = new Map<string, any[]>();
+            
+            for (const row of results) {
+              const fullName = row.name || row.Name;
+              if (!fullName) continue;
+              
+              // Extract base name and size
+              const sizePattern = /(\d+(?:\.\d+)?\s*(?:kg|g|l|ml|cl|oz|lb|pack)|x\d+\s*pack)/i;
+              const match = fullName.match(sizePattern);
+              
+              let baseName = fullName;
+              let size = null;
+              
+              if (match) {
+                size = match[1].trim();
+                baseName = fullName.replace(sizePattern, '').trim();
+              }
+              
+              if (!productGroups.has(baseName)) {
+                productGroups.set(baseName, []);
+              }
+              productGroups.get(baseName)!.push({ ...row, detectedSize: size });
+            }
+
+            // Process each product group
+            for (const [baseName, rows] of productGroups.entries()) {
+              try {
+                // Check if all rows are duplicates (same exact name, no size variations)
+                const allSameName = rows.every(r => !r.detectedSize);
+                
+                if (rows.length === 1 && !rows[0].detectedSize) {
+                  // Single product with no size variant
+                  await this.importSingleProduct(rows[0]);
+                  createdCount++;
+                } else if (allSameName && rows.length > 1) {
+                  // Multiple rows with exact same name - just update the first one with latest data
+                  const latestRow = rows[rows.length - 1]; // Use last occurrence
+                  await this.importSingleProduct(latestRow);
+                  createdCount++;
+                } else {
+                  // Multiple variants or single product with size
+                  const result = await this.importProductWithVariants(baseName, rows);
+                  createdCount += result.created;
+                  updatedCount += result.updated;
+                  variantCount += result.variants;
+                }
+              } catch (error) {
+                errorCount++;
+                errors.push({
+                  product: baseName,
+                  error: error.message,
+                });
+              }
+            }
+
+            // Audit log for CSV import
+            await this.auditService.log({
+              userId: 'system', // Will be updated when we add user context
+              action: 'CSV_IMPORT',
+              entity: 'Product',
+              entityId: 'bulk',
+              changes: {
+                totalRows: results.length,
+                created: createdCount,
+                updated: updatedCount,
+                variants: variantCount,
+                errors: errorCount,
+              },
+            });
+
+            resolve({
+              message: `CSV import completed: ${createdCount} products, ${variantCount} variants, ${updatedCount} updated, ${errorCount} errors`,
+              totalRows: results.length,
+              createdCount,
+              updatedCount,
+              variantCount,
+              successCount: createdCount + updatedCount,
+              errorCount,
+              errors: errors.length > 0 ? errors : undefined,
+            });
+          } catch (error) {
+            reject(error);
+          }
         })
         .on('error', (error) => {
-          reject(new BadRequestException(`CSV parsing error: ${error.message}`));
+          reject(new BadRequestException({
+            message: 'Failed to parse CSV file',
+            details: {
+              error: error.message,
+              help: 'Make sure your CSV file is properly formatted. Each row should have values separated by commas, not wrapped in quotes.',
+              example: 'Name,Category,Price\nProduct 1,Category A,9.99\nProduct 2,Category B,14.99',
+              commonIssues: [
+                'Entire rows wrapped in quotes: "Name,Category,Price" ❌',
+                'Missing required columns: Name, Category, Price',
+                'File encoding issues - save as UTF-8'
+              ]
+            }
+          }));
         });
     });
   }
