@@ -422,8 +422,17 @@ export class AdminService {
         await this.cacheManager.del(`product:slug:${slug}`);
       }
       
-      // Note: We can't easily clear all products:* keys without Redis SCAN
-      // For now, they will expire after 5 minutes
+      // Clear products list caches - use store.keys() to find and delete all matching keys
+      const store = this.cacheManager.store;
+      if (store && typeof store.keys === 'function') {
+        const keys = await store.keys();
+        const productsKeys = keys.filter((key: string) => key.startsWith('products:'));
+        for (const key of productsKeys) {
+          await this.cacheManager.del(key);
+        }
+        console.log(`🗑️  Cleared ${productsKeys.length} products list cache entries`);
+      }
+      
       console.log(`🗑️  Cleared cache for product: ${productId}`);
     } catch (error) {
       console.warn('⚠️  Cache clear error:', error.message);

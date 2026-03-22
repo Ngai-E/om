@@ -61,9 +61,9 @@ export default function InventoryManagementPage() {
   });
 
   const updateInventory = useMutation({
-    mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) => {
+    mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
       const token = localStorage.getItem('token');
-      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId}/inventory`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId}/inventory`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -71,9 +71,16 @@ export default function InventoryManagementPage() {
         },
         body: JSON.stringify({ quantity, action: 'SET' }),
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update inventory');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-products', searchTerm, page, pageSize] });
+      // Invalidate all admin-products queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['inventory-stats'] });
       success('Inventory updated successfully');
       setEditingId(null);
