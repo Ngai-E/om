@@ -42,16 +42,18 @@ export class AdminService {
     let lowStockItems = 0;
 
     for (const product of products) {
+      const threshold = product.inventory?.lowStockThreshold || 10;
+      
       if (product.variants && product.variants.length > 0) {
         // Count variants with low stock (including out of stock for badge alert)
         for (const variant of product.variants) {
-          if (variant.stock <= 10) {
+          if (variant.stock <= threshold) {
             lowStockItems++;
           }
         }
       } else {
         // Count products without variants
-        if (product.inventory && product.inventory.quantity <= 10) {
+        if (product.inventory && product.inventory.quantity <= threshold) {
           lowStockItems++;
         }
       }
@@ -933,6 +935,10 @@ export class AdminService {
         category: true,
         images: { orderBy: { sortOrder: 'asc' } },
         inventory: true,
+        variants: {
+          where: includeInactive ? {} : { isActive: true },
+          orderBy: { sortOrder: 'asc' },
+        },
       },
       orderBy: { name: 'asc' },
     });
@@ -941,6 +947,7 @@ export class AdminService {
     const headers = [
       'id',
       'name',
+      'variantName',
       'description',
       'price',
       'compareAtPrice',
@@ -958,23 +965,49 @@ export class AdminService {
       'isActive',
     ];
 
-    // Build CSV rows
-    const rows = products.map((product) => {
-      const imageUrls = product.images?.map(img => img.url).join('|') || '';
-      const stock = product.inventory?.quantity || 0;
+    // Build CSV rows - flatten variants into separate rows
+    const rows = products.flatMap((product) => {
+      const baseImageUrls = product.images?.map(img => img.url).join('|') || '';
+      const tags = product.tags?.join(',') || '';
       const lowStockThreshold = product.inventory?.lowStockThreshold || 10;
       const trackInventory = product.inventory?.isTracked !== false ? 'true' : 'false';
-      const tags = product.tags?.join(',') || '';
 
-      return [
+      // If product has variants, export each variant as a row
+      if (product.variants && product.variants.length > 0) {
+        return product.variants.map((variant) => [
+          variant.id,
+          this.escapeCsvValue(product.name),
+          this.escapeCsvValue(variant.name),
+          this.escapeCsvValue(product.description || ''),
+          variant.price.toString(),
+          variant.compareAtPrice?.toString() || '',
+          this.escapeCsvValue(product.category?.name || ''),
+          product.categoryId || '',
+          variant.imageUrl || baseImageUrls,
+          this.escapeCsvValue(tags),
+          product.unitSize || '',
+          variant.sku || '',
+          product.barcode || '',
+          variant.stock,
+          lowStockThreshold,
+          trackInventory,
+          product.isFeatured ? 'true' : 'false',
+          variant.isActive ? 'true' : 'false',
+        ].join(','));
+      }
+
+      // If no variants, export the product itself
+      const stock = product.inventory?.quantity || 0;
+      return [[
         product.id,
         this.escapeCsvValue(product.name),
+        '', // no variant name
         this.escapeCsvValue(product.description || ''),
         product.price.toString(),
         product.compareAtPrice?.toString() || '',
         this.escapeCsvValue(product.category?.name || ''),
         product.categoryId || '',
-        imageUrls,
+        baseImageUrls,
         this.escapeCsvValue(tags),
         product.unitSize || '',
         product.sku || '',
@@ -984,7 +1017,7 @@ export class AdminService {
         trackInventory,
         product.isFeatured ? 'true' : 'false',
         product.isActive ? 'true' : 'false',
-      ].join(',');
+      ].join(',')];
     });
 
     // Combine headers and rows
@@ -2042,13 +2075,15 @@ export class AdminService {
     let outOfStockCount = 0;
 
     for (const product of products) {
+      const threshold = product.inventory?.lowStockThreshold || 10;
+      
       if (product.variants && product.variants.length > 0) {
         // For products with variants, count each variant
         for (const variant of product.variants) {
           totalItems++;
           if (variant.stock === 0) {
             outOfStockCount++;
-          } else if (variant.stock <= 10) {
+          } else if (variant.stock <= threshold) {
             lowStockCount++;
           }
         }
@@ -2059,7 +2094,7 @@ export class AdminService {
           const stock = product.inventory.quantity;
           if (stock === 0) {
             outOfStockCount++;
-          } else if (stock <= 10) {
+          } else if (stock <= threshold) {
             lowStockCount++;
           }
         }

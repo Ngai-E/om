@@ -61,14 +61,17 @@ export default function InventoryManagementPage() {
   });
 
   const updateInventory = useMutation({
-    mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) =>
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productId}/inventory`, {
+    mutationFn: ({ productId, quantity }: { productId: string; quantity: number }) => {
+      const token = localStorage.getItem('token');
+      return fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId}/inventory`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ quantity, action: 'SET' }),
-      }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products', searchTerm, page, pageSize] });
       queryClient.invalidateQueries({ queryKey: ['inventory-stats'] });
@@ -126,7 +129,7 @@ export default function InventoryManagementPage() {
     const headers = Object.keys(csvData[0]);
     const csv = [
       headers.join(','),
-      ...csvData.map((row) => headers.map((h) => row[h as keyof typeof row]).join(',')),
+      ...csvData.map((row: Record<string, string | number>) => headers.map((h) => row[h]).join(',')),
     ].join('\n');
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -164,7 +167,7 @@ export default function InventoryManagementPage() {
   const totalPages = productsData?.pagination?.totalPages || 0;
 
   // Flatten products into variant-based inventory items
-  const inventoryItems = products.flatMap((product) => {
+  const inventoryItems = products.flatMap((product: any) => {
     if (product.variants && product.variants.length > 0) {
       // For products with variants, create an item for each variant
       return product.variants.map((variant: any) => ({
@@ -180,6 +183,7 @@ export default function InventoryManagementPage() {
         stock: variant.stock,
         imageUrl: variant.imageUrl || (product.images?.[0]?.url),
         isActive: variant.isActive,
+        lowStockThreshold: product.inventory?.lowStockThreshold || 10,
       }));
     } else {
       // For products without variants, create a single item
@@ -203,11 +207,12 @@ export default function InventoryManagementPage() {
 
   // Filter inventory items
   const filteredItems = inventoryItems
-    .filter((item) => {
-      const matchesLowStock = !showLowStockOnly || item.stock <= 10;
+    .filter((item: any) => {
+      const threshold = item.lowStockThreshold || 10;
+      const matchesLowStock = !showLowStockOnly || item.stock <= threshold;
       return matchesLowStock;
     })
-    .sort((a, b) => a.stock - b.stock);
+    .sort((a: any, b: any) => a.stock - b.stock);
 
   // Get stats from API
   const totalItems = statsData?.totalItems || 0;
@@ -338,11 +343,13 @@ export default function InventoryManagementPage() {
                     <th className="text-center p-4 font-medium">Low Stock Alert</th>
                     <th className="text-center p-4 font-medium">Status</th>
                     <th className="text-right p-4 font-medium">Price</th>
+                    <th className="text-right p-4 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredItems.map((item: any) => {
-                    const isLowStock = item.stock <= 10 && item.stock > 0;
+                    const threshold = item.lowStockThreshold || 10;
+                    const isLowStock = item.stock <= threshold && item.stock > 0;
                     const isOutOfStock = item.stock === 0;
 
                     return (
@@ -409,7 +416,7 @@ export default function InventoryManagementPage() {
                           )}
                         </td>
                         <td className="p-4 text-center">
-                          <span className="text-sm text-muted-foreground">10</span>
+                          <span className="text-sm text-muted-foreground">{item.lowStockThreshold || 10}</span>
                         </td>
                         <td className="p-4 text-center">
                           {isOutOfStock ? (
@@ -428,6 +435,14 @@ export default function InventoryManagementPage() {
                         </td>
                         <td className="p-4 text-right">
                           <span className="text-sm text-blue-600 font-medium">£{parseFloat(item.price).toFixed(2)}</span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => handleStartEdit(item.id, item.stock)}
+                            className="text-sm text-blue-600 hover:underline font-medium"
+                          >
+                            Quick Edit
+                          </button>
                         </td>
                       </tr>
                     );
