@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface AuditLogData {
-  userId: string;
+  userId?: string;
   action: string;
   entity: string;
   entityId: string;
@@ -17,9 +17,23 @@ export class AuditService {
 
   async log(data: AuditLogData) {
     try {
+      // Verify user exists if userId is provided
+      if (data.userId) {
+        const userExists = await this.prisma.user.findUnique({
+          where: { id: data.userId },
+          select: { id: true },
+        });
+        
+        // If user doesn't exist, set userId to null
+        if (!userExists) {
+          console.warn(`⚠️  User ${data.userId} not found, creating audit log without user reference`);
+          data.userId = undefined;
+        }
+      }
+
       await this.prisma.auditLog.create({
         data: {
-          userId: data.userId,
+          userId: data.userId || null,
           action: data.action,
           entity: data.entity,
           entityId: data.entityId,
@@ -29,7 +43,7 @@ export class AuditService {
         },
       });
 
-      console.log(`📝 Audit: ${data.action} on ${data.entity}:${data.entityId} by user:${data.userId}`);
+      console.log(`📝 Audit: ${data.action} on ${data.entity}:${data.entityId} by user:${data.userId || 'system'}`);
     } catch (error) {
       console.error('Failed to create audit log:', error.message);
     }
