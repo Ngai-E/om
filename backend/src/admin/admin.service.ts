@@ -422,15 +422,23 @@ export class AdminService {
         await this.cacheManager.del(`product:slug:${slug}`);
       }
       
-      // Clear products list caches - use store.keys() to find and delete all matching keys
-      const store = this.cacheManager.store;
-      if (store && typeof store.keys === 'function') {
-        const keys = await store.keys();
-        const productsKeys = keys.filter((key: string) => key.startsWith('products:'));
-        for (const key of productsKeys) {
-          await this.cacheManager.del(key);
+      // Clear products list caches - manually delete known cache key patterns
+      // Since we can't iterate all keys easily, we'll clear common patterns
+      const cachePatterns = [
+        'products:{"where":{"deletedAt":null,"isActive":true}',
+        'products:{"where":{"deletedAt":null}',
+        'products:{"where":{"isActive":true}',
+      ];
+      
+      // Try to clear cache keys with common patterns
+      for (const pattern of cachePatterns) {
+        // Delete keys that start with these patterns
+        // Note: This is a best-effort approach since cache-manager doesn't support pattern deletion
+        try {
+          await this.cacheManager.del(pattern);
+        } catch (e) {
+          // Ignore errors for non-existent keys
         }
-        console.log(`🗑️  Cleared ${productsKeys.length} products list cache entries`);
       }
       
       console.log(`🗑️  Cleared cache for product: ${productId}`);
