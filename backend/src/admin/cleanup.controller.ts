@@ -181,9 +181,30 @@ export class CleanupController {
 
     // 8. Delete product variants and products (if products selected)
     if (cleanupConfig.products) {
+      // Delete cart items first (references products and variants)
+      // Must delete even if carts cleanup is disabled
+      if (!cleanupConfig.carts) {
+        const deletedCartItems = await this.prisma.cartItem.deleteMany({});
+        results.cartItems = deletedCartItems.count;
+      }
+
+      // Delete order items (references products and variants)
+      const deletedOrderItems = await this.prisma.orderItem.deleteMany({});
+      results.orderItems = deletedOrderItems.count;
+
+      // Delete product images (references products)
+      const deletedImages = await this.prisma.productImage.deleteMany({});
+      results.productImages = deletedImages.count;
+
+      // Delete inventory (references products)
+      const deletedInventory = await this.prisma.inventory.deleteMany({});
+      results.inventory = deletedInventory.count;
+
+      // Delete variants (references products)
       const deletedVariants = await this.prisma.productVariant.deleteMany({});
       results.productVariants = deletedVariants.count;
 
+      // Finally delete products
       const deletedProducts = await this.prisma.product.deleteMany({});
       results.products = deletedProducts.count;
     }
