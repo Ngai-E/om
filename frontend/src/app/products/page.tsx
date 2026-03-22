@@ -15,6 +15,8 @@ function ProductsContent() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'price-asc' | 'price-desc'>('name');
   const [showInStockOnly, setShowInStockOnly] = useState(false);
+  const [page, setPage] = useState(1);
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   useEffect(() => {
     if (urlCategory) {
@@ -25,11 +27,33 @@ function ProductsContent() {
   const { data: productsData, isLoading: productsLoading } = useProducts({
     search: urlSearch || undefined,
     category: selectedCategory || undefined,
-    page: 1,
-    limit: 50,
+    page,
+    limit: 20,
   });
 
   const { data: categories } = useCategories();
+
+  // Helper to format category names to Title Case
+  const toTitleCase = (str: string) => {
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Limit categories display
+  const CATEGORY_LIMIT = 8;
+  const displayedCategories = showAllCategories 
+    ? categories 
+    : categories?.slice(0, CATEGORY_LIMIT);
+
+  const totalPages = productsData?.pagination?.totalPages || 1;
+
+  // Reset page when category or search changes
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCategory, urlSearch]);
 
   // Filter and sort products
   const filteredAndSortedProducts = productsData?.data
@@ -86,7 +110,7 @@ function ProductsContent() {
                   </button>
                 </div>
                 
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-[calc(100vh-120px)] overflow-y-auto pr-2">
                   <button
                     onClick={() => {
                       setSelectedCategory('');
@@ -100,7 +124,7 @@ function ProductsContent() {
                   >
                     All Products
                   </button>
-                  {categories?.map((category) => (
+                  {displayedCategories?.map((category) => (
                     <button
                       key={category.id}
                       onClick={() => {
@@ -113,9 +137,17 @@ function ProductsContent() {
                           : 'hover:bg-muted'
                       }`}
                     >
-                      {category.name}
+                      {toTitleCase(category.name)}
                     </button>
                   ))}
+                  {categories && categories.length > CATEGORY_LIMIT && (
+                    <button
+                      onClick={() => setShowAllCategories(!showAllCategories)}
+                      className="w-full text-left px-4 py-2 text-sm text-primary hover:bg-muted rounded-lg transition"
+                    >
+                      {showAllCategories ? '← Show Less' : `+ ${categories.length - CATEGORY_LIMIT} More Categories`}
+                    </button>
+                  )}
                 </div>
               </div>
             </aside>
@@ -126,8 +158,9 @@ function ProductsContent() {
           {/* Sidebar - Categories (Desktop Only) */}
           <aside className="hidden md:block w-64 flex-shrink-0">
             <div className="sticky top-24">
-              <h2 className="font-bold text-lg mb-4">Categories</h2>
-              <div className="space-y-2">
+              <h2 className="font-bold text-lg mb-4">Shop by Category</h2>
+              <p className="text-sm text-muted-foreground mb-4">Find exactly what you're looking for</p>
+              <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
                 <button
                   onClick={() => setSelectedCategory('')}
                   className={`w-full text-left px-4 py-2 rounded-lg transition ${
@@ -138,7 +171,7 @@ function ProductsContent() {
                 >
                   All Products
                 </button>
-                {categories?.map((category) => (
+                {displayedCategories?.map((category) => (
                   <button
                     key={category.id}
                     onClick={() => setSelectedCategory(category.slug)}
@@ -148,9 +181,17 @@ function ProductsContent() {
                         : 'hover:bg-muted'
                     }`}
                   >
-                    {category.name}
+                    {toTitleCase(category.name)}
                   </button>
                 ))}
+                {categories && categories.length > CATEGORY_LIMIT && (
+                  <button
+                    onClick={() => setShowAllCategories(!showAllCategories)}
+                    className="w-full text-left px-4 py-2 text-sm text-primary hover:bg-muted rounded-lg transition"
+                  >
+                    {showAllCategories ? '← Show Less' : `+ ${categories.length - CATEGORY_LIMIT} More Categories`}
+                  </button>
+                )}
               </div>
             </div>
           </aside>
@@ -236,6 +277,55 @@ function ProductsContent() {
                     </button>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {!productsLoading && filteredAndSortedProducts.length > 0 && totalPages > 1 && (
+              <div className="mt-8 flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                  className="px-4 py-2 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
+                    // Show first page, last page, current page, and pages around current
+                    if (
+                      pageNum === 1 ||
+                      pageNum === totalPages ||
+                      (pageNum >= page - 1 && pageNum <= page + 1)
+                    ) {
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setPage(pageNum)}
+                          className={`px-4 py-2 rounded-lg transition ${
+                            page === pageNum
+                              ? 'bg-primary text-primary-foreground'
+                              : 'hover:bg-muted'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    } else if (pageNum === page - 2 || pageNum === page + 2) {
+                      return <span key={pageNum} className="px-2">...</span>;
+                    }
+                    return null;
+                  })}
+                </div>
+
+                <button
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
               </div>
             )}
           </div>
