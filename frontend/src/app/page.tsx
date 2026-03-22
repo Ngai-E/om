@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Truck, CreditCard, Star, ArrowRight, Package } from 'lucide-react';
 import { useFeaturedProducts, useCategories } from '@/lib/hooks/use-products';
@@ -12,9 +13,25 @@ export default function Home() {
   const { settings } = useSettingsStore();
   const { data: featuredProducts } = useFeaturedProducts();
   const { data: categories } = useCategories();
+  const [showAllCategories, setShowAllCategories] = React.useState(false);
 
   // Default promo banner if not set
   const promoBanner = settings.promoBanner || '🎉 Weekly Deal: 20% off all Grains & Staples | Free delivery over £50';
+
+  // Helper to format category names to Title Case
+  const toTitleCase = (str: string) => {
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Limit categories display
+  const CATEGORY_LIMIT = 8;
+  const displayedCategories = showAllCategories 
+    ? categories 
+    : categories?.slice(0, CATEGORY_LIMIT);
 
   return (
     <div className="min-h-screen bg-background">
@@ -101,8 +118,8 @@ export default function Home() {
               <p className="text-muted-foreground">Find exactly what you're looking for</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-5xl mx-auto">
-              {categories.map((category, index) => {
-                const icons = ['🌾', '🌶️', '🥤']; // Grains, Spices, Beverages
+              {displayedCategories?.map((category, index) => {
+                const icons = ['🌾', '🌶️', '🥤', '🍖', '🧊', '🍪', '🥫', '🍚']; // More icons for variety
                 return (
                   <Link
                     key={category.id}
@@ -111,7 +128,7 @@ export default function Home() {
                   >
                     <div className="text-4xl md:text-5xl mb-3">{icons[index] || '📦'}</div>
                     <h3 className="font-bold text-base md:text-lg mb-1 group-hover:text-primary transition">
-                      {category.name}
+                      {toTitleCase(category.name)}
                     </h3>
                     <p className="text-xs md:text-sm text-muted-foreground">
                       Shop now
@@ -120,6 +137,26 @@ export default function Home() {
                 );
               })}
             </div>
+            {categories && categories.length > CATEGORY_LIMIT && (
+              <div className="text-center mt-6">
+                <button
+                  onClick={() => setShowAllCategories(!showAllCategories)}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition font-medium"
+                >
+                  {showAllCategories ? (
+                    <>
+                      Show Less Categories
+                      <ArrowRight className="w-4 h-4 rotate-90" />
+                    </>
+                  ) : (
+                    <>
+                      View All {categories.length} Categories
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </section>
       )}

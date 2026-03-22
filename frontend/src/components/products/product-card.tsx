@@ -66,7 +66,13 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   const hasVariants = product.variants && product.variants.length > 0;
-  const inStock = product.inventory && product.inventory.quantity > 0;
+  
+  // Check stock: if product has variants, check if ANY variant is in stock
+  // Otherwise, check the product's own inventory
+  const inStock = hasVariants && product.variants
+    ? product.variants.some(variant => variant.stock > 0)
+    : product.inventory && product.inventory.quantity > 0;
+    
   const lowStock = product.inventory && product.inventory.quantity < product.inventory.lowStockThreshold;
 
   return (
@@ -107,12 +113,16 @@ export function ProductCard({ product }: ProductCardProps) {
             />
           </button>
 
-          {product.inventory && product.inventory.isTracked && (
+          {(product.inventory?.isTracked || hasVariants) && (
             <div className="absolute top-2 left-2">
               <StockBadge
-                quantity={product.inventory.quantity}
-                lowStockThreshold={product.inventory.lowStockThreshold}
-                isTracked={product.inventory.isTracked}
+                quantity={
+                  hasVariants && product.variants
+                    ? product.variants.reduce((sum, v) => sum + v.stock, 0)
+                    : product.inventory?.quantity || 0
+                }
+                lowStockThreshold={product.inventory?.lowStockThreshold || 10}
+                isTracked={true}
                 size="sm"
               />
             </div>
