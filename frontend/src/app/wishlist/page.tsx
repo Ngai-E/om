@@ -60,28 +60,26 @@ export default function WishlistPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-2">
-              <Heart className="w-8 h-8 text-red-500 fill-red-500" />
-              My Wishlist
-            </h1>
-            <p className="text-muted-foreground mt-1">
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-black text-[#036637] mb-2">
+            My Wishlist
+          </h1>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-600">
               {items.length} {items.length === 1 ? 'item' : 'items'} saved
             </p>
+            {items.length > 0 && (
+              <button
+                onClick={clearWishlist}
+                className="text-sm text-red-600 hover:text-red-700 font-medium"
+              >
+                Clear All
+              </button>
+            )}
           </div>
-
-          {items.length > 0 && (
-            <button
-              onClick={clearWishlist}
-              className="text-sm text-red-600 hover:text-red-700 font-medium"
-            >
-              Clear All
-            </button>
-          )}
         </div>
 
         {/* Loading State */}
@@ -102,24 +100,29 @@ export default function WishlistPage() {
 
         {/* Empty State */}
         {!isLoading && items.length === 0 && (
-          <div className="text-center py-16">
-            <Heart className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Your wishlist is empty</h2>
+          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="p-6 bg-gray-100 rounded-full">
+                <Heart className="w-16 h-16 text-gray-400" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              Your wishlist is empty
+            </h2>
             <p className="text-gray-600 mb-6">
-              Save your favorite products by clicking the heart icon
+              Start adding your favorite products to your wishlist!
             </p>
-            <Link
-              href="/products"
-              className="inline-block px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition font-medium"
-            >
-              Browse Products
+            <Link href="/products">
+              <button className="bg-[#FF7730] hover:bg-[#FF6520] text-white px-6 py-3 rounded-lg font-semibold transition">
+                Browse Products
+              </button>
             </Link>
           </div>
         )}
 
         {/* Wishlist Grid */}
         {!isLoading && wishlistProductsList.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {wishlistProductsList.map((product) => {
               const hasVariants = product.variants && product.variants.length > 0;
               const inStock = hasVariants && product.variants

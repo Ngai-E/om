@@ -22,7 +22,8 @@ import {
   ChevronDown,
   ChevronRight,
   Bell,
-  Search
+  Search,
+  Star
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useQuery } from '@tanstack/react-query';
@@ -122,6 +123,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: Tag, 
       label: 'Promotions', 
       href: '/admin/promotions',
+    },
+    { 
+      icon: Star, 
+      label: 'Reviews', 
+      href: '/admin/reviews',
     },
     { 
       icon: Settings, 

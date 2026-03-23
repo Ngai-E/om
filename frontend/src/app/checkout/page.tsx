@@ -9,7 +9,7 @@ import { ordersApi } from '@/lib/api/orders';
 import { deliveryApi } from '@/lib/api/delivery';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
-import { MapPin, Clock, CreditCard, Truck, Store, AlertCircle, ShoppingBag, TrendingUp, Package } from 'lucide-react';
+import { MapPin, Clock, CreditCard, Truck, Store, AlertCircle, ShoppingBag, TrendingUp, Package, Check } from 'lucide-react';
 import { useCart } from '@/lib/hooks/use-cart';
 import { useCreateOrder } from '@/lib/hooks/use-orders';
 import { useQuery } from '@tanstack/react-query';
@@ -25,8 +25,14 @@ export default function CheckoutPage() {
   const { toast, hideToast, error } = useToast();
   const { data: cart, isLoading: cartLoading } = useCart();
   const createOrder = useCreateOrder();
+
+  const steps = [
+    { number: 1, title: 'Delivery', icon: Truck },
+    { number: 2, title: 'Payment', icon: CreditCard },
+    { number: 3, title: 'Review', icon: Check },
+  ];
   
-  const [step, setStep] = useState<'address' | 'delivery' | 'payment'>('address');
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [fulfillmentType, setFulfillmentType] = useState<'DELIVERY' | 'COLLECTION'>('DELIVERY');
   const [selectedAddressId, setSelectedAddressId] = useState<string>('');
   const [selectedSlotId, setSelectedSlotId] = useState<string>('');
@@ -111,8 +117,9 @@ export default function CheckoutPage() {
 
         const order = await createOrder.mutateAsync(orderData);
         
-        // Store order number for success page
+        // Store order details for success page
         sessionStorage.setItem('orderNumber', order.orderNumber);
+        sessionStorage.setItem('orderId', order.id);
         
         // Redirect to order confirmation
         router.push(`/orders/${order.id}`);
@@ -148,8 +155,9 @@ export default function CheckoutPage() {
 
       const order = await createOrder.mutateAsync(orderData);
       
-      // Store order number for success page
+      // Store order details for success page
       sessionStorage.setItem('orderNumber', order.orderNumber);
+      sessionStorage.setItem('orderId', order.id);
 
       // Create payment
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/create`, {
@@ -195,12 +203,30 @@ export default function CheckoutPage() {
   // Don't show empty cart message if we're processing payment (order already created)
   if ((!cart || cart.items.length === 0) && !isProcessingPayment && !paymentClientSecret) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
-          <Link href="/products" className="text-primary hover:underline">
-            Continue Shopping
-          </Link>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <h1 className="text-3xl md:text-4xl font-black text-[#036637] mb-8">
+            Checkout
+          </h1>
+
+          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="p-6 bg-gray-100 rounded-full">
+                <Package className="w-16 h-16 text-gray-400" />
+              </div>
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              Your cart is empty
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Add some products before checking out.
+            </p>
+            <Link href="/products">
+              <button className="bg-[#FF7730] hover:bg-[#FF6520] text-white px-6 py-3 rounded-lg font-semibold transition">
+                Browse Products
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -225,9 +251,56 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20 lg:pb-8">
-      <div className="container mx-auto px-4 py-4 lg:py-8">
-        <h1 className="text-2xl lg:text-3xl font-bold mb-4 lg:mb-8">Checkout</h1>
+    <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl md:text-4xl font-black text-[#036637] mb-8">Checkout</h1>
+
+        {/* Progress Steps */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between max-w-2xl mx-auto">
+            {steps.map((s, index) => {
+              const Icon = s.icon;
+              const isActive = step === s.number;
+              const isCompleted = step > s.number;
+
+              return (
+                <div key={s.number} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1">
+                    <div
+                      className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-colors ${
+                        isCompleted
+                          ? 'bg-[#036637] border-[#036637] text-white'
+                          : isActive
+                          ? 'bg-[#FF7730] border-[#FF7730] text-white'
+                          : 'bg-white border-gray-300 text-gray-400'
+                      }`}
+                    >
+                      {isCompleted ? (
+                        <Check className="w-6 h-6" />
+                      ) : (
+                        <Icon className="w-6 h-6" />
+                      )}
+                    </div>
+                    <p
+                      className={`text-sm mt-2 ${
+                        isActive || isCompleted ? 'text-[#036637] font-semibold' : 'text-gray-500'
+                      }`}
+                    >
+                      {s.title}
+                    </p>
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div
+                      className={`h-0.5 flex-1 mx-2 ${
+                        step > s.number ? 'bg-[#036637]' : 'bg-gray-300'
+                      }`}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Checkout Steps */}

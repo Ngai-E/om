@@ -135,27 +135,29 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.description}
           </p>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mt-4">
             <div>
-              <span className="text-2xl font-bold text-primary">
+              <p className="text-2xl font-bold text-[#036637]">
                 £{parseFloat(product.price).toFixed(2)}
-              </span>
-              {product.compareAtPrice && (
-                <span className="text-sm text-muted-foreground line-through ml-2">
-                  £{parseFloat(product.compareAtPrice).toFixed(2)}
-                </span>
+              </p>
+              {hasVariants && product.variants && product.variants.length > 1 && (
+                <p className="text-xs text-gray-500">
+                  +{product.variants.length - 1} variant{product.variants.length > 2 ? 's' : ''}
+                </p>
               )}
             </div>
 
             <button
               onClick={handleAddToCart}
               disabled={!inStock || addToCart.isPending}
-              className={`p-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed ${
                 justAdded
                   ? 'bg-green-600 text-white'
                   : !inStock
                   ? 'bg-gray-400 text-white'
-                  : 'bg-primary text-primary-foreground hover:opacity-90'
+                  : hasVariants
+                  ? 'bg-[#036637] hover:bg-[#014D29] text-white'
+                  : 'bg-[#FF7730] hover:bg-[#FF6520] text-white'
               }`}
               title={
                 !inStock 
@@ -166,9 +168,14 @@ export function ProductCard({ product }: ProductCardProps) {
               }
             >
               {justAdded ? (
-                <Check className="w-5 h-5" />
+                <Check className="w-4 h-4" />
+              ) : hasVariants ? (
+                'Select'
               ) : (
-                <ShoppingCart className="w-5 h-5" />
+                <>
+                  <ShoppingCart className="w-4 h-4 inline mr-1" />
+                  Add
+                </>
               )}
             </button>
           </div>

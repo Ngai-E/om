@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useProducts, useCategories } from '@/lib/hooks/use-products';
 import { ProductCard } from '@/components/products/product-card';
-import { Menu, X, Filter, ArrowUpDown } from 'lucide-react';
+import { Menu, X, Filter, ArrowUpDown, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 
 function ProductsContent() {
   const searchParams = useSearchParams();
@@ -48,6 +48,12 @@ function ProductsContent() {
     ? categories 
     : categories?.slice(0, CATEGORY_LIMIT);
 
+  // Category icons mapping
+  const getCategoryIcon = (index: number) => {
+    const icons = ['🌾', '🌶️', '🥤', '🍖', '🧊', '🍪', '🥫', '🍚', '🍌', '🥜', '🍞', '🧈', '🥛', '🍚'];
+    return icons[index] || '📦';
+  };
+
   const totalPages = productsData?.pagination?.totalPages || 1;
 
   // Reset page when category or search changes
@@ -77,169 +83,199 @@ function ProductsContent() {
     : [];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-6 md:py-8">
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setIsMobileMenuOpen(true)}
-          className="md:hidden mb-6 flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg"
-        >
-          <Menu className="w-5 h-5" />
-          Categories
-        </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-black text-[#036637] mb-2">
+            {urlSearch ? `Search: "${urlSearch}"` : selectedCategory ? toTitleCase(categories?.find(c => c.slug === selectedCategory)?.name || '') : 'Our Products'}
+          </h1>
+          <p className="text-gray-600">
+            {urlSearch ? `${filteredAndSortedProducts.length} products found` : 'Browse our wide selection of authentic Afro-Caribbean groceries'}
+          </p>
+        </div>
+        <div className="flex flex-col lg:flex-row gap-8">
 
-        {/* Mobile Sidebar Overlay */}
-        {isMobileMenuOpen && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 bg-black/50 z-40 md:hidden"
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-            
-            {/* Sidebar */}
-            <aside className="fixed top-0 left-0 h-full w-64 bg-background border-r z-50 md:hidden overflow-y-auto animate-in slide-in-from-left duration-300">
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="font-bold text-lg">Categories</h2>
-                  <button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 hover:bg-muted rounded-lg"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </div>
+          {/* Desktop Sidebar */}
+          <aside className="hidden lg:block w-64 flex-shrink-0">
+            <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-24">
+              <div className="space-y-6">
+                {/* Categories */}
+                <div>
+                  <h3 className="font-semibold text-[#036637] mb-3 flex items-center">
+                    <Filter className="w-4 h-4 mr-2" />
+                    Categories
+                  </h3>
                 
-                <div className="space-y-2 max-h-[calc(100vh-120px)] overflow-y-auto pr-2">
-                  <button
-                    onClick={() => {
-                      setSelectedCategory('');
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 rounded-lg transition ${
-                      selectedCategory === ''
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted'
-                    }`}
-                  >
-                    All Products
-                  </button>
-                  {displayedCategories?.map((category) => (
+                  <div className="space-y-2">
                     <button
-                      key={category.id}
-                      onClick={() => {
-                        setSelectedCategory(category.slug);
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`w-full text-left px-4 py-2 rounded-lg transition ${
-                        selectedCategory === category.slug
-                          ? 'bg-primary text-primary-foreground'
-                          : 'hover:bg-muted'
+                      onClick={() => setSelectedCategory('')}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                        selectedCategory === ''
+                          ? 'bg-[#E8F5E9] text-[#036637] font-medium'
+                          : 'hover:bg-gray-50'
                       }`}
                     >
-                      {toTitleCase(category.name)}
+                      All Products
                     </button>
-                  ))}
+                    {displayedCategories?.map((category, index) => (
+                      <button
+                        key={category.id}
+                        onClick={() => setSelectedCategory(category.slug)}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                          selectedCategory === category.slug
+                            ? 'bg-[#E8F5E9] text-[#036637] font-medium'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        {getCategoryIcon(index)} {toTitleCase(category.name)}
+                      </button>
+                    ))}
+                  </div>
                   {categories && categories.length > CATEGORY_LIMIT && (
                     <button
                       onClick={() => setShowAllCategories(!showAllCategories)}
-                      className="w-full text-left px-4 py-2 text-sm text-primary hover:bg-muted rounded-lg transition"
+                      className="text-sm text-[#FF7730] hover:text-[#FF6520] font-medium inline-flex items-center gap-1 mt-2"
                     >
-                      {showAllCategories ? '← Show Less' : `+ ${categories.length - CATEGORY_LIMIT} More Categories`}
+                      {showAllCategories ? (
+                        <>
+                          Show Less <ChevronUp className="w-4 h-4" />
+                        </>
+                      ) : (
+                        <>
+                          Show More <ChevronDown className="w-4 h-4" />
+                        </>
+                      )}
                     </button>
                   )}
                 </div>
-              </div>
-            </aside>
-          </>
-        )}
 
-        <div className="flex gap-8">
-          {/* Sidebar - Categories (Desktop Only) */}
-          <aside className="hidden md:block w-64 flex-shrink-0">
-            <div className="sticky top-24">
-              <h2 className="font-bold text-lg mb-4">Shop by Category</h2>
-              <p className="text-sm text-muted-foreground mb-4">Find exactly what you're looking for</p>
-              <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
-                <button
-                  onClick={() => setSelectedCategory('')}
-                  className={`w-full text-left px-4 py-2 rounded-lg transition ${
-                    selectedCategory === ''
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted'
-                  }`}
-                >
-                  All Products
-                </button>
-                {displayedCategories?.map((category) => (
+                {/* Stock Filter */}
+                <div>
+                  <h3 className="font-semibold text-[#036637] mb-3">Stock Status</h3>
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={showInStockOnly}
+                      onChange={(e) => setShowInStockOnly(e.target.checked)}
+                      className="w-4 h-4 text-[#036637] border-gray-300 rounded focus:ring-[#036637]"
+                    />
+                    <span className="text-sm">In Stock Only</span>
+                  </label>
+                </div>
+
+                {/* Clear Filters */}
+                {(selectedCategory || showInStockOnly) && (
                   <button
-                    key={category.id}
-                    onClick={() => setSelectedCategory(category.slug)}
-                    className={`w-full text-left px-4 py-2 rounded-lg transition ${
-                      selectedCategory === category.slug
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted'
-                    }`}
+                    onClick={() => {
+                      setSelectedCategory('');
+                      setShowInStockOnly(false);
+                    }}
+                    className="w-full border-2 border-[#036637] text-[#036637] hover:bg-[#E8F5E9] px-4 py-2 rounded-lg font-medium text-sm transition"
                   >
-                    {toTitleCase(category.name)}
-                  </button>
-                ))}
-                {categories && categories.length > CATEGORY_LIMIT && (
-                  <button
-                    onClick={() => setShowAllCategories(!showAllCategories)}
-                    className="w-full text-left px-4 py-2 text-sm text-primary hover:bg-muted rounded-lg transition"
-                  >
-                    {showAllCategories ? '← Show Less' : `+ ${categories.length - CATEGORY_LIMIT} More Categories`}
+                    Clear All Filters
                   </button>
                 )}
               </div>
             </div>
           </aside>
 
-          {/* Products Grid */}
+          {/* Main Content */}
           <div className="flex-1">
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h1 className="text-2xl md:text-3xl font-bold">
-                    {urlSearch
-                      ? `Search: "${urlSearch}"`
-                      : selectedCategory
-                      ? categories?.find((c) => c.slug === selectedCategory)?.name
-                      : 'All Products'}
-                  </h1>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {filteredAndSortedProducts.length} products
-                  </p>
-                </div>
+            {/* Toolbar */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                {/* Mobile Filter Toggle */}
+                <button
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                  className="lg:hidden border border-gray-300 px-4 py-2 rounded-lg inline-flex items-center gap-2 hover:bg-gray-50 transition"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Filters
+                </button>
+
+                <p className="text-sm text-gray-600">
+                  Showing {filteredAndSortedProducts.length} products
+                </p>
               </div>
 
-              {/* Sort and Filter Controls */}
-              <div className="flex flex-wrap gap-3 items-center">
-                <div className="flex items-center gap-2">
-                  <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
-                  <select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as any)}
-                    className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="name">Sort by Name</option>
-                    <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
-                  </select>
-                </div>
-
-                <label className="flex items-center gap-2 px-3 py-2 border rounded-lg text-sm cursor-pointer hover:bg-muted transition">
-                  <input
-                    type="checkbox"
-                    checked={showInStockOnly}
-                    onChange={(e) => setShowInStockOnly(e.target.checked)}
-                    className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
-                  />
-                  <span>In Stock Only</span>
-                </label>
+              {/* Sort */}
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <span className="text-sm text-gray-600">Sort by:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="border border-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#036637] focus:border-transparent"
+                >
+                  <option value="name">Name: A to Z</option>
+                  <option value="price-asc">Price: Low to High</option>
+                  <option value="price-desc">Price: High to Low</option>
+                </select>
               </div>
             </div>
+
+            {/* Mobile Filters */}
+            {isMobileMenuOpen && (
+              <div className="lg:hidden bg-white rounded-lg border border-gray-200 p-6 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-[#036637]">Filters</h3>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-2 hover:bg-gray-100 rounded-lg"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="font-medium text-[#036637] mb-3">Categories</h4>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => {
+                          setSelectedCategory('');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                          selectedCategory === ''
+                            ? 'bg-[#E8F5E9] text-[#036637] font-medium'
+                            : 'hover:bg-gray-50'
+                        }`}
+                      >
+                        All Products
+                      </button>
+                      {categories?.map((category, index) => (
+                        <button
+                          key={category.id}
+                          onClick={() => {
+                            setSelectedCategory(category.slug);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
+                            selectedCategory === category.slug
+                              ? 'bg-[#E8F5E9] text-[#036637] font-medium'
+                              : 'hover:bg-gray-50'
+                          }`}
+                        >
+                          {getCategoryIcon(index)} {toTitleCase(category.name)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-[#036637] mb-3">Stock Status</h4>
+                    <label className="flex items-center space-x-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={showInStockOnly}
+                        onChange={(e) => setShowInStockOnly(e.target.checked)}
+                        className="w-4 h-4 text-[#036637] border-gray-300 rounded focus:ring-[#036637]"
+                      />
+                      <span className="text-sm">In Stock Only</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {productsLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -261,22 +297,21 @@ function ProductsContent() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16">
-                <div className="max-w-md mx-auto">
-                  <p className="text-muted-foreground text-lg mb-4">
-                    {showInStockOnly
-                      ? 'No products in stock'
-                      : 'No products found'}
-                  </p>
-                  {showInStockOnly && (
-                    <button
-                      onClick={() => setShowInStockOnly(false)}
-                      className="text-primary hover:underline"
-                    >
-                      Show all products
-                    </button>
-                  )}
-                </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+                <p className="text-gray-500 mb-4">
+                  {showInStockOnly
+                    ? 'No products in stock matching your filters.'
+                    : 'No products found matching your filters.'}
+                </p>
+                <button
+                  onClick={() => {
+                    setSelectedCategory('');
+                    setShowInStockOnly(false);
+                  }}
+                  className="border-2 border-[#036637] text-[#036637] hover:bg-[#E8F5E9] px-6 py-2 rounded-lg font-medium transition"
+                >
+                  Clear Filters
+                </button>
               </div>
             )}
 
@@ -286,14 +321,13 @@ function ProductsContent() {
                 <button
                   onClick={() => setPage(page - 1)}
                   disabled={page === 1}
-                  className="px-4 py-2 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
                 
                 <div className="flex items-center gap-1">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => {
-                    // Show first page, last page, current page, and pages around current
                     if (
                       pageNum === 1 ||
                       pageNum === totalPages ||
@@ -305,15 +339,15 @@ function ProductsContent() {
                           onClick={() => setPage(pageNum)}
                           className={`px-4 py-2 rounded-lg transition ${
                             page === pageNum
-                              ? 'bg-primary text-primary-foreground'
-                              : 'hover:bg-muted'
+                              ? 'bg-[#036637] text-white'
+                              : 'hover:bg-gray-100'
                           }`}
                         >
                           {pageNum}
                         </button>
                       );
                     } else if (pageNum === page - 2 || pageNum === page + 2) {
-                      return <span key={pageNum} className="px-2">...</span>;
+                      return <span key={pageNum} className="px-2 text-gray-400">...</span>;
                     }
                     return null;
                   })}
@@ -322,7 +356,7 @@ function ProductsContent() {
                 <button
                   onClick={() => setPage(page + 1)}
                   disabled={page === totalPages}
-                  className="px-4 py-2 border rounded-lg hover:bg-muted transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>

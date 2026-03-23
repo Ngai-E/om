@@ -37,6 +37,7 @@ model User {
   carts           Cart[]
   orders          Order[]
   auditLogs       AuditLog[]
+  reviews         Review[]
 
   @@index([email])
   @@index([role])
@@ -173,6 +174,7 @@ model Product {
   variants   ProductVariant[]
   cartItems  CartItem[]
   orderItems OrderItem[]
+  reviews    Review[]
 
   @@index([slug])
   @@index([categoryId])
@@ -228,6 +230,43 @@ model Inventory {
   updatedAt         DateTime @updatedAt
 
   @@map("inventory")
+}
+
+// ============================================
+// PRODUCT REVIEWS
+// ============================================
+
+model Review {
+  id          String       @id @default(uuid())
+  productId   String
+  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId     String?      // Optional: Link to order to verify purchase
+  rating      Int          // 1-5 stars
+  title       String?
+  comment     String?
+  status      ReviewStatus @default(PENDING)
+  approvedBy  String?      // Admin/Staff user ID who approved
+  approvedAt  DateTime?
+  rejectedBy  String?      // Admin/Staff user ID who rejected
+  rejectedAt  DateTime?
+  rejectionReason String?
+  isVerifiedPurchase Boolean @default(false) // True if linked to an order
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([productId])
+  @@index([userId])
+  @@index([status])
+  @@index([orderId])
+  @@map("reviews")
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 // ============================================

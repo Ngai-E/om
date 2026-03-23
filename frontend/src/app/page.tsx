@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Truck, CreditCard, Star, ArrowRight, Package } from 'lucide-react';
+import { ShoppingBag, Truck, CreditCard, Star, ArrowRight, Package, Shield, ChevronRight } from 'lucide-react';
 import { useFeaturedProducts, useCategories } from '@/lib/hooks/use-products';
 import { ProductCard } from '@/components/products/product-card';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -34,152 +34,138 @@ export default function Home() {
     : categories?.slice(0, CATEGORY_LIMIT);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Promo Banner */}
-      <section className="bg-gradient-to-r from-primary to-secondary text-white py-3">
-        <div className="container mx-auto px-4">
-          <p className="text-center text-sm md:text-base font-medium">
-            {promoBanner}
-          </p>
-        </div>
-      </section>
-
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary/5 via-white to-secondary/5">
-        <div className="container mx-auto px-4 py-12 md:py-20">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
-              Authentic African & Caribbean Groceries
+      <section className="relative bg-[#036637] text-white overflow-hidden">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
+          style={{ backgroundImage: 'url(/hero-bg.png)' }}
+        ></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#036637]/60 to-[#036637]/40"></div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+          <div className="max-w-2xl">
+            <h1 className="text-4xl md:text-6xl font-black mb-4">
+              Authentic Afro-Caribbean Groceries
             </h1>
-            <p className="text-lg md:text-xl text-muted-foreground mb-6 md:mb-8">
-              Fresh ingredients, traditional flavors, delivered to your door in Bolton
+            <p className="text-lg md:text-xl mb-8 text-white/90">
+              Discover the finest selection of African and Caribbean foods, spices, and specialty items delivered to your door.
             </p>
-            <Link 
-              href="/products"
-              className="inline-flex items-center justify-center gap-2 bg-primary text-white px-8 py-4 rounded-lg hover:bg-primary/90 transition text-lg font-semibold shadow-lg"
-            >
-              <ShoppingBag className="w-5 h-5" />
-              Start Shopping
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="py-12 border-b">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="text-center p-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-primary/10 rounded-full mb-4">
-                <Package className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="font-bold text-lg mb-2">Fresh Products</h3>
-              <p className="text-sm text-muted-foreground">
-                Authentic ingredients sourced directly
-              </p>
-            </div>
-            <div className="text-center p-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-secondary/10 rounded-full mb-4">
-                <Truck className="w-8 h-8 text-secondary" />
-              </div>
-              <h3 className="font-bold text-lg mb-2">Fast Delivery</h3>
-              <p className="text-sm text-muted-foreground">
-                Same-day delivery in Bolton area
-              </p>
-            </div>
-            <div className="text-center p-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-accent/10 rounded-full mb-4">
-                <CreditCard className="w-8 h-8 text-accent" />
-              </div>
-              <h3 className="font-bold text-lg mb-2">Secure Payment</h3>
-              <p className="text-sm text-muted-foreground">
-                Card, Apple Pay, or cash on delivery
-              </p>
-            </div>
-            <div className="text-center p-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                <Star className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="font-bold text-lg mb-2">Quality Guaranteed</h3>
-              <p className="text-sm text-muted-foreground">
-                100% satisfaction or money back
-              </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/products">
+                <button className="bg-[#FF7730] hover:bg-[#FF6520] text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2 w-full sm:w-auto transition">
+                  Shop Now
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </Link>
+              <Link href="/promotions">
+                <button className="bg-white/10 border-2 border-white text-white hover:bg-white/20 px-6 py-3 rounded-lg font-semibold w-full sm:w-auto transition">
+                  View Promotions
+                </button>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Categories */}
+      {/* Trust Indicators */}
+      <section className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-[#E8F5E9] rounded-full flex-shrink-0">
+                <Truck className="w-6 h-6 text-[#036637]" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-[#036637]">Free Delivery</h3>
+                <p className="text-sm text-gray-600">On orders over £50</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-[#FFF5F0] rounded-full flex-shrink-0">
+                <CreditCard className="w-6 h-6 text-[#FF7730]" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-[#036637]">Secure Payment</h3>
+                <p className="text-sm text-gray-600">Multiple payment options</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-[#E8F5E9] rounded-full flex-shrink-0">
+                <Shield className="w-6 h-6 text-[#036637]" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-[#036637]">Quality Guaranteed</h3>
+                <p className="text-sm text-gray-600">Fresh & authentic products</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Categories */}
       {categories && categories.length > 0 && (
-        <section className="py-12 md:py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-8 md:mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold mb-2">Shop by Category</h2>
-              <p className="text-muted-foreground">Find exactly what you're looking for</p>
+        <section className="py-12 md:py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl md:text-3xl font-black text-[#036637]">
+                Shop by Category
+              </h2>
+              <Link href="/products">
+                <button className="text-[#FF7730] hover:text-[#FF6520] font-medium inline-flex items-center gap-1 transition">
+                  View All
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4 max-w-5xl mx-auto">
+
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
               {displayedCategories?.map((category, index) => {
-                const icons = ['🌾', '🌶️', '🥤', '🍖', '🧊', '🍪', '🥫', '🍚']; // More icons for variety
+                const icons = ['🌾', '🌶️', '🥤', '🍖', '🧊', '🍪', '🥫', '🍚'];
                 return (
                   <Link
                     key={category.id}
                     href={`/products?category=${category.slug}`}
-                    className="bg-gradient-to-br from-primary/5 to-secondary/5 border-2 border-transparent rounded-xl p-4 md:p-6 hover:border-primary hover:shadow-lg transition text-center group"
+                    className="flex flex-col items-center p-4 bg-white rounded-lg border border-gray-200 hover:border-[#036637] hover:shadow-md transition-all group"
                   >
-                    <div className="text-4xl md:text-5xl mb-3">{icons[index] || '📦'}</div>
-                    <h3 className="font-bold text-base md:text-lg mb-1 group-hover:text-primary transition">
+                    <div className="text-4xl mb-2">{icons[index] || '📦'}</div>
+                    <h3 className="text-sm text-center font-medium text-gray-700 group-hover:text-[#036637] transition">
                       {toTitleCase(category.name)}
                     </h3>
-                    <p className="text-xs md:text-sm text-muted-foreground">
-                      Shop now
-                    </p>
                   </Link>
                 );
               })}
             </div>
-            {categories && categories.length > CATEGORY_LIMIT && (
-              <div className="text-center mt-6">
-                <button
-                  onClick={() => setShowAllCategories(!showAllCategories)}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition font-medium"
-                >
-                  {showAllCategories ? (
-                    <>
-                      Show Less Categories
-                      <ArrowRight className="w-4 h-4 rotate-90" />
-                    </>
-                  ) : (
-                    <>
-                      View All {categories.length} Categories
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
+            <div className="mt-6 text-center">
+              <Link href="/products">
+                <button className="border-2 border-[#036637] text-[#036637] hover:bg-[#E8F5E9] px-6 py-2 rounded-lg font-medium transition">
+                  Show More Categories
                 </button>
-              </div>
-            )}
+              </Link>
+            </div>
           </div>
         </section>
       )}
 
-      {/* Best Sellers / Fresh Stock */}
+      {/* Featured Products */}
       {featuredProducts && featuredProducts.length > 0 && (
-        <section className="py-12 md:py-16 bg-gray-50">
-          <div className="container mx-auto px-4">
-            <div className="flex items-center justify-between mb-6 md:mb-8">
-              <div>
-                <h2 className="text-2xl md:text-3xl font-bold mb-1">Best Sellers</h2>
-                <p className="text-sm md:text-base text-muted-foreground">Customer favorites this week</p>
-              </div>
-              <Link
-                href="/products"
-                className="text-primary font-medium text-sm md:text-base hover:underline flex items-center gap-1"
-              >
-                View All
-                <ArrowRight className="w-4 h-4" />
+        <section className="py-12 md:py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl md:text-3xl font-black text-[#036637]">
+                Best Sellers
+              </h2>
+              <Link href="/products">
+                <button className="text-[#FF7730] hover:text-[#FF6520] font-medium inline-flex items-center gap-1 transition">
+                  View All
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </Link>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
-              {featuredProducts.slice(0, 6).map((product) => (
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {featuredProducts.slice(0, 8).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>
@@ -187,53 +173,59 @@ export default function Home() {
         </section>
       )}
 
-      {/* CTA Section */}
-      <section className="py-12 md:py-16 bg-gradient-to-r from-primary to-secondary text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3 md:mb-4">
-            New to OMEGA?
-          </h2>
-          <p className="text-base md:text-lg mb-6 md:mb-8 opacity-95">
-            Get 10% off your first order over £30
-          </p>
-          {!isAuthenticated ? (
-            <Link
-              href="/register"
-              className="inline-block bg-white text-primary px-6 md:px-8 py-3 md:py-4 rounded-lg hover:bg-gray-100 transition font-semibold shadow-lg"
-            >
-              Create Free Account
-            </Link>
-          ) : (
-            <Link
-              href="/products"
-              className="inline-block bg-white text-primary px-6 md:px-8 py-3 md:py-4 rounded-lg hover:bg-gray-100 transition font-semibold shadow-lg"
-            >
-              Start Shopping
-            </Link>
-          )}
+      {/* Promotional Banner */}
+      <section className="py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-gradient-to-r from-[#036637] to-[#014D29] rounded-2xl overflow-hidden">
+            <div className="px-8 py-12 md:py-16 text-center text-white">
+              <h2 className="text-3xl md:text-4xl font-black mb-4">
+                {!isAuthenticated ? 'New to OMEGA?' : 'Special Offer This Week!'}
+              </h2>
+              <p className="text-lg mb-6 text-white/90">
+                {!isAuthenticated 
+                  ? 'Get 10% off your first order over £30. Sign up today!' 
+                  : 'Get 20% off on all fresh produce. Limited time only!'}
+              </p>
+              {!isAuthenticated ? (
+                <Link href="/register">
+                  <button className="bg-[#FF7730] hover:bg-[#FF6520] text-white px-8 py-3 rounded-lg font-semibold transition">
+                    Create Free Account
+                  </button>
+                </Link>
+              ) : (
+                <Link href="/promotions">
+                  <button className="bg-[#FF7730] hover:bg-[#FF6520] text-white px-8 py-3 rounded-lg font-semibold transition">
+                    Shop Deals Now
+                  </button>
+                </Link>
+              )}
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Footer Info */}
-      <section className="py-12 border-t">
-        <div className="container mx-auto px-4">
+      <section className="py-12 border-t bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
             <div>
-              <h3 className="font-bold text-lg mb-3">About Us</h3>
-              <p className="text-sm text-muted-foreground">
-                OMEGA Afro Caribbean Superstore brings authentic African and Caribbean products to Bolton and surrounding areas.
+              <h3 className="font-bold text-lg mb-3 text-[#036637]">About Us</h3>
+              <p className="text-gray-600">
+                Your trusted source for authentic African and Caribbean groceries in Bolton.
               </p>
             </div>
             <div>
-              <h3 className="font-bold text-lg mb-3">Delivery Areas</h3>
-              <p className="text-sm text-muted-foreground">
-                Bolton Central, Bolton North, Bolton South, and surrounding postcodes. Check availability at checkout.
+              <h3 className="font-bold text-lg mb-3 text-[#036637]">Contact</h3>
+              <p className="text-gray-600">
+                Email: info@omega-groceries.co.uk<br />
+                Phone: +44 1234 567890
               </p>
             </div>
             <div>
-              <h3 className="font-bold text-lg mb-3">Customer Service</h3>
-              <p className="text-sm text-muted-foreground">
-                Need help? Contact our friendly team for assistance with orders, delivery, or product questions.
+              <h3 className="font-bold text-lg mb-3 text-[#036637]">Opening Hours</h3>
+              <p className="text-gray-600">
+                Mon-Sat: 9:00 AM - 8:00 PM<br />
+                Sunday: 10:00 AM - 6:00 PM
               </p>
             </div>
           </div>

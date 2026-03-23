@@ -242,17 +242,23 @@ export class StaffService {
   }
 
   /**
-   * Search customers by email or phone
+   * Search customers by email, phone, or name
    */
   async searchCustomers(query: string) {
+    if (!query || query.trim().length === 0) {
+      return [];
+    }
+
+    const searchTerm = query.trim();
+
     const customers = await this.prisma.user.findMany({
       where: {
         role: 'CUSTOMER',
         OR: [
-          { email: { contains: query, mode: 'insensitive' } },
-          { phone: { contains: query } },
-          { firstName: { contains: query, mode: 'insensitive' } },
-          { lastName: { contains: query, mode: 'insensitive' } },
+          { email: { contains: searchTerm, mode: 'insensitive' } },
+          { phone: { contains: searchTerm } },
+          { firstName: { contains: searchTerm, mode: 'insensitive' } },
+          { lastName: { contains: searchTerm, mode: 'insensitive' } },
         ],
       },
       select: {
@@ -261,7 +267,17 @@ export class StaffService {
         firstName: true,
         lastName: true,
         phone: true,
-        addresses: true,
+        addresses: {
+          select: {
+            id: true,
+            label: true,
+            line1: true,
+            line2: true,
+            city: true,
+            postcode: true,
+            isDefault: true,
+          },
+        },
         _count: {
           select: {
             orders: true,
