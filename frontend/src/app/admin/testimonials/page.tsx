@@ -1,108 +1,66 @@
 'use client';
 
 import { useState } from 'react';
-import { Upload, Trash2, Eye, EyeOff, Video } from 'lucide-react';
-import { useTestimonials, useCreateTestimonial, useUpdateTestimonial, useToggleTestimonialActive, useDeleteTestimonial } from '@/lib/hooks/use-testimonials';
-import apiClient from '@/lib/api/client';
-
-const toast = {
-  success: (msg: string) => alert(msg),
-  error: (msg: string) => alert(msg),
-};
+import { Plus, Trash2, Eye, EyeOff, Video } from 'lucide-react';
+import { useTestimonials, useCreateTestimonial, useToggleTestimonialActive, useDeleteTestimonial } from '@/lib/hooks/use-testimonials';
+import { AdminLayout } from '@/components/admin/admin-layout';
 
 export default function TestimonialsPage() {
   const { data: testimonials, isLoading } = useTestimonials();
   const createTestimonial = useCreateTestimonial();
-  const updateTestimonial = useUpdateTestimonial();
   const toggleActive = useToggleTestimonialActive();
   const deleteTestimonial = useDeleteTestimonial();
 
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [formData, setFormData] = useState({
+    videoUrl: '',
+    thumbnailUrl: '',
     title: '',
     description: '',
     sortOrder: 0,
   });
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (20MB)
-    const maxSize = 20 * 1024 * 1024;
-    if (file.size > maxSize) {
-      toast.error('File size must be less than 20MB');
-      return;
-    }
-
-    // Validate file type
-    const validTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime', 'video/x-msvideo'];
-    if (!validTypes.includes(file.type)) {
-      toast.error('Invalid file type. Please upload mp4, webm, ogg, mov, or avi');
-      return;
-    }
-
-    setSelectedFile(file);
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleUpload = async () => {
-    if (!selectedFile) {
-      toast.error('Please select a video file');
+  const handleSubmit = async () => {
+    if (!formData.videoUrl.trim()) {
+      showNotification('error', 'Please enter a video URL');
       return;
     }
 
-    setIsUploading(true);
-    setUploadProgress(0);
+    setIsSubmitting(true);
 
     try {
-      // Upload video
-      const formDataUpload = new FormData();
-      formDataUpload.append('video', selectedFile);
-
-      const { data: uploadResult } = await apiClient.post('/upload/testimonial-video', formDataUpload, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: (progressEvent) => {
-          const progress = progressEvent.total
-            ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            : 0;
-          setUploadProgress(progress);
-        },
-      });
-
-      // Create testimonial record
       await createTestimonial.mutateAsync({
-        videoUrl: uploadResult.url,
+        videoUrl: formData.videoUrl,
+        thumbnailUrl: formData.thumbnailUrl || undefined,
         title: formData.title || undefined,
         description: formData.description || undefined,
         sortOrder: formData.sortOrder,
       });
 
-      toast.success('Video uploaded successfully!');
+      showNotification('success', 'Testimonial added successfully!');
       
       // Reset form
-      setSelectedFile(null);
-      setFormData({ title: '', description: '', sortOrder: 0 });
-      setUploadProgress(0);
-      
-      // Reset file input
-      const fileInput = document.getElementById('video-upload') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+      setFormData({ videoUrl: '', thumbnailUrl: '', title: '', description: '', sortOrder: 0 });
     } catch (error: any) {
-      console.error('Upload error:', error);
-      toast.error(error.response?.data?.message || 'Failed to upload video');
+      console.error('Submit error:', error);
+      showNotification('error', error.response?.data?.message || 'Failed to add testimonial');
     } finally {
-      setIsUploading(false);
+      setIsSubmitting(false);
     }
   };
 
   const handleToggleActive = async (id: string) => {
     try {
       await toggleActive.mutateAsync(id);
-      toast.success('Testimonial status updated');
+      showNotification('success', 'Testimonial status updated');
     } catch (error) {
-      toast.error('Failed to update testimonial');
+      showNotification('error', 'Failed to update testimonial');
     }
   };
 
@@ -111,49 +69,55 @@ export default function TestimonialsPage() {
 
     try {
       await deleteTestimonial.mutateAsync(id);
-      toast.success('Testimonial deleted');
+      showNotification('success', 'Testimonial deleted');
     } catch (error) {
-      toast.error('Failed to delete testimonial');
+      showNotification('error', 'Failed to delete testimonial');
     }
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <AdminLayout>
+      {/* Notification Toast */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-lg shadow-lg ${
+          notification.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+        } text-white font-medium animate-slide-in`}>
+          {notification.message}
+        </div>
+      )}
+
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Video Testimonials</h1>
-        <p className="text-gray-600">Upload and manage customer testimonial videos for the homepage</p>
+        <p className="text-gray-600">Add and manage customer testimonial videos for the homepage</p>
       </div>
 
-      {/* Upload Section */}
+      {/* Add New Testimonial */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-        <h2 className="text-xl font-bold mb-4">Upload New Video</h2>
+        <h2 className="text-xl font-bold mb-4">Add New Testimonial</h2>
         
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Video File (Max 20MB)</label>
-            <div className="flex items-center gap-4">
-              <label className="flex-1 cursor-pointer">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-green-500 transition text-center">
-                  <Video className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm text-gray-600">
-                    {selectedFile ? selectedFile.name : 'Click to select video file'}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">MP4, WebM, OGG, MOV, AVI (max 20MB)</p>
-                </div>
-                <input
-                  id="video-upload"
-                  type="file"
-                  accept="video/mp4,video/webm,video/ogg,video/quicktime,video/x-msvideo"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-              </label>
-            </div>
-            {selectedFile && (
-              <p className="text-sm text-green-600 mt-2">
-                Selected: {selectedFile.name} ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-              </p>
-            )}
+            <label className="block text-sm font-medium mb-2">Video URL *</label>
+            <input
+              type="url"
+              value={formData.videoUrl}
+              onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+              placeholder="https://example.com/video.mp4 or YouTube/Vimeo embed URL"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">Direct link to video file or embed URL from YouTube/Vimeo</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Thumbnail URL (Optional)</label>
+            <input
+              type="url"
+              value={formData.thumbnailUrl}
+              onChange={(e) => setFormData({ ...formData, thumbnailUrl: e.target.value })}
+              placeholder="https://example.com/thumbnail.jpg"
+              className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <p className="text-xs text-gray-500 mt-1">Optional thumbnail image for the video</p>
           </div>
 
           <div>
@@ -189,22 +153,13 @@ export default function TestimonialsPage() {
             <p className="text-xs text-gray-500 mt-1">Lower numbers appear first</p>
           </div>
 
-          {uploadProgress > 0 && uploadProgress < 100 && (
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-green-600 h-2 rounded-full transition-all"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          )}
-
           <button
-            onClick={handleUpload}
-            disabled={!selectedFile || isUploading}
+            onClick={handleSubmit}
+            disabled={!formData.videoUrl.trim() || isSubmitting}
             className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            <Upload className="w-5 h-5" />
-            {isUploading ? `Uploading... ${uploadProgress}%` : 'Upload Video'}
+            <Plus className="w-5 h-5" />
+            {isSubmitting ? 'Adding...' : 'Add Testimonial'}
           </button>
         </div>
       </div>
@@ -275,6 +230,6 @@ export default function TestimonialsPage() {
           </div>
         )}
       </div>
-    </div>
+    </AdminLayout>
   );
 }

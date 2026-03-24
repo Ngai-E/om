@@ -49,7 +49,7 @@ export default function Home() {
     : categories?.slice(0, CATEGORY_LIMIT);
 
   return (
-    <div className="min-h-screen bg-omega-beige">
+    <div className="min-h-screen bg-white">
       {/* Hero Section */}
       <section className="relative text-white overflow-hidden">
         {/* Background Image */}
@@ -104,13 +104,12 @@ export default function Home() {
       </section>
 
       {/* Quick Categories */}
-      <section className="py-8 md:py-12">
+      <section className="py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+          <div className="text-center mb-4">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900">
               Quick Categories
             </h2>
-            <div className="w-24 h-1 bg-gray-200 mx-auto"></div>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -162,13 +161,12 @@ export default function Home() {
       </section>
 
       {/* Featured Bundles */}
-      <section className="py-8 md:py-12 bg-white">
+      <section className="py-4 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+          <div className="text-center mb-4">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900">
               Featured Bundles
             </h2>
-            <div className="w-24 h-1 bg-gray-200 mx-auto"></div>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
@@ -216,13 +214,12 @@ export default function Home() {
 
       {/* Best Sellers */}
       {bestSellers && bestSellers.length > 0 && (
-        <section className="py-8 md:py-12 bg-omega-beige">
+        <section className="py-4 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+            <div className="text-center mb-4">
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900">
                 Best Sellers
               </h2>
-              <div className="w-24 h-1 bg-gray-200 mx-auto"></div>
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
@@ -235,13 +232,12 @@ export default function Home() {
       )}
 
       {/* Customer Testimonials - 3 Videos */}
-      <section className="py-8 md:py-12 bg-white">
+      <section className="py-4 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 mb-2">
+          <div className="text-center mb-4">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900">
               What customers say 💛
             </h2>
-            <div className="w-24 h-1 bg-gray-200 mx-auto"></div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
