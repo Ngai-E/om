@@ -175,27 +175,78 @@ export default function ProductDetailPage() {
             {/* Variant Selector */}
             {hasVariants && (
               <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">
-                  Select Variant <span className="text-destructive">*</span>
+                <label className="block text-sm font-semibold text-gray-900 mb-3">
+                  Choose Variant <span className="text-red-600">*</span>
                 </label>
-                <select
-                  value={selectedVariantId || ''}
-                  onChange={(e) => {
-                    console.log('Variant selected:', e.target.value);
-                    setSelectedVariantId(e.target.value || null);
-                  }}
-                  className="w-full px-4 py-3 border-2 border-primary/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                >
-                  <option value="">Choose a variant...</option>
-                  {product.variants?.map((variant) => (
-                    <option key={variant.id} value={variant.id}>
-                      {variant.name} - £{parseFloat(variant.price).toFixed(2)} 
-                      {variant.stock > 0 ? ` (${variant.stock} in stock)` : ' (Out of stock)'}
-                    </option>
-                  ))}
-                </select>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {product.variants?.map((variant) => {
+                    const isSelected = selectedVariantId === variant.id;
+                    const isOutOfStock = variant.stock <= 0;
+                    const variantImage = variant.imageUrl || product.images?.[0]?.url;
+
+                    return (
+                      <button
+                        key={variant.id}
+                        onClick={() => !isOutOfStock && setSelectedVariantId(variant.id)}
+                        disabled={isOutOfStock}
+                        className={`relative border-2 rounded-lg p-3 transition text-left ${
+                          isSelected
+                            ? 'border-omega-green-dark bg-green-50'
+                            : isOutOfStock
+                            ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        {/* Variant Image */}
+                        {variantImage && (
+                          <div className="aspect-square bg-gray-100 rounded mb-2 overflow-hidden">
+                            <img
+                              src={variantImage}
+                              alt={variant.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        
+                        {/* Variant Name */}
+                        <div className="text-sm font-semibold text-gray-900 mb-1">
+                          {variant.name}
+                        </div>
+                        
+                        {/* Variant Price */}
+                        <div className="text-lg font-black text-omega-orange">
+                          £{parseFloat(variant.price).toFixed(2)}
+                        </div>
+
+                        {/* Stock Status */}
+                        {isOutOfStock ? (
+                          <div className="text-xs text-red-600 font-medium mt-1">
+                            Out of Stock
+                          </div>
+                        ) : variant.stock < 5 ? (
+                          <div className="text-xs text-orange-600 font-medium mt-1">
+                            Only {variant.stock} left
+                          </div>
+                        ) : (
+                          <div className="text-xs text-green-600 font-medium mt-1">
+                            In Stock
+                          </div>
+                        )}
+
+                        {/* Selected Indicator */}
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 bg-omega-green-dark text-white rounded-full p-1">
+                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
                 {!selectedVariantId && (
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-sm text-gray-600 mt-2">
                     Please select a variant to continue
                   </p>
                 )}

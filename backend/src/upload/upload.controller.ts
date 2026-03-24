@@ -30,18 +30,17 @@ export class UploadController {
   @ApiResponse({ status: 201, description: 'Image uploaded successfully' })
   @ApiResponse({ status: 400, description: 'Invalid file type or size' })
   @UseInterceptors(FileInterceptor('image'))
-  uploadProductImage(@UploadedFile() file: Express.Multer.File) {
+  async uploadProductImage(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
 
-    const baseUrl = process.env.API_URL || 'http://localhost:4000';
-    const url = this.uploadService.getFileUrl(file.filename, baseUrl);
+    const result = await this.uploadService.uploadImage(file);
 
     return {
       message: 'Image uploaded successfully',
-      filename: file.filename,
-      url,
+      url: result.url,
+      deleteUrl: result.deleteUrl,
       size: file.size,
       mimetype: file.mimetype,
     };
@@ -53,22 +52,100 @@ export class UploadController {
   @ApiResponse({ status: 201, description: 'Images uploaded successfully' })
   @ApiResponse({ status: 400, description: 'Invalid file type or size' })
   @UseInterceptors(FilesInterceptor('images', 10)) // Max 10 images
-  uploadProductImages(@UploadedFiles() files: Express.Multer.File[]) {
+  async uploadProductImages(@UploadedFiles() files: Express.Multer.File[]) {
     if (!files || files.length === 0) {
       throw new BadRequestException('No files uploaded');
     }
 
-    const baseUrl = process.env.API_URL || 'http://localhost:4000';
-    const uploadedFiles = files.map((file) => ({
-      filename: file.filename,
-      url: this.uploadService.getFileUrl(file.filename, baseUrl),
-      size: file.size,
-      mimetype: file.mimetype,
+    const uploadPromises = files.map(file => this.uploadService.uploadImage(file));
+    const results = await Promise.all(uploadPromises);
+
+    const uploadedFiles = results.map((result, index) => ({
+      url: result.url,
+      deleteUrl: result.deleteUrl,
+      size: files[index].size,
+      mimetype: files[index].mimetype,
     }));
 
     return {
       message: `${files.length} image(s) uploaded successfully`,
       files: uploadedFiles,
+    };
+  }
+
+  @Post('category-image')
+  @ApiOperation({ summary: 'Upload single category image (Admin/Staff only)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Image uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid file type or size' })
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadCategoryImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    const result = await this.uploadService.uploadImage(file);
+
+    return {
+      message: 'Image uploaded successfully',
+      url: result.url,
+      deleteUrl: result.deleteUrl,
+      size: file.size,
+      mimetype: file.mimetype,
+    };
+  }
+
+  @Post('variant-image')
+  @ApiOperation({ summary: 'Upload single variant image (Admin/Staff only)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Image uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid file type or size' })
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadVariantImage(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    const result = await this.uploadService.uploadImage(file);
+
+    return {
+      message: 'Image uploaded successfully',
+      url: result.url,
+      deleteUrl: result.deleteUrl,
+      size: file.size,
+      mimetype: file.mimetype,
+    };
+  }
+
+  @Post('testimonial-video')
+  @ApiOperation({ summary: 'Upload testimonial video (Admin/Staff only)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Video uploaded successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid file type or size (max 20MB)' })
+  @UseInterceptors(FileInterceptor('video', {
+    limits: {
+      fileSize: 20 * 1024 * 1024, // 20MB
+    },
+    fileFilter: (req, file, callback) => {
+      if (!file.mimetype.match(/\/(mp4|webm|ogg|mov|avi)$/)) {
+        return callback(new BadRequestException('Only video files are allowed (mp4, webm, ogg, mov, avi)'), false);
+      }
+      callback(null, true);
+    },
+  }))
+  async uploadTestimonialVideo(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    const result = await this.uploadService.uploadVideo(file);
+
+    return {
+      message: 'Video uploaded successfully',
+      url: result.url,
+      deleteUrl: result.deleteUrl,
+      size: file.size,
+      mimetype: file.mimetype,
     };
   }
 

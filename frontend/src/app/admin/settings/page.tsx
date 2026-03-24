@@ -22,9 +22,14 @@ export default function SettingsPage() {
     storeName: settings.storeName,
     storeEmail: settings.storeEmail,
     phoneNumber: settings.phoneNumber,
+    whatsappNumber: settings.whatsappNumber || '+44 7535 316253',
     address: settings.address,
     deliveryMessage: settings.deliveryMessage,
     promoBanner: settings.promoBanner,
+    aboutUs: settings.aboutUs,
+    contactEmail: settings.contactEmail,
+    openingHours: settings.openingHours,
+    googleMapsEmbedUrl: settings.googleMapsEmbedUrl,
   });
 
   // Image upload configuration state
@@ -41,9 +46,14 @@ export default function SettingsPage() {
       storeName: settings.storeName,
       storeEmail: settings.storeEmail,
       phoneNumber: settings.phoneNumber,
+      whatsappNumber: settings.whatsappNumber || '+44 7535 316253',
       address: settings.address,
       deliveryMessage: settings.deliveryMessage,
       promoBanner: settings.promoBanner,
+      aboutUs: settings.aboutUs,
+      contactEmail: settings.contactEmail,
+      openingHours: settings.openingHours,
+      googleMapsEmbedUrl: settings.googleMapsEmbedUrl,
     });
   }, [settings]);
 
@@ -253,6 +263,17 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div>
+                  <label className="block text-sm font-medium mb-2">WhatsApp Number</label>
+                  <input
+                    type="tel"
+                    value={formData.whatsappNumber}
+                    onChange={(e) => setFormData({ ...formData, whatsappNumber: e.target.value })}
+                    placeholder="+44 7535 316253"
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Include country code (e.g., +44 for UK)</p>
+                </div>
+                <div>
                   <label className="block text-sm font-medium mb-2">Store Address</label>
                   <textarea
                     rows={3}
@@ -294,30 +315,52 @@ export default function SettingsPage() {
             </div>
 
             <div className="bg-white border rounded-lg p-6">
-              <h2 className="text-lg font-bold mb-4">Business Hours</h2>
-              <div className="space-y-3">
-                {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-                  <div key={day} className="flex items-center gap-4">
-                    <div className="w-32">
-                      <span className="font-medium">{day}</span>
-                    </div>
-                    <input
-                      type="time"
-                      defaultValue="09:00"
-                      className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                    <span className="text-gray-500">to</span>
-                    <input
-                      type="time"
-                      defaultValue="18:00"
-                      className="px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    />
-                    <label className="flex items-center gap-2">
-                      <input type="checkbox" defaultChecked className="rounded" />
-                      <span className="text-sm">Open</span>
-                    </label>
-                  </div>
-                ))}
+              <h2 className="text-lg font-bold mb-4">Footer Information</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">About Us</label>
+                  <textarea
+                    rows={3}
+                    value={formData.aboutUs}
+                    onChange={(e) => setFormData({ ...formData, aboutUs: e.target.value })}
+                    placeholder="Your trusted source for authentic African and Caribbean groceries..."
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">This appears in the footer About Us section</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Contact Email</label>
+                  <input
+                    type="email"
+                    value={formData.contactEmail}
+                    onChange={(e) => setFormData({ ...formData, contactEmail: e.target.value })}
+                    placeholder="info@omega-groceries.co.uk"
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">This appears in the footer Contact section</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Opening Hours</label>
+                  <textarea
+                    rows={3}
+                    value={formData.openingHours}
+                    onChange={(e) => setFormData({ ...formData, openingHours: e.target.value })}
+                    placeholder="Mon-Sat: 9:00 AM - 8:00 PM&#10;Sunday: 10:00 AM - 6:00 PM"
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Use line breaks for each day/time range</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Google Maps Embed URL</label>
+                  <textarea
+                    rows={2}
+                    value={formData.googleMapsEmbedUrl}
+                    onChange={(e) => setFormData({ ...formData, googleMapsEmbedUrl: e.target.value })}
+                    placeholder="https://www.google.com/maps/embed?pb=..."
+                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Get embed URL from Google Maps (Share → Embed a map)</p>
+                </div>
               </div>
             </div>
 

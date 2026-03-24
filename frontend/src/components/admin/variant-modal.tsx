@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useAuthStore } from '@/lib/store/auth-store';
 
 const variantSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -12,6 +13,7 @@ const variantSchema = z.object({
   price: z.string().min(1, 'Price is required'),
   compareAtPrice: z.string().optional().or(z.literal('')),
   stock: z.string(),
+  imageUrl: z.string().optional().or(z.literal('')),
   isActive: z.boolean(),
 });
 
@@ -27,11 +29,16 @@ interface VariantModalProps {
 
 export function VariantModal({ isOpen, onClose, onSubmit, variant, productId }: VariantModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [isUploading, setIsUploading] = useState(false);
+  const { token } = useAuthStore();
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<VariantFormData>({
     resolver: zodResolver(variantSchema),
@@ -41,6 +48,7 @@ export function VariantModal({ isOpen, onClose, onSubmit, variant, productId }: 
       price: variant.price.toString(),
       compareAtPrice: variant.compareAtPrice?.toString() || '',
       stock: variant.stock.toString(),
+      imageUrl: variant.imageUrl || '',
       isActive: variant.isActive,
     } : {
       name: '',
@@ -48,6 +56,7 @@ export function VariantModal({ isOpen, onClose, onSubmit, variant, productId }: 
       price: '',
       compareAtPrice: '',
       stock: '0',
+      imageUrl: '',
       isActive: true,
     },
   });
@@ -61,8 +70,10 @@ export function VariantModal({ isOpen, onClose, onSubmit, variant, productId }: 
         price: variant.price.toString(),
         compareAtPrice: variant.compareAtPrice?.toString() || '',
         stock: variant.stock.toString(),
+        imageUrl: variant.imageUrl || '',
         isActive: variant.isActive,
       });
+      setImagePreview(variant.imageUrl || '');
     } else {
       reset({
         name: '',
@@ -70,21 +81,67 @@ export function VariantModal({ isOpen, onClose, onSubmit, variant, productId }: 
         price: '',
         compareAtPrice: '',
         stock: '0',
+        imageUrl: '',
         isActive: true,
       });
+      setImagePreview('');
     }
+    setImageFile(null);
   }, [variant, reset]);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleFormSubmit = async (data: VariantFormData) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(data);
+      let imageUrl = data.imageUrl;
+
+      // Upload image if a new file was selected
+      if (imageFile) {
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append('image', imageFile);
+
+        const uploadResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/upload/variant-image`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+            },
+            body: formData,
+          }
+        );
+
+        if (uploadResponse.ok) {
+          const uploadData = await uploadResponse.json();
+          imageUrl = uploadData.url;
+        } else {
+          throw new Error('Failed to upload image');
+        }
+        setIsUploading(false);
+      }
+
+      await onSubmit({ ...data, imageUrl });
       reset();
+      setImageFile(null);
+      setImagePreview('');
       onClose();
     } catch (error) {
       console.error('Failed to save variant:', error);
     } finally {
       setIsSubmitting(false);
+      setIsUploading(false);
     }
   };
 
@@ -190,6 +247,44 @@ export function VariantModal({ isOpen, onClose, onSubmit, variant, productId }: 
             )}
           </div>
 
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Variant Image (Optional)
+            </label>
+            <div className="space-y-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:opacity-90"
+              />
+              {imagePreview && (
+                <div className="relative w-32 h-32">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover rounded-lg border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setImageFile(null);
+                      setImagePreview('');
+                      setValue('imageUrl', '');
+                    }}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+              <p className="text-xs text-gray-500">
+                Upload a specific image for this variant (recommended for variants with different appearances)
+              </p>
+            </div>
+          </div>
+
           {/* Is Active */}
           <div className="flex items-center gap-2">
             <input
@@ -214,10 +309,10 @@ export function VariantModal({ isOpen, onClose, onSubmit, variant, productId }: 
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploading}
               className="flex-1 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? 'Saving...' : variant ? 'Update Variant' : 'Add Variant'}
+              {isUploading ? 'Uploading Image...' : isSubmitting ? 'Saving...' : variant ? 'Update Variant' : 'Add Variant'}
             </button>
           </div>
         </form>

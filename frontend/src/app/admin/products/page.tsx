@@ -2,13 +2,14 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Search, Plus, Edit, Trash2, Copy, Power, PowerOff, RefreshCw, Download, Upload } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Edit, Trash2, Copy, Power, PowerOff, RefreshCw, Download, Upload, Star } from 'lucide-react';
 import { useProducts } from '@/lib/hooks/use-products';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
+import { productsApi } from '@/lib/api/products';
 
 export default function AdminProductsPage() {
   const [searchInput, setSearchInput] = useState(''); // User's input
@@ -44,6 +45,17 @@ export default function AdminProductsPage() {
   const handleRefresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['products'] });
     await refetch();
+  };
+
+  const handleToggleBestSeller = async (productId: string, currentStatus: boolean) => {
+    try {
+      await productsApi.toggleBestSeller(productId, !currentStatus);
+      success(`Product ${!currentStatus ? 'marked as' : 'removed from'} best seller`);
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
+      await refetch();
+    } catch (err) {
+      error('Failed to update best seller status');
+    }
   };
 
   const handleExport = async () => {
@@ -285,6 +297,21 @@ export default function AdminProductsPage() {
                     {/* Actions Column */}
                     <td className="p-4">
                       <div className="flex items-center justify-center gap-1">
+                        <button
+                          onClick={() => handleToggleBestSeller(product.id, product.isBestSeller || false)}
+                          className={`p-2 rounded-lg transition ${
+                            product.isBestSeller
+                              ? 'bg-yellow-50 hover:bg-yellow-100'
+                              : 'hover:bg-gray-50'
+                          }`}
+                          title={product.isBestSeller ? 'Remove from Best Sellers' : 'Mark as Best Seller'}
+                        >
+                          <Star className={`w-4 h-4 ${
+                            product.isBestSeller
+                              ? 'text-yellow-500 fill-yellow-500'
+                              : 'text-gray-400'
+                          }`} />
+                        </button>
                         <Link
                           href={`/admin/products/${product.id}/edit`}
                           className="p-2 hover:bg-blue-50 rounded-lg transition"

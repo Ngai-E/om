@@ -84,13 +84,12 @@ export default function WishlistPage() {
 
         {/* Loading State */}
         {isLoading && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[...Array(4)].map((_, i) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+            {[...Array(10)].map((_, i) => (
               <div key={i} className="bg-card border rounded-lg overflow-hidden animate-pulse">
                 <div className="aspect-square bg-muted" />
-                <div className="p-4 space-y-3">
+                <div className="p-3 space-y-2">
                   <div className="h-4 bg-muted rounded w-3/4" />
-                  <div className="h-3 bg-muted rounded w-full" />
                   <div className="h-6 bg-muted rounded w-1/3" />
                 </div>
               </div>
@@ -122,7 +121,7 @@ export default function WishlistPage() {
 
         {/* Wishlist Grid */}
         {!isLoading && wishlistProductsList.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
             {wishlistProductsList.map((product) => {
               const hasVariants = product.variants && product.variants.length > 0;
               const inStock = hasVariants && product.variants

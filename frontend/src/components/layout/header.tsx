@@ -96,12 +96,17 @@ export function Header() {
         <div className="flex items-center justify-between h-20 gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <div className="bg-omega-green-dark text-white p-2 rounded-lg">
-              <Home className="w-6 h-6" />
-            </div>
-            <div className="hidden md:block">
-              <div className="text-2xl font-black text-omega-green-dark">OMEGA</div>
-              <div className="text-xs text-gray-600 -mt-1">Afro Caribbean Store</div>
+            <img 
+              src="/omega-logo.png" 
+              alt="OMEGA Afro Caribbean Superstore" 
+              className="h-12 w-auto object-contain"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+            <div className="hidden font-black text-2xl text-omega-green-dark">
+              OMEGA
             </div>
           </Link>
 
@@ -173,22 +178,32 @@ export function Header() {
               <Tag className="w-4 h-4" />
               Promotions
             </Link>
+            
+            <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition">
+              <ShoppingCart className="w-6 h-6 text-gray-700" />
+              {totalCartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-omega-orange text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                  {totalCartCount}
+                </span>
+              )}
+            </Link>
+            
             {isAuthenticated ? (
               <>
+                {(user?.role === 'ADMIN' || user?.role === 'STAFF') && (
+                  <Link
+                    href={getDashboardUrl()}
+                    className="px-4 py-2 bg-omega-green-dark text-white rounded-lg hover:bg-omega-green transition font-medium"
+                  >
+                    Dashboard
+                  </Link>
+                )}
                 <Link
                   href="/account"
                   className="flex items-center gap-1 px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"
                 >
                   <User className="w-4 h-4" />
                   My Account
-                </Link>
-                <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition">
-                  <ShoppingCart className="w-6 h-6 text-gray-700" />
-                  {totalCartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-omega-orange text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
-                      {totalCartCount}
-                    </span>
-                  )}
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -199,14 +214,6 @@ export function Header() {
               </>
             ) : (
               <>
-                <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition">
-                  <ShoppingCart className="w-6 h-6 text-gray-700" />
-                  {totalCartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-omega-orange text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
-                      {totalCartCount}
-                    </span>
-                  )}
-                </Link>
                 <Link
                   href="/login"
                   className="px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"

@@ -258,6 +258,31 @@ export class ProductsService {
         category: true,
         images: { orderBy: { sortOrder: 'asc' }, take: 1 },
         inventory: true,
+        variants: {
+          where: { isActive: true },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getBestSellers(limit = 8) {
+    return this.prisma.product.findMany({
+      where: {
+        isBestSeller: true,
+        isActive: true,
+        deletedAt: null,
+      },
+      include: {
+        category: true,
+        images: { orderBy: { sortOrder: 'asc' }, take: 1 },
+        inventory: true,
+        variants: {
+          where: { isActive: true },
+          orderBy: { createdAt: 'asc' },
+        },
       },
       take: limit,
       orderBy: { createdAt: 'desc' },

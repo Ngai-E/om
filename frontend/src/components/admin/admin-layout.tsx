@@ -23,7 +23,9 @@ import {
   ChevronRight,
   Bell,
   Search,
-  Star
+  Star,
+  FolderTree,
+  Video
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useQuery } from '@tanstack/react-query';
@@ -97,6 +99,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       href: '/admin/products',
     },
     { 
+      icon: FolderTree, 
+      label: 'Categories', 
+      href: '/admin/categories',
+    },
+    { 
       icon: BarChart3, 
       label: 'Inventory', 
       href: '/admin/inventory',
@@ -128,6 +135,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       icon: Star, 
       label: 'Reviews', 
       href: '/admin/reviews',
+    },
+    { 
+      icon: Video, 
+      label: 'Testimonials', 
+      href: '/admin/testimonials',
     },
     { 
       icon: Settings, 

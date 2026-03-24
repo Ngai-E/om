@@ -12,6 +12,7 @@ import { useCartStore } from '@/lib/store/cart-store';
 import { useRouter } from 'next/navigation';
 import { Toast } from '@/components/ui/toast';
 import { StockBadge } from './stock-badge';
+import { VariantSelectorModal } from './variant-selector-modal';
 
 interface ProductCardProps {
   product: Product;
@@ -26,15 +27,16 @@ export function ProductCard({ product }: ProductCardProps) {
   const { setItemCount } = useCartStore();
   const [showToast, setShowToast] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [showVariantModal, setShowVariantModal] = useState(false);
   const inWishlist = isInWishlist(product.id);
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.preventDefault();
     
-    // If product has variants, redirect to product page for selection
+    // If product has variants, show variant selector modal
     const hasVariants = product.variants && product.variants.length > 0;
     if (hasVariants) {
-      router.push(`/products/${product.slug}`);
+      setShowVariantModal(true);
       return;
     }
     
@@ -83,10 +85,16 @@ export function ProductCard({ product }: ProductCardProps) {
           onClose={() => setShowToast(false)}
         />
       )}
+
+      <VariantSelectorModal
+        product={product}
+        isOpen={showVariantModal}
+        onClose={() => setShowVariantModal(false)}
+      />
       
       <Link href={`/products/${product.slug}`}>
-        <div className="bg-card border rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
-        <div className="aspect-square bg-muted relative">
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition">
+        <div className="aspect-square bg-gray-100 relative">
           {product.images && product.images.length > 0 ? (
             <img
               src={product.images[0].url}
@@ -98,6 +106,21 @@ export function ProductCard({ product }: ProductCardProps) {
               No Image
             </div>
           )}
+          
+          {/* Best Seller Tag */}
+          {product.isBestSeller && (
+            <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">
+              Best Seller
+            </div>
+          )}
+          
+          {/* Discount Tag */}
+          {product.compareAtPrice && parseFloat(product.compareAtPrice) > parseFloat(product.price) && (
+            <div className="absolute top-2 left-2 bg-omega-orange text-white px-2 py-1 rounded text-xs font-bold" style={{ marginTop: product.isBestSeller ? '32px' : '0' }}>
+              Save £{(parseFloat(product.compareAtPrice) - parseFloat(product.price)).toFixed(2)}
+            </div>
+          )}
+          
           {/* Wishlist Button */}
           <button
             onClick={(e) => {
@@ -113,7 +136,7 @@ export function ProductCard({ product }: ProductCardProps) {
             />
           </button>
 
-          {(product.inventory?.isTracked || hasVariants) && (
+          {(product.inventory?.isTracked || hasVariants) && !product.isBestSeller && !(product.compareAtPrice && parseFloat(product.compareAtPrice) > parseFloat(product.price)) && (
             <div className="absolute top-2 left-2">
               <StockBadge
                 quantity={
@@ -129,56 +152,46 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        <div className="p-4">
-          <h3 className="font-semibold text-lg mb-1 line-clamp-1">{product.name}</h3>
-          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-            {product.description}
+        <div className="p-3 text-center">
+          <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 min-h-[2.5rem]">
+            {product.name}
+          </h3>
+          <p className="text-3xl font-black text-omega-orange mb-1">
+            £{parseFloat(product.price).toFixed(2)}
           </p>
-
-          <div className="flex items-center justify-between mt-4">
-            <div>
-              <p className="text-2xl font-bold text-[#036637]">
-                £{parseFloat(product.price).toFixed(2)}
-              </p>
-              {hasVariants && product.variants && product.variants.length > 1 && (
-                <p className="text-xs text-gray-500">
-                  +{product.variants.length - 1} variant{product.variants.length > 2 ? 's' : ''}
-                </p>
-              )}
-            </div>
-
-            <button
-              onClick={handleAddToCart}
-              disabled={!inStock || addToCart.isPending}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition disabled:opacity-50 disabled:cursor-not-allowed ${
-                justAdded
-                  ? 'bg-green-600 text-white'
-                  : !inStock
-                  ? 'bg-gray-400 text-white'
-                  : hasVariants
-                  ? 'bg-[#036637] hover:bg-[#014D29] text-white'
-                  : 'bg-[#FF7730] hover:bg-[#FF6520] text-white'
-              }`}
-              title={
-                !inStock 
-                  ? 'Out of stock' 
-                  : hasVariants 
-                    ? 'Select variant' 
-                    : 'Add to cart'
-              }
-            >
-              {justAdded ? (
-                <Check className="w-4 h-4" />
-              ) : hasVariants ? (
-                'Select'
-              ) : (
-                <>
-                  <ShoppingCart className="w-4 h-4 inline mr-1" />
-                  Add
-                </>
-              )}
-            </button>
-          </div>
+          {hasVariants && product.variants && product.variants.length > 1 && (
+            <p className="text-xs text-gray-500 mb-2">
+              +{product.variants.length - 1} variant{product.variants.length > 2 ? 's' : ''}
+            </p>
+          )}
+          <button
+            onClick={handleAddToCart}
+            disabled={!inStock || addToCart.isPending}
+            className={`w-full py-2 rounded text-sm font-bold transition disabled:opacity-50 disabled:cursor-not-allowed ${
+              justAdded
+                ? 'bg-green-600 text-white'
+                : !inStock
+                ? 'bg-gray-400 text-white'
+                : hasVariants
+                ? 'bg-omega-green-dark hover:bg-omega-green text-white'
+                : 'bg-omega-green-dark hover:bg-omega-green text-white'
+            }`}
+            title={
+              !inStock 
+                ? 'Out of stock' 
+                : hasVariants 
+                  ? 'Select variant' 
+                  : 'Add to cart'
+            }
+          >
+            {justAdded ? (
+              <Check className="w-4 h-4 inline" />
+            ) : hasVariants ? (
+              'Select Options'
+            ) : (
+              'Add to Cart'
+            )}
+          </button>
         </div>
       </div>
     </Link>

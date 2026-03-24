@@ -166,16 +166,62 @@ export class AdminController {
     return this.adminService.updateInventory(productId, dto);
   }
 
+  @Patch('products/:id/best-seller')
+  @ApiOperation({ summary: 'Toggle best seller status (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Product ID' })
+  @ApiResponse({ status: 200, description: 'Best seller status updated' })
+  @ApiResponse({ status: 404, description: 'Product not found' })
+  async toggleBestSeller(@Param('id') productId: string, @Body() dto: { isBestSeller: boolean }) {
+    return this.adminService.toggleBestSeller(productId, dto.isBestSeller);
+  }
+
   // ============================================
   // CATEGORIES
   // ============================================
+
+  @Get('categories')
+  @ApiOperation({ summary: 'Get all categories (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Categories retrieved' })
+  async getAllCategories() {
+    return this.adminService.getAllCategories();
+  }
+
+  @Get('categories/:id')
+  @ApiOperation({ summary: 'Get category by ID (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Category ID' })
+  @ApiResponse({ status: 200, description: 'Category found' })
+  @ApiResponse({ status: 404, description: 'Category not found' })
+  async getCategory(@Param('id') id: string) {
+    return this.adminService.getCategory(id);
+  }
 
   @Post('categories')
   @ApiOperation({ summary: 'Create a new category (Admin only)' })
   @ApiResponse({ status: 201, description: 'Category created' })
   @ApiResponse({ status: 400, description: 'Category already exists' })
-  async createCategory(@Body() dto: { name: string; description?: string }) {
-    return this.adminService.createCategory(dto.name, dto.description);
+  async createCategory(@Body() dto: { name: string; description?: string; image?: string; parentId?: string }) {
+    return this.adminService.createCategory(dto.name, dto.description, dto.image, dto.parentId);
+  }
+
+  @Put('categories/:id')
+  @ApiOperation({ summary: 'Update category (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Category ID' })
+  @ApiResponse({ status: 200, description: 'Category updated' })
+  @ApiResponse({ status: 404, description: 'Category not found' })
+  async updateCategory(
+    @Param('id') id: string,
+    @Body() dto: { name?: string; description?: string; image?: string; parentId?: string; isActive?: boolean; sortOrder?: number },
+  ) {
+    return this.adminService.updateCategory(id, dto);
+  }
+
+  @Delete('categories/:id')
+  @ApiOperation({ summary: 'Delete category (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Category ID' })
+  @ApiResponse({ status: 200, description: 'Category deleted' })
+  @ApiResponse({ status: 404, description: 'Category not found' })
+  async deleteCategory(@Param('id') id: string) {
+    return this.adminService.deleteCategory(id);
   }
 
   // ============================================

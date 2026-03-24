@@ -468,6 +468,26 @@ export class AdminService {
     return { message: 'Product deleted successfully' };
   }
 
+  async toggleBestSeller(productId: string, isBestSeller: boolean) {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      throw new NotFoundException('Product not found');
+    }
+
+    const updated = await this.prisma.product.update({
+      where: { id: productId },
+      data: { isBestSeller },
+    });
+
+    // Clear product cache
+    await this.clearProductCache(productId, product.slug);
+
+    return updated;
+  }
+
   async updateInventory(productId: string, dto: UpdateInventoryDto) {
     const inventory = await this.prisma.inventory.findUnique({
       where: { productId },
@@ -510,6 +530,119 @@ export class AdminService {
       newQuantity,
       change: newQuantity - inventory.quantity,
     };
+  }
+
+  // ============================================
+  // CATEGORY MANAGEMENT
+  // ============================================
+
+  async getAllCategories() {
+    return this.prisma.category.findMany({
+      include: {
+        children: true,
+        parent: true,
+        _count: {
+          select: { products: true },
+        },
+      },
+      orderBy: { sortOrder: 'asc' },
+    });
+  }
+
+  async getCategory(id: string) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+      include: {
+        children: true,
+        parent: true,
+        _count: {
+          select: { products: true },
+        },
+      },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    return category;
+  }
+
+  async createCategory(name: string, description?: string, image?: string, parentId?: string) {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    
+    const existing = await this.prisma.category.findUnique({
+      where: { slug },
+    });
+
+    if (existing) {
+      throw new BadRequestException('Category with this name already exists');
+    }
+
+    return this.prisma.category.create({
+      data: {
+        name,
+        slug,
+        description,
+        image,
+        parentId,
+      },
+    });
+  }
+
+  async updateCategory(id: string, dto: any) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    const updateData: any = {};
+    
+    if (dto.name !== undefined) {
+      updateData.name = dto.name;
+      updateData.slug = dto.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    }
+    if (dto.description !== undefined) updateData.description = dto.description;
+    if (dto.image !== undefined) updateData.image = dto.image;
+    if (dto.parentId !== undefined) updateData.parentId = dto.parentId;
+    if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
+    if (dto.sortOrder !== undefined) updateData.sortOrder = dto.sortOrder;
+
+    return this.prisma.category.update({
+      where: { id },
+      data: updateData,
+    });
+  }
+
+  async deleteCategory(id: string) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+      include: {
+        products: true,
+        children: true,
+      },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    if (category.products.length > 0) {
+      throw new BadRequestException('Cannot delete category with products. Please reassign products first.');
+    }
+
+    if (category.children.length > 0) {
+      throw new BadRequestException('Cannot delete category with subcategories. Please delete subcategories first.');
+    }
+
+    await this.prisma.category.delete({
+      where: { id },
+    });
+
+    return { message: 'Category deleted successfully' };
   }
 
   // ============================================
@@ -739,34 +872,6 @@ export class AdminService {
     }
 
     return { created, updated, variants };
-  }
-
-  async createCategory(name: string, description?: string) {
-    // Check if category already exists
-    const existingCategory = await this.prisma.category.findFirst({
-      where: { name },
-    });
-
-    if (existingCategory) {
-      throw new BadRequestException(`Category "${name}" already exists`);
-    }
-
-    // Generate slug from name
-    const slug = name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-
-    // Create the category
-    const category = await this.prisma.category.create({
-      data: {
-        name,
-        slug,
-        description: description || '',
-      },
-    });
-
-    return category;
   }
 
   async importProductsFromCSV(file: Express.Multer.File) {

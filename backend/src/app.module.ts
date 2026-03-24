@@ -20,6 +20,7 @@ import { EmailModule } from './email/email.module';
 import { PromotionsModule } from './promotions/promotions.module';
 import { LicensingModule } from './licensing/licensing.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { TestimonialsModule } from './testimonials/testimonials.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -64,6 +65,7 @@ import { AppController } from './app.controller';
     PromotionsModule,
     LicensingModule,
     ReviewsModule,
+    TestimonialsModule,
   ],
   controllers: [AppController],
 })

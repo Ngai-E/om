@@ -11,17 +11,19 @@ import { AdminLayout } from '@/components/admin/admin-layout';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { data: stats, isLoading } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: adminApi.getDashboardStats,
   });
 
   useEffect(() => {
-    if (user && user.role !== 'ADMIN') {
+    // Only redirect if we know the user is authenticated but not an admin
+    // Don't redirect while auth is still loading (user === null)
+    if (isAuthenticated && user && user.role !== 'ADMIN') {
       router.push('/');
     }
-  }, [user, router]);
+  }, [user, isAuthenticated, router]);
 
   if (isLoading) {
     return (

@@ -190,6 +190,38 @@ export class ReviewsService {
   }
 
   /**
+   * Get approved reviews for homepage display (Public)
+   */
+  async getHomepageReviews() {
+    return this.prisma.review.findMany({
+      where: {
+        status: 'APPROVED',
+        showOnHomepage: true,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        product: {
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: 10, // Limit to 10 most recent
+    });
+  }
+
+  /**
    * Get all pending reviews (Admin/Staff only)
    */
   async getPendingReviews() {
@@ -374,6 +406,30 @@ export class ReviewsService {
     });
 
     return updatedReview;
+  }
+
+  /**
+   * Toggle homepage display for a review (Admin/Staff only)
+   */
+  async toggleHomepageDisplay(reviewId: string) {
+    const review = await this.prisma.review.findUnique({
+      where: { id: reviewId },
+    });
+
+    if (!review) {
+      throw new NotFoundException('Review not found');
+    }
+
+    if (review.status !== 'APPROVED') {
+      throw new BadRequestException('Only approved reviews can be featured on homepage');
+    }
+
+    return this.prisma.review.update({
+      where: { id: reviewId },
+      data: {
+        showOnHomepage: !review.showOnHomepage,
+      },
+    });
   }
 
   /**

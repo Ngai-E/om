@@ -35,6 +35,13 @@ export const productsApi = {
     return data;
   },
 
+  getBestSellers: async (limit = 8): Promise<Product[]> => {
+    const { data } = await apiClient.get<Product[]>('/products/best-sellers', {
+      params: { limit },
+    });
+    return data;
+  },
+
   getCategories: async (): Promise<Category[]> => {
     const { data } = await apiClient.get<Category[]>('/products/categories');
     return data;
@@ -78,5 +85,10 @@ export const productsApi = {
 
   deleteVariant: async (productId: string, variantId: string): Promise<void> => {
     await apiClient.delete(`/admin/products/${productId}/variants/${variantId}`);
+  },
+
+  toggleBestSeller: async (productId: string, isBestSeller: boolean): Promise<Product> => {
+    const { data } = await apiClient.patch<Product>(`/admin/products/${productId}/best-seller`, { isBestSeller });
+    return data;
   },
 };

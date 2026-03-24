@@ -54,6 +54,14 @@ export class ProductsController {
     return this.productsService.getFeatured(limit);
   }
 
+  @Get('best-sellers')
+  @ApiOperation({ summary: 'Get best seller products' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of products to return (default: 8)' })
+  @ApiResponse({ status: 200, description: 'Best seller products retrieved successfully' })
+  async getBestSellers(@Query('limit', new DefaultValuePipe(8), ParseIntPipe) limit?: number) {
+    return this.productsService.getBestSellers(limit);
+  }
+
   @Get('categories')
   @ApiOperation({ summary: 'Get all categories with product counts' })
   @ApiResponse({ status: 200, description: 'Categories retrieved successfully' })

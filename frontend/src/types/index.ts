@@ -29,6 +29,7 @@ export interface Product {
   category: Category;
   isActive: boolean;
   isFeatured: boolean;
+  isBestSeller?: boolean;
   tags: string[];
   images: ProductImage[];
   inventory?: Inventory;
@@ -45,6 +46,7 @@ export interface ProductVariant {
   price: string;
   compareAtPrice?: string;
   stock: number;
+  imageUrl?: string;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;

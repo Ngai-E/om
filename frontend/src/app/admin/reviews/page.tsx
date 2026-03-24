@@ -16,6 +16,7 @@ export default function AdminReviewsPage() {
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [showApproveModal, setShowApproveModal] = useState(false);
   const [selectedReviewId, setSelectedReviewId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,12 +43,19 @@ export default function AdminReviewsPage() {
     }
   };
 
-  const handleApprove = async (reviewId: string) => {
-    if (!token) return;
+  const handleApproveClick = (reviewId: string) => {
+    setSelectedReviewId(reviewId);
+    setShowApproveModal(true);
+  };
+
+  const handleApproveConfirm = async () => {
+    if (!token || !selectedReviewId) return;
     
     try {
-      setProcessingId(reviewId);
-      await reviewsApi.approveReview(reviewId, token);
+      setProcessingId(selectedReviewId);
+      await reviewsApi.approveReview(selectedReviewId, token);
+      setShowApproveModal(false);
+      setSelectedReviewId(null);
       fetchReviews();
     } catch (error) {
       console.error('Failed to approve review:', error);
@@ -197,7 +205,7 @@ export default function AdminReviewsPage() {
                 {review.status === 'PENDING' && (
                   <div className="flex gap-3">
                     <button
-                      onClick={() => handleApprove(review.id)}
+                      onClick={() => handleApproveClick(review.id)}
                       disabled={processingId === review.id}
                       className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition disabled:opacity-50"
                     >
@@ -216,6 +224,36 @@ export default function AdminReviewsPage() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Approve Confirmation Modal */}
+        {showApproveModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-4">Approve Review</h3>
+              <p className="text-sm text-gray-600 mb-6">
+                Are you sure you want to approve this review? It will be visible to all customers on the product page.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleApproveConfirm}
+                  disabled={processingId !== null}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium transition disabled:opacity-50"
+                >
+                  Yes, Approve
+                </button>
+                <button
+                  onClick={() => {
+                    setShowApproveModal(false);
+                    setSelectedReviewId(null);
+                  }}
+                  className="px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         )}
 

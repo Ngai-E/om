@@ -69,6 +69,13 @@ export class ReviewsController {
     return this.reviewsService.getProductReviews(productId, false);
   }
 
+  @Get('homepage')
+  @ApiOperation({ summary: 'Get approved reviews for homepage display (Public)' })
+  @ApiResponse({ status: 200, description: 'Homepage reviews retrieved' })
+  async getHomepageReviews() {
+    return this.reviewsService.getHomepageReviews();
+  }
+
   // ============================================
   // ADMIN/STAFF ENDPOINTS
   // ============================================
@@ -118,5 +125,15 @@ export class ReviewsController {
     @Body() dto: ApproveReviewDto,
   ) {
     return this.reviewsService.rejectReview(reviewId, user.id, dto);
+  }
+
+  @Patch(':reviewId/toggle-homepage')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('STAFF', 'ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle review homepage display (Staff/Admin only)' })
+  @ApiResponse({ status: 200, description: 'Homepage display toggled' })
+  async toggleHomepageDisplay(@Param('reviewId') reviewId: string) {
+    return this.reviewsService.toggleHomepageDisplay(reviewId);
   }
 }
