@@ -50,6 +50,22 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        // Omega brand colors
+        omega: {
+          green: {
+            dark: '#1B4332',
+            DEFAULT: '#2D6A4F',
+            light: '#40916C',
+          },
+          orange: {
+            DEFAULT: '#FF8C00',
+            light: '#FFA500',
+          },
+          beige: {
+            DEFAULT: '#F5F5F0',
+            dark: '#E8E8E0',
+          },
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Truck, CreditCard, Star, ArrowRight, Package, Shield, ChevronRight } from 'lucide-react';
+import { ShoppingBag, Truck, CreditCard, Star, ArrowRight, Package, Shield, ChevronRight, Phone, MessageCircle, MapPin, Play } from 'lucide-react';
 import { useFeaturedProducts, useCategories } from '@/lib/hooks/use-products';
 import { ProductCard } from '@/components/products/product-card';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -34,203 +34,293 @@ export default function Home() {
     : categories?.slice(0, CATEGORY_LIMIT);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-omega-beige">
       {/* Hero Section */}
-      <section className="relative bg-[#036637] text-white overflow-hidden">
+      <section className="relative text-white overflow-hidden">
         {/* Background Image */}
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-40"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: 'url(/hero-bg.png)' }}
         ></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#036637]/60 to-[#036637]/40"></div>
+        <div className="absolute inset-0 bg-black/30"></div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
           <div className="max-w-2xl">
-            <h1 className="text-4xl md:text-6xl font-black mb-4">
-              Authentic Afro-Caribbean Groceries
+            <h1 className="text-4xl md:text-6xl font-black mb-4 leading-tight">
+              African & Caribbean<br />Groceries in Bolton
             </h1>
-            <p className="text-lg md:text-xl mb-8 text-white/90">
-              Discover the finest selection of African and Caribbean foods, spices, and specialty items delivered to your door.
+            <p className="text-lg md:text-xl mb-8 text-white flex items-center gap-2">
+              Fresh food. Affordable prices. Delivery available 🚚
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/products">
-                <button className="bg-[#FF7730] hover:bg-[#FF6520] text-white px-6 py-3 rounded-lg font-semibold inline-flex items-center justify-center gap-2 w-full sm:w-auto transition">
+                <button className="bg-omega-green-dark hover:bg-omega-green text-white px-8 py-4 rounded-lg font-bold inline-flex items-center justify-center gap-2 w-full sm:w-auto transition">
                   Shop Now
-                  <ArrowRight className="w-5 h-5" />
                 </button>
               </Link>
-              <Link href="/promotions">
-                <button className="bg-white/10 border-2 border-white text-white hover:bg-white/20 px-6 py-3 rounded-lg font-semibold w-full sm:w-auto transition">
-                  View Promotions
+              <a href="https://wa.me/447355316253" target="_blank" rel="noopener noreferrer">
+                <button className="bg-omega-orange hover:bg-omega-orange-light text-white px-8 py-4 rounded-lg font-bold inline-flex items-center justify-center gap-2 w-full sm:w-auto transition">
+                  <MessageCircle className="w-5 h-5" />
+                  Order via WhatsApp
                 </button>
-              </Link>
+              </a>
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Trust Indicators */}
-      <section className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-[#E8F5E9] rounded-full flex-shrink-0">
-                <Truck className="w-6 h-6 text-[#036637]" />
+        
+        {/* Trust Badges */}
+        <div className="relative bg-omega-green-dark/90 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex flex-wrap justify-center md:justify-between gap-4 text-sm text-white">
+              <div className="flex items-center gap-2">
+                <span className="text-yellow-400">👍</span>
+                <span>Trusted by the Bolton & Manchester African community</span>
               </div>
-              <div>
-                <h3 className="font-semibold text-[#036637]">Free Delivery</h3>
-                <p className="text-sm text-gray-600">On orders over £50</p>
+              <div className="flex items-center gap-2">
+                <span className="text-yellow-400">🚚</span>
+                <span>Same-day home delivery</span>
               </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-[#FFF5F0] rounded-full flex-shrink-0">
-                <CreditCard className="w-6 h-6 text-[#FF7730]" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-[#036637]">Secure Payment</h3>
-                <p className="text-sm text-gray-600">Multiple payment options</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="p-3 bg-[#E8F5E9] rounded-full flex-shrink-0">
-                <Shield className="w-6 h-6 text-[#036637]" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-[#036637]">Quality Guaranteed</h3>
-                <p className="text-sm text-gray-600">Fresh & authentic products</p>
+              <div className="flex items-center gap-2">
+                <span className="text-yellow-400">⚡</span>
+                <span>Order in 2 minutes via WhatsApp</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Categories */}
-      {categories && categories.length > 0 && (
-        <section className="py-12 md:py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl md:text-3xl font-black text-[#036637]">
-                Shop by Category
-              </h2>
-              <Link href="/products">
-                <button className="text-[#FF7730] hover:text-[#FF6520] font-medium inline-flex items-center gap-1 transition">
-                  View All
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-              {displayedCategories?.map((category, index) => {
-                const icons = ['🌾', '🌶️', '🥤', '🍖', '🧊', '🍪', '🥫', '🍚'];
-                return (
-                  <Link
-                    key={category.id}
-                    href={`/products?category=${category.slug}`}
-                    className="flex flex-col items-center p-4 bg-white rounded-lg border border-gray-200 hover:border-[#036637] hover:shadow-md transition-all group"
-                  >
-                    <div className="text-4xl mb-2">{icons[index] || '📦'}</div>
-                    <h3 className="text-sm text-center font-medium text-gray-700 group-hover:text-[#036637] transition">
-                      {toTitleCase(category.name)}
-                    </h3>
-                  </Link>
-                );
-              })}
-            </div>
-            <div className="mt-6 text-center">
-              <Link href="/products">
-                <button className="border-2 border-[#036637] text-[#036637] hover:bg-[#E8F5E9] px-6 py-2 rounded-lg font-medium transition">
-                  Show More Categories
-                </button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Featured Products */}
-      {featuredProducts && featuredProducts.length > 0 && (
-        <section className="py-12 md:py-16 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-2xl md:text-3xl font-black text-[#036637]">
-                Best Sellers
-              </h2>
-              <Link href="/products">
-                <button className="text-[#FF7730] hover:text-[#FF6520] font-medium inline-flex items-center gap-1 transition">
-                  View All
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {featuredProducts.slice(0, 8).map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Promotional Banner */}
+      {/* Quick Categories */}
       <section className="py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-r from-[#036637] to-[#014D29] rounded-2xl overflow-hidden">
-            <div className="px-8 py-12 md:py-16 text-center text-white">
-              <h2 className="text-3xl md:text-4xl font-black mb-4">
-                {!isAuthenticated ? 'New to OMEGA?' : 'Special Offer This Week!'}
-              </h2>
-              <p className="text-lg mb-6 text-white/90">
-                {!isAuthenticated 
-                  ? 'Get 10% off your first order over £30. Sign up today!' 
-                  : 'Get 20% off on all fresh produce. Limited time only!'}
-              </p>
-              {!isAuthenticated ? (
-                <Link href="/register">
-                  <button className="bg-[#FF7730] hover:bg-[#FF6520] text-white px-8 py-3 rounded-lg font-semibold transition">
-                    Create Free Account
+          <h2 className="text-3xl md:text-4xl font-black text-center text-gray-900 mb-10">
+            Quick Categories
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Meat & Fish */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition">
+              <div className="relative h-48 bg-gray-200">
+                <img src="/hero-bg.png" alt="Meat & Fish" className="w-full h-full object-cover" />
+                <div className="absolute top-4 right-4 bg-omega-green-dark text-white px-3 py-1 rounded-full text-sm font-bold">
+                  Fresh
+                </div>
+              </div>
+              <div className="p-6 text-center">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Meat & Fish</h3>
+                <p className="text-3xl font-black text-omega-orange mb-4">£29.99</p>
+                <Link href="/products?category=meat-fish">
+                  <button className="w-full bg-omega-green-dark hover:bg-omega-green text-white py-3 rounded-lg font-bold transition">
+                    Shop Bundle
                   </button>
                 </Link>
-              ) : (
-                <Link href="/promotions">
-                  <button className="bg-[#FF7730] hover:bg-[#FF6520] text-white px-8 py-3 rounded-lg font-semibold transition">
-                    Shop Deals Now
+              </div>
+            </div>
+
+            {/* Rice & Grains */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition">
+              <div className="relative h-48 bg-gray-200">
+                <img src="/hero-bg.png" alt="Rice & Grains" className="w-full h-full object-cover" />
+                <div className="absolute top-4 right-4 bg-omega-green-dark text-white px-3 py-1 rounded-full text-sm font-bold">
+                  Staples
+                </div>
+              </div>
+              <div className="p-6 text-center">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Rice & Grains</h3>
+                <p className="text-3xl font-black text-omega-orange mb-4">£19.99</p>
+                <Link href="/products?category=grains-staples">
+                  <button className="w-full bg-omega-green-dark hover:bg-omega-green text-white py-3 rounded-lg font-bold transition">
+                    Shop Bundle
                   </button>
                 </Link>
-              )}
+              </div>
+            </div>
+
+            {/* Drinks & Snacks */}
+            <div className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition">
+              <div className="relative h-48 bg-gray-200">
+                <img src="/hero-bg.png" alt="Drinks & Snacks" className="w-full h-full object-cover" />
+                <div className="absolute top-4 right-4 bg-omega-green-dark text-white px-3 py-1 rounded-full text-sm font-bold">
+                  Popular
+                </div>
+              </div>
+              <div className="p-6 text-center">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Drinks & Snacks</h3>
+                <p className="text-3xl font-black text-omega-orange mb-4">£24.99</p>
+                <Link href="/products?category=beverages">
+                  <button className="w-full bg-omega-green-dark hover:bg-omega-green text-white py-3 rounded-lg font-bold transition">
+                    Shop Bundle
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Footer Info */}
-      <section className="py-12 border-t bg-white">
+      {/* Featured Bundles */}
+      <section className="py-12 md:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-            <div>
-              <h3 className="font-bold text-lg mb-3 text-[#036637]">About Us</h3>
-              <p className="text-gray-600">
-                Your trusted source for authentic African and Caribbean groceries in Bolton.
-              </p>
+          <h2 className="text-3xl md:text-4xl font-black text-center text-gray-900 mb-10">
+            Featured Bundles
+          </h2>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+            {featuredProducts?.slice(0, 5).map((product, index) => (
+              <div key={product.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition">
+                <div className="relative">
+                  {index === 0 && (
+                    <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">
+                      Best Seller
+                    </div>
+                  )}
+                  {index === 2 && (
+                    <div className="absolute top-2 left-2 bg-omega-orange text-white px-2 py-1 rounded text-xs font-bold">
+                      Save £5
+                    </div>
+                  )}
+                  <div className="aspect-square bg-gray-100">
+                    {product.images?.[0]?.url ? (
+                      <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <Package className="w-12 h-12" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="p-3">
+                  <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 min-h-[2.5rem]">
+                    {product.name}
+                  </h3>
+                  <p className="text-lg font-black text-omega-orange mb-2">
+                    £{product.variants?.[0]?.price || '0.00'}
+                  </p>
+                  <Link href={`/products/${product.slug}`}>
+                    <button className="w-full bg-omega-green-dark hover:bg-omega-green text-white py-2 rounded text-sm font-bold transition">
+                      {index < 2 ? 'Shop Bundle' : index === 2 ? 'Add to Cart' : 'Shop Now'}
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Customer Testimonials */}
+      <section className="py-12 md:py-16 bg-omega-beige">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl md:text-4xl font-black text-center text-gray-900 mb-10">
+            What customers say 💛
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            {/* Video Section */}
+            <div className="relative rounded-lg overflow-hidden bg-gray-900 aspect-video">
+              <img src="/hero-bg.png" alt="Customer preparing food" className="w-full h-full object-cover opacity-70" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <button className="bg-white/90 hover:bg-white rounded-full p-6 transition">
+                  <Play className="w-12 h-12 text-omega-green-dark" fill="currentColor" />
+                </button>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-lg mb-3 text-[#036637]">Contact</h3>
-              <p className="text-gray-600">
-                Email: info@omega-groceries.co.uk<br />
-                Phone: +44 1234 567890
-              </p>
-            </div>
-            <div>
-              <h3 className="font-bold text-lg mb-3 text-[#036637]">Opening Hours</h3>
-              <p className="text-gray-600">
-                Mon-Sat: 9:00 AM - 8:00 PM<br />
-                Sunday: 10:00 AM - 6:00 PM
-              </p>
+            
+            {/* Testimonials */}
+            <div className="space-y-6">
+              <div className="flex items-start gap-2">
+                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 flex-shrink-0 mt-1" />
+                <div>
+                  <p className="text-lg font-semibold text-gray-900">Best African shop in Bolton!"</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 flex-shrink-0 mt-1" />
+                <div>
+                  <p className="text-lg font-semibold text-gray-900">Fresh meat and very fast delivery.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 flex-shrink-0 mt-1" />
+                <div>
+                  <p className="text-lg font-semibold text-gray-900">Highly recommend.</p>
+                </div>
+              </div>
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded">
+                <p className="text-gray-900">
+                  <span className="font-bold">😋 Fresh stock weekly.</span> <span className="text-green-600">✅ From decline, your doorstep</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </section>
+
+      {/* CTA Section */}
+      <section className="relative py-16 md:py-20 bg-cover bg-center" style={{ backgroundImage: 'url(/hero-bg.png)' }}>
+        <div className="absolute inset-0 bg-omega-green-dark/85"></div>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div className="text-white">
+              <h2 className="text-3xl md:text-4xl font-black mb-4">
+                Ready to cook? Shop now or order via WhatsApp 🛒
+              </h2>
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <Link href="/products">
+                  <button className="bg-white text-omega-green-dark hover:bg-gray-100 px-8 py-3 rounded-lg font-bold transition">
+                    Shop Now
+                  </button>
+                </Link>
+                <a href="tel:07355316253">
+                  <button className="bg-omega-orange hover:bg-omega-orange-light text-white px-8 py-3 rounded-lg font-bold transition">
+                    Call Now
+                  </button>
+                </a>
+                <a href="https://wa.me/447355316253" target="_blank" rel="noopener noreferrer">
+                  <button className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-bold transition inline-flex items-center gap-2">
+                    <MessageCircle className="w-5 h-5" />
+                    WhatsApp Us
+                  </button>
+                </a>
+              </div>
+            </div>
+            <div className="bg-white rounded-lg p-6 shadow-xl">
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin className="w-6 h-6 text-omega-green-dark" />
+                <div>
+                  <p className="font-bold text-gray-900">📍 07355-316259</p>
+                  <p className="text-sm text-gray-600">Map</p>
+                </div>
+              </div>
+              <div className="aspect-video bg-gray-200 rounded overflow-hidden">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2373.123456789!2d-2.428!3d53.577!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTPCsDM0JzM3LjIiTiAywrAyNScwNC44Ilc!5e0!3m2!1sen!2suk!4v1234567890"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                ></iframe>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-omega-green-dark text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-5 h-5" />
+              <p className="text-sm">123 Market St, Framworth, Bolton BL4 8EX</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Phone className="w-5 h-5" />
+              <p className="text-sm">@omega_afrocaribbean_store</p>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { Search, ShoppingCart, User, Menu, X, LogOut, Heart } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, LogOut, Heart, Home, Tag, Phone } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useGuestCartStore } from '@/lib/store/guest-cart-store';
@@ -72,32 +72,37 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b shadow-sm">
+    <header className="sticky top-0 z-50 bg-white shadow-md">
       {/* Top Bar */}
-      <div className="bg-primary text-white py-2">
+      <div className="bg-omega-green-dark text-white py-2">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between text-sm">
-            <p>{settings.deliveryMessage}</p>
-            <p className="hidden md:block">📞 Call us: {settings.phoneNumber}</p>
+          <div className="flex items-center justify-between text-xs md:text-sm">
+            <div className="flex items-center gap-4">
+              <span className="font-medium">💰 Prices • 1,000+ Products</span>
+              <span className="hidden md:inline">🎁 Free ATI Programs</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Phone className="w-3 h-3 md:w-4 md:h-4" />
+              <a href="tel:07355316253" className="hover:text-omega-orange transition">
+                Call us: 07355 316253
+              </a>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main Header */}
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 gap-4">
+        <div className="flex items-center justify-between h-20 gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
-            <img 
-              src="/omega-logo.png" 
-              alt="OMEGA Afro Caribbean Superstore" 
-              className="h-12 w-auto object-contain"
-              onError={(e) => {
-                // Fallback to text logo if image fails to load
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-              }}
-            />
+            <div className="bg-omega-green-dark text-white p-2 rounded-lg">
+              <Home className="w-6 h-6" />
+            </div>
+            <div className="hidden md:block">
+              <div className="text-2xl font-black text-omega-green-dark">OMEGA</div>
+              <div className="text-xs text-gray-600 -mt-1">Afro Caribbean Store</div>
+            </div>
           </Link>
 
           {/* Desktop Search */}
@@ -152,75 +157,65 @@ export function Header() {
             </div>
           </form>
 
-          {/* Desktop Actions */}
-          <div className="hidden md:flex items-center gap-4">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-2">
+            <Link
+              href="/products"
+              className="flex items-center gap-1 px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"
+            >
+              <Home className="w-4 h-4" />
+              Shop
+            </Link>
             <Link
               href="/promotions"
-              className="text-sm px-3 py-2 text-primary hover:bg-primary/10 rounded-lg transition font-medium"
+              className="flex items-center gap-1 px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"
             >
-              🎉 Promotions
+              <Tag className="w-4 h-4" />
+              Promotions
             </Link>
             {isAuthenticated ? (
               <>
-                {(user?.role === 'ADMIN' || user?.role === 'STAFF') && (
-                  <Link
-                    href={getDashboardUrl()}
-                    className="text-sm px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition font-medium"
-                  >
-                    Dashboard
-                  </Link>
-                )}
                 <Link
                   href="/account"
-                  className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 rounded-lg transition"
+                  className="flex items-center gap-1 px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"
                 >
-                  <User className="w-5 h-5" />
-                  <span className="text-sm">{user?.firstName}</span>
-                </Link>
-                <Link href="/wishlist" className="relative p-2 hover:bg-gray-100 rounded-lg transition">
-                  <Heart className="w-6 h-6" />
-                  {wishlistItems.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
-                      {wishlistItems.length}
-                    </span>
-                  )}
+                  <User className="w-4 h-4" />
+                  My Account
                 </Link>
                 <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition">
-                  <ShoppingCart className="w-6 h-6" />
+                  <ShoppingCart className="w-6 h-6 text-gray-700" />
                   {totalCartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                    <span className="absolute -top-1 -right-1 bg-omega-orange text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
                       {totalCartCount}
                     </span>
                   )}
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-2 px-3 py-2 text-destructive hover:bg-destructive/10 rounded-lg transition"
+                  className="px-6 py-2 bg-omega-orange hover:bg-omega-orange-light text-white rounded-lg font-bold transition"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span className="text-sm">Logout</span>
+                  Logout
                 </button>
               </>
             ) : (
               <>
-                {/* Guest Cart Icon */}
                 <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition">
-                  <ShoppingCart className="w-6 h-6" />
+                  <ShoppingCart className="w-6 h-6 text-gray-700" />
                   {totalCartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                    <span className="absolute -top-1 -right-1 bg-omega-orange text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
                       {totalCartCount}
                     </span>
                   )}
                 </Link>
                 <Link
                   href="/login"
-                  className="px-4 py-2 text-primary hover:bg-primary/5 rounded-lg transition font-medium"
+                  className="px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/register"
-                  className="px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition font-medium"
+                  className="px-6 py-2 bg-omega-orange hover:bg-omega-orange-light text-white rounded-lg font-bold transition"
                 >
                   Sign Up
                 </Link>
