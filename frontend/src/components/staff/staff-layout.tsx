@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Package, Phone, LogOut, User } from 'lucide-react';
+import { Package, Phone, LogOut, User, BarChart3, Users, FileText } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
 
 interface StaffLayoutProps {
@@ -20,7 +20,8 @@ export function StaffLayout({ children }: StaffLayoutProps) {
     router.push('/login');
   };
 
-  const navItems = [
+  // Base navigation items (always visible to staff)
+  const baseNavItems = [
     {
       label: 'Orders',
       icon: Package,
@@ -34,6 +35,40 @@ export function StaffLayout({ children }: StaffLayoutProps) {
       active: pathname === '/staff/phone-order',
     },
   ];
+
+  // Permission-based navigation items
+  const permissionNavItems = [
+    {
+      label: 'Inventory',
+      icon: BarChart3,
+      href: '/admin/inventory',
+      active: pathname?.startsWith('/admin/inventory'),
+      permission: 'inventory',
+    },
+    {
+      label: 'Customers',
+      icon: Users,
+      href: '/admin/customers',
+      active: pathname?.startsWith('/admin/customers'),
+      permission: 'customers',
+    },
+    {
+      label: 'Reports',
+      icon: FileText,
+      href: '/admin/reports',
+      active: pathname?.startsWith('/admin/reports'),
+      permission: 'reports',
+    },
+  ];
+
+  // Filter permission items based on user's permissions
+  const userPermissions = user?.permissions || [];
+  const permittedItems = permissionNavItems.filter(item => 
+    userPermissions.includes(item.permission)
+  );
+
+  // Combine base items with permitted items
+  const navItems = [...baseNavItems, ...permittedItems];
 
   return (
     <div className="min-h-screen bg-gray-100 flex">

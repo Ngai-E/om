@@ -127,6 +127,12 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       adminOnly: true
     },
     { 
+      icon: Shield, 
+      label: 'Staff Permissions', 
+      href: '/admin/staff-permissions',
+      adminOnly: true
+    },
+    { 
       icon: Tag, 
       label: 'Promotions', 
       href: '/admin/promotions',

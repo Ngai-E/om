@@ -106,4 +106,17 @@ export const adminApi = {
     const { data } = await apiClient.delete(`/admin/delivery-slots/${id}`);
     return data;
   },
+
+  // Staff Management
+  getAllStaff: async (page = 1, limit = 50) => {
+    const { data } = await apiClient.get('/admin/staff', {
+      params: { page, limit },
+    });
+    return data.staff || data;
+  },
+
+  updateStaffPermissions: async (staffId: string, permissions: string[]) => {
+    const { data } = await apiClient.patch(`/admin/staff/${staffId}/permissions`, { permissions });
+    return data;
+  },
 };

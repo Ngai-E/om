@@ -2072,6 +2072,7 @@ export class AdminService {
         lastName: true,
         phone: true,
         role: true,
+        permissions: true,
         isActive: true,
         emailVerified: true,
         createdAt: true,
@@ -2196,6 +2197,49 @@ export class AdminService {
     console.log(`🔐 Password reset for staff: ${staff.email}`);
 
     return { message: 'Password reset successfully' };
+  }
+
+  async updateStaffPermissions(id: string, permissions: string[], adminId: string) {
+    const staff = await this.getStaffById(id);
+
+    // Validate permissions
+    const validPermissions = ['inventory', 'reports', 'customers', 'analytics', 'settings'];
+    const invalidPerms = permissions.filter(p => !validPermissions.includes(p));
+    
+    if (invalidPerms.length > 0) {
+      throw new BadRequestException(`Invalid permissions: ${invalidPerms.join(', ')}`);
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: { permissions },
+    });
+
+    // Audit log
+    await this.auditService.log({
+      userId: adminId,
+      action: 'UPDATE_STAFF_PERMISSIONS',
+      entity: 'User',
+      entityId: id,
+      changes: {
+        email: staff.email,
+        oldPermissions: staff.permissions,
+        newPermissions: permissions,
+      },
+    });
+
+    console.log(`🔐 Permissions updated for staff: ${staff.email} - ${permissions.join(', ')}`);
+
+    return {
+      message: 'Permissions updated successfully',
+      user: {
+        id: updated.id,
+        email: updated.email,
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        permissions: updated.permissions,
+      },
+    };
   }
 
   // ============================================

@@ -6,6 +6,7 @@ export interface User {
   lastName: string;
   phone?: string;
   role: 'CUSTOMER' | 'STAFF' | 'ADMIN';
+  permissions?: string[]; // Fine-grained permissions for staff (e.g., ['inventory', 'reports'])
   emailVerified: boolean;
   isActive: boolean;
   createdAt: string;

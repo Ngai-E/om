@@ -22,13 +22,15 @@ import { AdminService } from './admin.service';
 import { CreateProductDto, UpdateProductDto, UpdateInventoryDto, CreateStaffDto, UpdateStaffDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
 @ApiTags('admin')
 @Controller('admin')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN')
+@UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard)
+@Roles('ADMIN', 'STAFF')
 @ApiBearerAuth()
 export class AdminController {
   constructor(private adminService: AdminService) {}
@@ -47,7 +49,8 @@ export class AdminController {
 
   @Get('inventory/stats')
   @Roles('ADMIN', 'STAFF')
-  @ApiOperation({ summary: 'Get inventory statistics' })
+  @RequirePermissions('inventory')
+  @ApiOperation({ summary: 'Get inventory statistics (Admin or Staff with inventory permission)' })
   @ApiResponse({ status: 200, description: 'Inventory stats retrieved' })
   async getInventoryStats() {
     return this.adminService.getInventoryStats();
@@ -158,7 +161,8 @@ export class AdminController {
   }
 
   @Patch('products/:id/inventory')
-  @ApiOperation({ summary: 'Update product inventory (Admin only)' })
+  @RequirePermissions('inventory')
+  @ApiOperation({ summary: 'Update product inventory (Admin or Staff with inventory permission)' })
   @ApiParam({ name: 'id', description: 'Product ID' })
   @ApiResponse({ status: 200, description: 'Inventory updated' })
   @ApiResponse({ status: 404, description: 'Product not found' })
@@ -369,7 +373,8 @@ export class AdminController {
   // ============================================
 
   @Get('users')
-  @ApiOperation({ summary: 'Get all users (Admin only)' })
+  @RequirePermissions('customers')
+  @ApiOperation({ summary: 'Get all users (Admin or Staff with customers permission)' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Users retrieved' })
@@ -381,7 +386,8 @@ export class AdminController {
   }
 
   @Get('users/:id')
-  @ApiOperation({ summary: 'Get user details (Admin only)' })
+  @RequirePermissions('customers')
+  @ApiOperation({ summary: 'Get user details (Admin or Staff with customers permission)' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @ApiResponse({ status: 200, description: 'User found' })
   @ApiResponse({ status: 404, description: 'User not found' })
@@ -534,5 +540,17 @@ export class AdminController {
     @CurrentUser() user: any,
   ) {
     return this.adminService.resetStaffPassword(id, newPassword, user.id);
+  }
+
+  @Patch('staff/:id/permissions')
+  @ApiOperation({ summary: 'Update staff permissions (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Staff ID' })
+  @ApiResponse({ status: 200, description: 'Permissions updated' })
+  async updateStaffPermissions(
+    @Param('id') id: string,
+    @Body('permissions') permissions: string[],
+    @CurrentUser() user: any,
+  ) {
+    return this.adminService.updateStaffPermissions(id, permissions, user.id);
   }
 }

@@ -81,6 +81,7 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        permissions: user.permissions || [],
       },
       accessToken,
       expiresIn: 604800, // 7 days in seconds
