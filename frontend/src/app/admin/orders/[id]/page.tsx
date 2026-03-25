@@ -130,11 +130,11 @@ export default function OrderDetailPage() {
               </div>
             </div>
 
-            {/* Delivery/Collection Info */}
+            {/* Delivery/Pick Up Info */}
             <div className="bg-white border rounded-lg p-6">
               <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
                 <Truck className="w-5 h-5" />
-                {order.fulfillmentType === 'DELIVERY' ? 'Delivery Information' : 'Collection Information'}
+                {order.fulfillmentType === 'DELIVERY' ? 'Delivery Information' : 'Pick Up Information'}
               </h2>
               
               {order.fulfillmentType === 'DELIVERY' && order.deliveryAddress && (
@@ -170,10 +170,10 @@ export default function OrderDetailPage() {
 
               {order.fulfillmentType === 'COLLECTION' && (
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-600">Customer will collect from store</p>
+                  <p className="text-sm text-gray-600">Customer will pick up from store</p>
                   {order.collectionDate && (
                     <p className="text-sm">
-                      <span className="font-medium">Collection Date:</span>{' '}
+                      <span className="font-medium">Pick Up Date:</span>{' '}
                       {new Date(order.collectionDate).toLocaleDateString()}
                     </p>
                   )}

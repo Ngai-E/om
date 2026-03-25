@@ -18,9 +18,8 @@ export default function GuestCheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH_ON_DELIVERY' | 'PAY_IN_STORE'>('CASH_ON_DELIVERY');
   const [formData, setFormData] = useState({
     email: '',
-    firstName: '',
-    lastName: '',
     phone: '',
+    countryCode: '+44',
     addressLine1: '',
     addressLine2: '',
     city: '',
@@ -110,7 +109,7 @@ export default function GuestCheckoutPage() {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -180,91 +179,84 @@ export default function GuestCheckoutPage() {
                     }`}
                   >
                     <Store className="w-5 h-5 lg:w-6 lg:h-6 mx-auto mb-1 lg:mb-2" />
-                    <p className="font-semibold text-sm lg:text-base">Collection</p>
-                    <p className="text-xs lg:text-sm text-muted-foreground">Pick up in store</p>
+                    <p className="font-semibold text-sm lg:text-base">Pick Up</p>
+                    <p className="text-xs lg:text-sm text-muted-foreground">Collect from store</p>
                   </button>
                 </div>
               </div>
 
-              {/* Personal Information */}
+              {/* Contact Information */}
               <div className="bg-card border rounded-lg p-4 lg:p-6">
                 <h2 className="text-lg lg:text-xl font-bold mb-3 lg:mb-4 flex items-center gap-2">
                   <User className="w-4 h-4 lg:w-5 lg:h-5" />
-                  Personal Information
+                  Contact Information
                 </h2>
 
-                <div className="grid sm:grid-cols-2 gap-3 lg:gap-4">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      First Name *
+                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                      <Mail className="w-4 h-4" />
+                      Email Address *
                     </label>
                     <input
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
+                      type="email"
+                      name="email"
+                      value={formData.email}
                       onChange={handleChange}
                       required
-                      className="w-full px-3 lg:px-4 py-2 lg:py-2.5 text-sm lg:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      placeholder="your.email@example.com"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      We'll send your order confirmation to this email
+                    </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Last Name *
+                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                      <Phone className="w-4 h-4" />
+                      Phone Number *
                     </label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-3 lg:px-4 py-2 lg:py-2.5 text-sm lg:text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
+                    <div className="flex gap-2">
+                      <select
+                        name="countryCode"
+                        value={formData.countryCode || '+44'}
+                        onChange={handleChange}
+                        className="w-32 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+234">🇳🇬 +234</option>
+                        <option value="+233">🇬🇭 +233</option>
+                        <option value="+254">🇰🇪 +254</option>
+                        <option value="+27">🇿🇦 +27</option>
+                        <option value="+91">🇮🇳 +91</option>
+                        <option value="+86">🇨🇳 +86</option>
+                        <option value="+81">🇯🇵 +81</option>
+                        <option value="+49">🇩🇪 +49</option>
+                        <option value="+33">🇫🇷 +33</option>
+                      </select>
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        required
+                        className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="7700 900000"
+                      />
+                    </div>
                   </div>
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                    <Mail className="w-4 h-4" />
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="your.email@example.com"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    We'll send your order confirmation to this email
-                  </p>
-                </div>
-
-                <div className="mt-4">
-                  <label className="block text-sm font-medium mb-2 flex items-center gap-2">
-                    <Phone className="w-4 h-4" />
-                    Phone Number *
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="+44 7700 900000"
-                  />
                 </div>
               </div>
 
-              {/* Delivery Address */}
-              <div className="bg-card border rounded-lg p-4 lg:p-6">
-                <h2 className="text-lg lg:text-xl font-bold mb-3 lg:mb-4 flex items-center gap-2">
-                  <MapPin className="w-4 h-4 lg:w-5 lg:h-5" />
-                  Delivery Address
-                </h2>
+              {/* Delivery Address - Only show for delivery */}
+              {fulfillmentType === 'DELIVERY' && (
+                <div className="bg-card border rounded-lg p-4 lg:p-6">
+                  <h2 className="text-lg lg:text-xl font-bold mb-3 lg:mb-4 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 lg:w-5 lg:h-5" />
+                    Delivery Address
+                  </h2>
 
                 <div className="space-y-3 lg:space-y-4">
                   <div>
@@ -358,6 +350,7 @@ export default function GuestCheckoutPage() {
                   </div>
                 </div>
               </div>
+              )}
 
               {/* Payment Method */}
               <div className="bg-card border rounded-lg p-4 lg:p-6">

@@ -27,10 +27,10 @@ export function Toast({ message, onClose, duration = 3000, type = 'success' }: T
     CheckCircle;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 animate-in slide-in-from-bottom-5 duration-300">
-      <div className={`${styles} px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 min-w-[300px]`}>
+    <div className="fixed bottom-20 md:bottom-4 right-4 left-4 md:left-auto z-[9999] animate-in slide-in-from-bottom-5 duration-300">
+      <div className={`${styles} px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 max-w-md mx-auto md:mx-0 md:min-w-[300px]`}>
         <Icon className="w-5 h-5 flex-shrink-0" />
-        <p className="flex-1">{message}</p>
+        <p className="flex-1 text-sm md:text-base">{message}</p>
         <button
           onClick={onClose}
           className="hover:opacity-70 transition"

@@ -301,4 +301,43 @@ export class ProductsService {
       orderBy: { sortOrder: 'asc' },
     });
   }
+
+  async getQuickCategories() {
+    // First try to get categories marked as quick categories
+    const quickCategories = await this.prisma.category.findMany({
+      where: { 
+        isActive: true,
+        isQuickCategory: true,
+      },
+      include: {
+        _count: {
+          select: { products: true },
+        },
+      },
+      orderBy: { sortOrder: 'asc' },
+    });
+
+    // If we have quick categories, return them
+    if (quickCategories.length > 0) {
+      return quickCategories;
+    }
+
+    // Otherwise, return top 5 categories by product count
+    const topCategories = await this.prisma.category.findMany({
+      where: { isActive: true },
+      include: {
+        _count: {
+          select: { products: true },
+        },
+      },
+      orderBy: {
+        products: {
+          _count: 'desc',
+        },
+      },
+      take: 5,
+    });
+
+    return topCategories;
+  }
 }

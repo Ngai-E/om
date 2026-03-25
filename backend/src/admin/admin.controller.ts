@@ -224,6 +224,14 @@ export class AdminController {
     return this.adminService.deleteCategory(id);
   }
 
+  @Patch('categories/:id/quick-category')
+  @ApiOperation({ summary: 'Toggle quick category status (Admin only)' })
+  @ApiParam({ name: 'id', description: 'Category ID' })
+  @ApiResponse({ status: 200, description: 'Quick category status toggled' })
+  async toggleQuickCategory(@Param('id') id: string) {
+    return this.adminService.toggleQuickCategory(id);
+  }
+
   // ============================================
   // PRODUCT VARIANTS
   // ============================================

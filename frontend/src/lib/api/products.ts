@@ -47,6 +47,11 @@ export const productsApi = {
     return data;
   },
 
+  getQuickCategories: async (): Promise<Category[]> => {
+    const { data } = await apiClient.get<Category[]>('/products/categories/quick');
+    return data;
+  },
+
   // Admin functions
   getAdminProduct: async (id: string): Promise<Product> => {
     const { data } = await apiClient.get<Product>(`/admin/products/${id}`);

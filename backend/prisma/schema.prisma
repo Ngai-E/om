@@ -124,24 +124,26 @@ model Address {
 // ============================================
 
 model Category {
-  id          String     @id @default(uuid())
-  name        String
-  slug        String     @unique
-  description String?
-  image       String? // S3 URL
-  parentId    String?
-  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children    Category[] @relation("CategoryHierarchy")
-  sortOrder   Int        @default(0)
-  isActive    Boolean    @default(true)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id              String     @id @default(uuid())
+  name            String
+  slug            String     @unique
+  description     String?
+  image           String? // S3 URL
+  parentId        String?
+  parent          Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children        Category[] @relation("CategoryHierarchy")
+  sortOrder       Int        @default(0)
+  isActive        Boolean    @default(true)
+  isQuickCategory Boolean    @default(false) // Show on homepage quick categories
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   // Relations
   products Product[]
 
   @@index([slug])
   @@index([parentId])
+  @@index([isQuickCategory])
   @@map("categories")
 }
 

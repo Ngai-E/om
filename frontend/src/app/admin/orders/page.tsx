@@ -91,7 +91,7 @@ export default function AdminOrdersPage() {
     { value: 'PENDING', label: 'Pending', color: 'bg-yellow-100 text-yellow-700' },
     { value: 'PROCESSING', label: 'Processing', color: 'bg-blue-100 text-blue-700' },
     { value: 'OUT_FOR_DELIVERY', label: 'Out for Delivery', color: 'bg-purple-100 text-purple-700' },
-    { value: 'READY_FOR_COLLECTION', label: 'Ready for Collection', color: 'bg-indigo-100 text-indigo-700' },
+    { value: 'READY_FOR_COLLECTION', label: 'Ready for Pick Up', color: 'bg-indigo-100 text-indigo-700' },
     { value: 'COMPLETED', label: 'Completed', color: 'bg-green-100 text-green-700' },
     { value: 'CANCELLED', label: 'Cancelled', color: 'bg-red-100 text-red-700' },
   ];
@@ -150,9 +150,9 @@ export default function AdminOrdersPage() {
                 onChange={(e) => setFulfillmentFilter(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm appearance-none"
               >
-                <option value="">Delivery & Collection</option>
+                <option value="">Delivery & Pick Up</option>
                 <option value="DELIVERY">Delivery Only</option>
-                <option value="COLLECTION">Collection Only</option>
+                <option value="COLLECTION">Pick Up Only</option>
               </select>
             </div>
 
@@ -195,12 +195,12 @@ export default function AdminOrdersPage() {
         {/* Orders Table */}
         <div className="bg-white border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[800px]">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="text-left p-4 font-semibold text-sm text-gray-700">Order #</th>
                   <th className="text-left p-4 font-semibold text-sm text-gray-700">Customer</th>
-                  <th className="text-left p-4 font-semibold text-sm text-gray-700">Delivery / Collection</th>
+                  <th className="text-left p-4 font-semibold text-sm text-gray-700">Delivery / Pick Up</th>
                   <th className="text-left p-4 font-semibold text-sm text-gray-700">Time Slot</th>
                   <th className="text-left p-4 font-semibold text-sm text-gray-700">Payment Status</th>
                   <th className="text-left p-4 font-semibold text-sm text-gray-700">Order Status</th>
@@ -236,7 +236,7 @@ export default function AdminOrdersPage() {
                           ) : (
                             <>
                               <span className="text-lg">🏪</span>
-                              <span className="text-sm font-medium">Collection</span>
+                              <span className="text-sm font-medium">Pick Up</span>
                             </>
                           )}
                         </div>

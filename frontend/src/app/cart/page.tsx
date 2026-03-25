@@ -237,16 +237,22 @@ export default function CartPage() {
                     <div className="flex flex-col items-end gap-2">
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => guestCart.updateItem(item.product.id, item.quantity - 1)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            guestCart.updateItem(item.product.id, item.quantity - 1);
+                          }}
                           disabled={item.quantity <= 1}
-                          className="p-1 hover:bg-muted rounded disabled:opacity-50"
+                          className="p-1 hover:bg-muted rounded disabled:opacity-50 active:scale-95 transition-all"
                         >
                           <Minus className="w-4 h-4" />
                         </button>
                         <span className="w-12 text-center font-semibold">{item.quantity}</span>
                         <button
-                          onClick={() => guestCart.updateItem(item.product.id, item.quantity + 1)}
-                          className="p-1 hover:bg-muted rounded"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            guestCart.updateItem(item.product.id, item.quantity + 1);
+                          }}
+                          className="p-1 hover:bg-muted rounded active:scale-95 transition-all"
                         >
                           <Plus className="w-4 h-4" />
                         </button>
@@ -383,13 +389,14 @@ export default function CartPage() {
                   </p>
 
                   {/* Quantity Controls */}
-                  <div className="flex items-center gap-3 mt-3">
+                  <div className="flex items-center gap-2 md:gap-3 mt-3">
                     <button
-                      onClick={() =>
-                        handleUpdateQuantity(item.id, item.quantity - 1)
-                      }
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleUpdateQuantity(item.id, item.quantity - 1);
+                      }}
                       disabled={item.quantity <= 1 || updateItem.isPending}
-                      className="w-8 h-8 rounded border flex items-center justify-center hover:bg-muted disabled:opacity-50"
+                      className="w-8 h-8 rounded border flex items-center justify-center hover:bg-muted active:scale-95 transition-all disabled:opacity-50"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
@@ -397,11 +404,12 @@ export default function CartPage() {
                       {item.quantity}
                     </span>
                     <button
-                      onClick={() =>
-                        handleUpdateQuantity(item.id, item.quantity + 1)
-                      }
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleUpdateQuantity(item.id, item.quantity + 1);
+                      }}
                       disabled={updateItem.isPending}
-                      className="w-8 h-8 rounded border flex items-center justify-center hover:bg-muted disabled:opacity-50"
+                      className="w-8 h-8 rounded border flex items-center justify-center hover:bg-muted active:scale-95 transition-all disabled:opacity-50"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -414,9 +422,12 @@ export default function CartPage() {
                     £{(parseFloat(item.product.price) * item.quantity).toFixed(2)}
                   </p>
                   <button
-                    onClick={() => handleRemoveItem(item.id)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRemoveItem(item.id);
+                    }}
                     disabled={removeItem.isPending}
-                    className="text-destructive hover:underline text-sm flex items-center gap-1"
+                    className="text-destructive hover:underline text-sm flex items-center gap-1 mt-3 md:mt-0"
                   >
                     <Trash2 className="w-4 h-4" />
                     Remove

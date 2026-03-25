@@ -37,6 +37,7 @@ async function bootstrap() {
   const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3002',
+     'http://172.20.10.6:3000',
     'https://www.omegaafro.com',
     'https://omegaafro.com',
     'https://om-ebon-omega.vercel.app',

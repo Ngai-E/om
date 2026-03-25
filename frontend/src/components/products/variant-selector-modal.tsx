@@ -63,8 +63,8 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 pb-20 md:pb-4">
+      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[85vh] md:max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white z-10">
           <h2 className="text-2xl font-bold text-gray-900">Select Options</h2>
@@ -176,7 +176,7 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-bold"
+                  className="w-10 h-10 border border-gray-300 rounded-lg hover:bg-gray-50 active:scale-95 transition-all font-bold"
                 >
                   −
                 </button>
@@ -191,7 +191,7 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
                 <button
                   onClick={() => setQuantity(Math.min(selectedVariant.stock, quantity + 1))}
                   disabled={quantity >= selectedVariant.stock}
-                  className="w-10 h-10 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-10 h-10 border border-gray-300 rounded-lg hover:bg-gray-50 active:scale-95 transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   +
                 </button>
@@ -216,7 +216,7 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t p-6 bg-gray-50 sticky bottom-0">
+        <div className="border-t p-4 md:p-6 bg-gray-50 sticky bottom-0 shadow-lg">
           <div className="flex gap-3">
             <Link
               href={`/products/${product.slug}`}

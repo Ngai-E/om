@@ -110,7 +110,7 @@ function StaffOrdersContent() {
                       ) : (
                         <div className="flex items-center gap-2">
                           <Package className="w-5 h-5 text-blue-600" />
-                          <span className="font-semibold">Collection</span>
+                          <span className="font-semibold">Pick Up</span>
                         </div>
                       )}
                     </td>

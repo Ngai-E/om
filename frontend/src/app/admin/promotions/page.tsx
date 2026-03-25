@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function PromotionsPage() {
   const router = useRouter();
@@ -244,9 +245,31 @@ export default function PromotionsPage() {
 
       {/* Promotions List */}
       {isLoading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading promotions...</p>
+        <div className="space-y-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-lg border p-6">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-6 w-20" />
+                    <Skeleton className="h-8 w-24" />
+                  </div>
+                  <Skeleton className="h-4 w-full max-w-md" />
+                  <Skeleton className="h-6 w-32" />
+                  <div className="flex gap-6">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="h-9 w-9 rounded-lg" />
+                  <Skeleton className="h-9 w-9 rounded-lg" />
+                  <Skeleton className="h-9 w-9 rounded-lg" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : promotions.length === 0 ? (
         <div className="bg-white rounded-lg border p-12 text-center">

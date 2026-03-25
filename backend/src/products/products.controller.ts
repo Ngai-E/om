@@ -69,6 +69,13 @@ export class ProductsController {
     return this.productsService.getCategories();
   }
 
+  @Get('categories/quick')
+  @ApiOperation({ summary: 'Get quick categories or top 5 by product count' })
+  @ApiResponse({ status: 200, description: 'Quick categories retrieved successfully' })
+  async getQuickCategories() {
+    return this.productsService.getQuickCategories();
+  }
+
   @Get('slug/:slug')
   @ApiOperation({ summary: 'Get product by slug' })
   @ApiParam({ name: 'slug', description: 'Product slug' })

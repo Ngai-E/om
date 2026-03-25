@@ -45,3 +45,11 @@ export function useCategories() {
     queryFn: () => productsApi.getCategories(),
   });
 }
+
+export function useQuickCategories() {
+  return useQuery({
+    queryKey: ['quick-categories'],
+    queryFn: () => productsApi.getQuickCategories(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}

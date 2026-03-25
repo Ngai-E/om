@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ShoppingBag, Truck, CreditCard, Star, ArrowRight, Package, Shield, ChevronRight, Phone, MessageCircle, MapPin, Play } from 'lucide-react';
-import { useFeaturedProducts, useCategories } from '@/lib/hooks/use-products';
+import { useFeaturedProducts, useQuickCategories } from '@/lib/hooks/use-products';
 import { useBestSellers } from '@/lib/hooks/use-best-sellers';
 import { useHomepageReviews } from '@/lib/hooks/use-homepage-reviews';
 import { useActiveTestimonials } from '@/lib/hooks/use-testimonials';
@@ -17,7 +17,7 @@ export default function Home() {
   const { settings } = useSettingsStore();
   const { data: featuredProducts, isLoading: featuredLoading } = useFeaturedProducts();
   const { data: bestSellers, isLoading: bestSellersLoading } = useBestSellers(8);
-  const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { data: categories, isLoading: categoriesLoading } = useQuickCategories();
   const { data: homepageReviews, isLoading: reviewsLoading } = useHomepageReviews();
   const { data: testimonials, isLoading: testimonialsLoading } = useActiveTestimonials();
   const [showAllCategories, setShowAllCategories] = React.useState(false);
@@ -166,27 +166,29 @@ export default function Home() {
       </section>
 
       {/* Featured Bundles */}
-      <section className="py-4 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-4">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900">
-              Featured Bundles
-            </h2>
+      {(featuredLoading || (featuredProducts && featuredProducts.length > 0)) && (
+        <section className="py-4 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-4">
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900">
+                Featured Bundles
+              </h2>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+              {featuredLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))
+              ) : (
+                featuredProducts?.slice(0, 5).map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              )}
+            </div>
           </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-            {featuredLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <ProductCardSkeleton key={i} />
-              ))
-            ) : (
-              featuredProducts?.slice(0, 5).map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))
-            )}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Best Sellers */}
       {bestSellers && bestSellers.length > 0 && (

@@ -174,7 +174,7 @@ export default function WishlistPage() {
                         {product.description}
                       </p>
 
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mb-2">
                         <div>
                           <span className="text-xl font-bold text-primary">
                             £{parseFloat(product.price).toFixed(2)}
@@ -186,6 +186,11 @@ export default function WishlistPage() {
                           )}
                         </div>
                       </div>
+                      {hasVariants && product.variants && product.variants.length > 1 && (
+                        <p className="text-xs text-gray-500">
+                          +{product.variants.length - 1} variant{product.variants.length > 2 ? 's' : ''}
+                        </p>
+                      )}
                     </div>
                   </Link>
 
@@ -198,7 +203,7 @@ export default function WishlistPage() {
                       title={hasVariants ? 'Select variant' : 'Add to cart'}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      {hasVariants ? 'Select Variant' : 'Add to Cart'}
+                      Add to Cart
                     </button>
                     <button
                       onClick={() => removeItem(product.id)}

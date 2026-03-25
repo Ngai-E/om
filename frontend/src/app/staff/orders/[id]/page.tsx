@@ -111,7 +111,7 @@ export default function StaffOrderDetailPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Order #{order.orderNumber}</h1>
             <p className="text-lg text-gray-600">
-              {order.fulfillmentType === 'DELIVERY' ? '🚚 Delivery' : '📦 Collection'}
+              {order.fulfillmentType === 'DELIVERY' ? '🚚 Delivery' : '📦 Pick Up'}
             </p>
           </div>
         </div>

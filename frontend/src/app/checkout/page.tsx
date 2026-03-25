@@ -335,8 +335,8 @@ export default function CheckoutPage() {
                   }`}
                 >
                   <Store className="w-5 h-5 lg:w-6 lg:h-6 mx-auto mb-1 lg:mb-2" />
-                  <p className="font-semibold text-sm lg:text-base">Collection</p>
-                  <p className="text-xs lg:text-sm text-muted-foreground">Pick up in store</p>
+                  <p className="font-semibold text-sm lg:text-base">Pick Up</p>
+                  <p className="text-xs lg:text-sm text-muted-foreground">Collect from store</p>
                 </button>
               </div>
             </div>
@@ -469,7 +469,7 @@ export default function CheckoutPage() {
                             className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
                           >
                             <Package className="w-4 h-4" />
-                            Collect from Store
+                            Switch to Pick Up from Store
                           </button>
                         </div>
                       )}
@@ -489,7 +489,7 @@ export default function CheckoutPage() {
                             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 border-2 border-orange-600 text-orange-600 hover:bg-orange-50 rounded-lg font-semibold transition"
                           >
                             <Package className="w-4 h-4" />
-                            Or Collect Instead
+                            Try Pick Up Instead
                           </button>
                         </div>
                       )}

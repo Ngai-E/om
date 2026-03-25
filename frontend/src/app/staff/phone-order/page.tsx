@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, Plus, Minus, Trash2, Package, Truck, CreditCard, AlertTriangle, Send, Banknote } from 'lucide-react';
+import { Search, Plus, Minus, Trash2, Package, Truck, CreditCard, AlertTriangle, Send, Banknote, Store } from 'lucide-react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { staffApi } from '@/lib/api/staff';
 import { useProducts } from '@/lib/hooks/use-products';
@@ -21,7 +21,7 @@ export default function PhoneOrderPage() {
   const [orderItems, setOrderItems] = useState<Array<{ productId: string; product: any; quantity: number }>>([]);
   const [fulfillmentType, setFulfillmentType] = useState<'DELIVERY' | 'COLLECTION'>('DELIVERY');
   const [selectedAddressId, setSelectedAddressId] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH_ON_DELIVERY'>('CARD');
+  const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH_ON_DELIVERY' | 'PAY_IN_STORE'>('CARD');
   const [selectedSlotId, setSelectedSlotId] = useState('');
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const productSearchRef = useRef<HTMLInputElement>(null);
@@ -410,7 +410,7 @@ export default function PhoneOrderPage() {
                     }`}
                   >
                     <Package className="w-5 h-5 mx-auto mb-1" />
-                    Collection
+                    Pick Up
                   </button>
                 </div>
 
@@ -485,29 +485,54 @@ export default function PhoneOrderPage() {
                     </div>
                   </button>
 
-                  {/* Cash on Delivery */}
-                  <button
-                    onClick={() => setPaymentMethod('CASH_ON_DELIVERY')}
-                    className={`w-full p-4 rounded-xl font-bold text-left transition-all ${
-                      paymentMethod === 'CASH_ON_DELIVERY'
-                        ? 'bg-orange-500 text-white border-4 border-orange-600'
-                        : 'bg-gray-100 hover:bg-gray-200 border-2 border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                        <Banknote className="w-6 h-6" />
+                  {/* Cash on Delivery or Pay in Store */}
+                  {fulfillmentType === 'DELIVERY' ? (
+                    <button
+                      onClick={() => setPaymentMethod('CASH_ON_DELIVERY')}
+                      className={`w-full p-4 rounded-xl font-bold text-left transition-all ${
+                        paymentMethod === 'CASH_ON_DELIVERY'
+                          ? 'bg-orange-500 text-white border-4 border-orange-600'
+                          : 'bg-gray-100 hover:bg-gray-200 border-2 border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                          <Banknote className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="text-lg">🟠 Cash on Delivery</p>
+                          <p className={`text-xs ${
+                            paymentMethod === 'CASH_ON_DELIVERY' ? 'text-white/80' : 'text-gray-500'
+                          }`}>
+                            Pay when delivered
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-lg">🟠 Cash on Delivery</p>
-                        <p className={`text-xs ${
-                          paymentMethod === 'CASH_ON_DELIVERY' ? 'text-white/80' : 'text-gray-500'
-                        }`}>
-                          Pay when delivered
-                        </p>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setPaymentMethod('PAY_IN_STORE')}
+                      className={`w-full p-4 rounded-xl font-bold text-left transition-all ${
+                        paymentMethod === 'PAY_IN_STORE'
+                          ? 'bg-purple-500 text-white border-4 border-purple-600'
+                          : 'bg-gray-100 hover:bg-gray-200 border-2 border-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                          <Store className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="text-lg">🟣 Pay in Store</p>
+                          <p className={`text-xs ${
+                            paymentMethod === 'PAY_IN_STORE' ? 'text-white/80' : 'text-gray-500'
+                          }`}>
+                            Pay when picking up
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                  )}
                 </div>
 
                 {/* Warnings */}

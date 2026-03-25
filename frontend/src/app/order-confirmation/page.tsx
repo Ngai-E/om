@@ -159,7 +159,7 @@ function OrderConfirmationContent() {
           </div>
         </div>
 
-        {/* Delivery/Collection Info */}
+        {/* Delivery/Pick Up Info */}
         <div className="bg-blue-50 rounded-xl p-6 mb-6">
           <div className="flex items-start gap-3">
             {order.fulfillmentType === 'DELIVERY' ? (
@@ -185,11 +185,11 @@ function OrderConfirmationContent() {
               <>
                 <Package className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
                 <div>
-                  <h3 className="font-bold text-gray-900 mb-2">Collection</h3>
-                  <p className="text-sm text-gray-700">You can collect your order from our store.</p>
+                  <h3 className="font-bold text-gray-900 mb-2">Pick Up</h3>
+                  <p className="text-sm text-gray-700">You can pick up your order from our store.</p>
                   {order.deliverySlot && (
                     <p className="text-sm text-gray-600 mt-2">
-                      Collection Time: {order.deliverySlot.startTime} - {order.deliverySlot.endTime}
+                      Pick Up Time: {order.deliverySlot.startTime} - {order.deliverySlot.endTime}
                     </p>
                   )}
                 </div>
@@ -243,7 +243,7 @@ function OrderConfirmationContent() {
               <span>
                 {order.fulfillmentType === 'DELIVERY' 
                   ? "You'll get an update when your order is out for delivery"
-                  : "We'll let you know when your order is ready for collection"}
+                  : "We'll let you know when your order is ready for pick up"}
               </span>
             </li>
           </ul>

@@ -645,6 +645,28 @@ export class AdminService {
     return { message: 'Category deleted successfully' };
   }
 
+  async toggleQuickCategory(id: string) {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+    });
+
+    if (!category) {
+      throw new NotFoundException('Category not found');
+    }
+
+    const updated = await this.prisma.category.update({
+      where: { id },
+      data: {
+        isQuickCategory: !category.isQuickCategory,
+      },
+    });
+
+    return {
+      message: `Category ${updated.isQuickCategory ? 'added to' : 'removed from'} quick categories`,
+      category: updated,
+    };
+  }
+
   // ============================================
   // PRODUCT VARIANTS
   // ============================================

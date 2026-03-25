@@ -11,6 +11,7 @@ import { useWishlistStore } from '@/lib/store/wishlist-store';
 import { useSettingsStore } from '@/lib/store/settings-store';
 import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
+import { promotionsApi } from '@/lib/api/promotions';
 
 export function Header() {
   const router = useRouter();
@@ -26,6 +27,15 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Check for active promotions
+  const { data: activePromotions } = useQuery({
+    queryKey: ['active-promotions-check'],
+    queryFn: () => promotionsApi.getActivePromotions(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+  
+  const hasActivePromotions = activePromotions && activePromotions.length > 0;
 
   // Autocomplete query
   const { data: autocompleteResults } = useQuery({
@@ -171,13 +181,15 @@ export function Header() {
               <Home className="w-4 h-4" />
               Shop
             </Link>
-            <Link
-              href="/promotions"
-              className="flex items-center gap-1 px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"
-            >
-              <Tag className="w-4 h-4" />
-              Promotions
-            </Link>
+            {hasActivePromotions && (
+              <Link
+                href="/promotions"
+                className="flex items-center gap-1 px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"
+              >
+                <Tag className="w-4 h-4" />
+                Promotions
+              </Link>
+            )}
             
             <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition">
               <ShoppingCart className="w-6 h-6 text-gray-700" />
@@ -295,13 +307,15 @@ export function Header() {
             >
               Beverages
             </Link>
-            <Link
-              href="/promotions"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 hover:bg-gray-100 rounded-lg text-primary font-medium"
-            >
-              🎉 Promotions
-            </Link>
+            {hasActivePromotions && (
+              <Link
+                href="/promotions"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-3 hover:bg-gray-100 rounded-lg text-primary font-medium"
+              >
+                🎉 Promotions
+              </Link>
+            )}
             
             {isAuthenticated ? (
               <>

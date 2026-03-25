@@ -5,6 +5,7 @@ import { AdminLayout } from '@/components/admin/admin-layout';
 import { Plus, Edit, Trash2, Image as ImageIcon, X } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Toast } from '@/components/ui/toast';
 
 interface Category {
@@ -17,6 +18,7 @@ interface Category {
   parent?: Category;
   children?: Category[];
   isActive: boolean;
+  isQuickCategory: boolean;
   sortOrder: number;
   _count?: {
     products: number;
@@ -185,6 +187,27 @@ export default function AdminCategoriesPage() {
     }
   };
 
+  const handleToggleQuickCategory = async (id: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories/${id}/quick-category`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle quick category');
+      }
+
+      showToast('Quick category status updated', 'success');
+      fetchCategories();
+    } catch (error) {
+      console.error('Failed to toggle quick category:', error);
+      showToast('Failed to update quick category status', 'error');
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this category?')) {
       return;
@@ -235,13 +258,39 @@ export default function AdminCategoriesPage() {
         </div>
 
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-omega-green-dark mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading categories...</p>
+          <div className="bg-white rounded-lg border overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Products</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4"><Skeleton className="h-12 w-12 rounded" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-5 w-32" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-5 w-64" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-5 w-16" /></td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Skeleton className="h-8 w-8 rounded" />
+                        <Skeleton className="h-8 w-8 rounded" />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
           <div className="bg-white rounded-lg border overflow-hidden">
-            <table className="w-full">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px]">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="text-left p-4 font-semibold">Image</th>
@@ -250,6 +299,7 @@ export default function AdminCategoriesPage() {
                   <th className="text-left p-4 font-semibold">Parent</th>
                   <th className="text-center p-4 font-semibold">Products</th>
                   <th className="text-center p-4 font-semibold">Status</th>
+                  <th className="text-center p-4 font-semibold">Quick Category</th>
                   <th className="text-center p-4 font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -303,6 +353,18 @@ export default function AdminCategoriesPage() {
                         {category.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </td>
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => handleToggleQuickCategory(category.id)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                          category.isQuickCategory
+                            ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {category.isQuickCategory ? '⭐ Quick' : 'Set Quick'}
+                      </button>
+                    </td>
                     <td className="p-4">
                       <div className="flex items-center justify-center gap-2">
                         <button
@@ -331,6 +393,7 @@ export default function AdminCategoriesPage() {
                 No categories found. Create your first category to get started.
               </div>
             )}
+            </div>
           </div>
         )}
       </div>

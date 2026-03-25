@@ -6,6 +6,7 @@ import { reviewsApi, Review } from '@/lib/api/reviews';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useRouter } from 'next/navigation';
 import { AdminLayout } from '@/components/admin/admin-layout';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminReviewsPage() {
   const router = useRouter();
@@ -145,9 +146,27 @@ export default function AdminReviewsPage() {
 
         {/* Reviews List */}
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#036637] mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading reviews...</p>
+          <div className="space-y-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="bg-white rounded-lg border p-6">
+                <div className="flex items-start gap-4">
+                  <Skeleton className="h-12 w-12 rounded-full" />
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-5 w-32" />
+                      <Skeleton className="h-5 w-20" />
+                    </div>
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <div className="flex gap-2">
+                      <Skeleton className="h-9 w-24" />
+                      <Skeleton className="h-9 w-24" />
+                      <Skeleton className="h-9 w-24" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         ) : reviews.length === 0 ? (
           <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
