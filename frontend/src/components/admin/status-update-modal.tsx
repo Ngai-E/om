@@ -9,27 +9,47 @@ interface StatusUpdateModalProps {
   onUpdate: (status: string) => void;
   currentStatus: string;
   orderNumber: string;
+  fulfillmentType?: string;
 }
 
-export function StatusUpdateModal({ isOpen, onClose, onUpdate, currentStatus, orderNumber }: StatusUpdateModalProps) {
-  const [selectedStatus, setSelectedStatus] = useState(currentStatus);
-
+export function StatusUpdateModal({ isOpen, onClose, onUpdate, currentStatus, orderNumber, fulfillmentType = 'DELIVERY' }: StatusUpdateModalProps) {
   if (!isOpen) return null;
 
-  const statuses = [
-    { value: 'RECEIVED', label: 'Received', color: 'bg-yellow-100 text-yellow-700 border-yellow-300' },
-    { value: 'PICKING', label: 'Picking', color: 'bg-blue-100 text-blue-700 border-blue-300' },
-    { value: 'PACKED', label: 'Packed', color: 'bg-cyan-100 text-cyan-700 border-cyan-300' },
-    { value: 'OUT_FOR_DELIVERY', label: 'Out for Delivery', color: 'bg-purple-100 text-purple-700 border-purple-300' },
-    { value: 'DELIVERED', label: 'Delivered', color: 'bg-green-100 text-green-700 border-green-300' },
-    { value: 'READY_FOR_COLLECTION', label: 'Ready for Collection', color: 'bg-indigo-100 text-indigo-700 border-indigo-300' },
-    { value: 'COLLECTED', label: 'Collected', color: 'bg-teal-100 text-teal-700 border-teal-300' },
-    { value: 'CANCELLED', label: 'Cancelled', color: 'bg-red-100 text-red-700 border-red-300' },
-    { value: 'REFUNDED', label: 'Refunded', color: 'bg-orange-100 text-orange-700 border-orange-300' },
-  ];
+  // Define valid status transitions based on current status and fulfillment type
+  const getNextStatuses = () => {
+    const transitions: Record<string, Array<{ value: string; label: string; description: string; color: string; icon: string }>> = {
+      RECEIVED: [
+        { value: 'PICKING', label: 'Start Picking', description: 'Begin picking items from inventory', color: 'bg-orange-500 hover:bg-orange-600', icon: '📦' },
+        { value: 'CANCELLED', label: 'Cancel Order', description: 'Cancel this order', color: 'bg-red-500 hover:bg-red-600', icon: '❌' },
+      ],
+      PICKING: [
+        { value: 'OUT_FOR_DELIVERY', label: 'Mark as Ready', description: fulfillmentType === 'DELIVERY' ? 'Ready for delivery' : 'Ready for pick up', color: 'bg-purple-500 hover:bg-purple-600', icon: '✅' },
+        { value: 'CANCELLED', label: 'Cancel Order', description: 'Cancel this order', color: 'bg-red-500 hover:bg-red-600', icon: '❌' },
+      ],
+      OUT_FOR_DELIVERY: fulfillmentType === 'DELIVERY' ? [
+        { value: 'DELIVERED', label: 'Mark Delivered', description: 'Order has been delivered', color: 'bg-green-500 hover:bg-green-600', icon: '🚚' },
+        { value: 'CANCELLED', label: 'Cancel Order', description: 'Cancel this order', color: 'bg-red-500 hover:bg-red-600', icon: '❌' },
+      ] : [
+        { value: 'COLLECTED', label: 'Mark Collected', description: 'Customer picked up order', color: 'bg-green-500 hover:bg-green-600', icon: '🏪' },
+        { value: 'CANCELLED', label: 'Cancel Order', description: 'Cancel this order', color: 'bg-red-500 hover:bg-red-600', icon: '❌' },
+      ],
+      DELIVERED: [
+        { value: 'REFUNDED', label: 'Issue Refund', description: 'Refund this order', color: 'bg-orange-500 hover:bg-orange-600', icon: '💰' },
+      ],
+      COLLECTED: [
+        { value: 'REFUNDED', label: 'Issue Refund', description: 'Refund this order', color: 'bg-orange-500 hover:bg-orange-600', icon: '💰' },
+      ],
+      CANCELLED: [],
+      REFUNDED: [],
+    };
 
-  const handleUpdate = () => {
-    onUpdate(selectedStatus);
+    return transitions[currentStatus] || [];
+  };
+
+  const nextStatuses = getNextStatuses();
+
+  const handleUpdate = (status: string) => {
+    onUpdate(status);
     onClose();
   };
 
@@ -52,44 +72,48 @@ export function StatusUpdateModal({ isOpen, onClose, onUpdate, currentStatus, or
 
         {/* Content */}
         <div className="p-6">
-          <p className="text-sm text-gray-600 mb-4">Select the new status for this order:</p>
-          <div className="space-y-2">
-            {statuses.map((status) => (
-              <label
-                key={status.value}
-                className={`flex items-center p-4 border-2 rounded-lg cursor-pointer transition ${
-                  selectedStatus === status.value
-                    ? status.color + ' border-current'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="status"
-                  value={status.value}
-                  checked={selectedStatus === status.value}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-4 h-4 text-green-600 focus:ring-green-500"
-                />
-                <span className="ml-3 font-medium">{status.label}</span>
-              </label>
-            ))}
+          {/* Current Status */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm font-semibold text-blue-900">Current Status</p>
+            <p className="text-lg font-bold text-blue-700 mt-1">{currentStatus.replace(/_/g, ' ')}</p>
           </div>
+
+          {nextStatuses.length > 0 ? (
+            <>
+              <p className="text-sm font-semibold text-gray-700 mb-4">Choose next action:</p>
+              <div className="space-y-3">
+                {nextStatuses.map((status) => (
+                  <button
+                    key={status.value}
+                    onClick={() => handleUpdate(status.value)}
+                    className={`w-full text-left p-4 rounded-lg text-white transition-all transform hover:scale-[1.02] ${status.color}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">{status.icon}</span>
+                      <div className="flex-1">
+                        <p className="font-bold text-lg">{status.label}</p>
+                        <p className="text-sm text-white/90 mt-1">{status.description}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500 font-medium">✅ Order is complete</p>
+              <p className="text-sm text-gray-400 mt-2">No further status updates available</p>
+            </div>
+          )}
         </div>
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-6 border-t bg-gray-50">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition font-medium"
+            className="px-6 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition font-medium"
           >
-            Cancel
-          </button>
-          <button
-            onClick={handleUpdate}
-            className="px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition font-medium"
-          >
-            Update Status
+            Close
           </button>
         </div>
       </div>

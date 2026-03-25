@@ -84,7 +84,7 @@ export default function PhoneOrderPage() {
     mutationFn: staffApi.createPhoneOrder,
     onSuccess: (data) => {
       success(`Order created successfully! Order number: ${data.orderNumber}`);
-      setTimeout(() => router.push('/admin/orders'), 1500);
+      setTimeout(() => router.push('/staff/orders'), 1500);
     },
     onError: () => {
       error('Failed to create order. Please try again.');

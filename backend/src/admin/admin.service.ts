@@ -1670,8 +1670,8 @@ export class AdminService {
       throw new NotFoundException('Order not found');
     }
 
-    if (order.payment?.paymentMethod !== 'CASH_ON_DELIVERY') {
-      throw new BadRequestException('Only COD orders can be marked as paid');
+    if (order.payment?.paymentMethod !== 'CASH_ON_DELIVERY' && order.payment?.paymentMethod !== 'PAY_IN_STORE') {
+      throw new BadRequestException('Only COD and Pay in Store orders can be marked as paid');
     }
 
     // Update payment status

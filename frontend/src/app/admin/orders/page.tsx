@@ -396,6 +396,7 @@ export default function AdminOrdersPage() {
             onUpdate={(status) => handleStatusChange(selectedOrder.id, status)}
             currentStatus={selectedOrder.status}
             orderNumber={selectedOrder.orderNumber}
+            fulfillmentType={selectedOrder.fulfillmentType}
           />
         )}
 
