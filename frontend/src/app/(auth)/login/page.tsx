@@ -58,7 +58,7 @@ export default function LoginPage() {
       <h2 className="text-2xl font-bold mb-6">Sign In</h2>
 
       {error && (
-        <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded mb-4">
+        <div className="bg-red-50 border border-red-500 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
@@ -77,7 +77,7 @@ export default function LoginPage() {
             disabled={isLoading}
           />
           {errors.email && (
-            <p className="text-destructive text-sm mt-1">{errors.email.message}</p>
+            <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
           )}
         </div>
 
@@ -94,7 +94,7 @@ export default function LoginPage() {
             disabled={isLoading}
           />
           {errors.password && (
-            <p className="text-destructive text-sm mt-1">{errors.password.message}</p>
+            <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
           )}
         </div>
 

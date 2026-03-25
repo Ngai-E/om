@@ -27,6 +27,9 @@ export const useAuthStore = create<AuthState>()(
         // Clear token from localStorage
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
+          // Clear cart stores on logout
+          localStorage.removeItem('cart-storage');
+          localStorage.removeItem('guest-cart-storage');
         }
         set({ user: null, token: null, isAuthenticated: false });
       },

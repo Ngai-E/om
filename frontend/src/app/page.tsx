@@ -10,15 +10,16 @@ import { useActiveTestimonials } from '@/lib/hooks/use-testimonials';
 import { ProductCard } from '@/components/products/product-card';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useSettingsStore } from '@/lib/store/settings-store';
+import { ProductCardSkeleton, CategoryCardSkeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const { isAuthenticated } = useAuthStore();
   const { settings } = useSettingsStore();
-  const { data: featuredProducts } = useFeaturedProducts();
-  const { data: bestSellers } = useBestSellers(8);
-  const { data: categories } = useCategories();
-  const { data: homepageReviews } = useHomepageReviews();
-  const { data: testimonials } = useActiveTestimonials();
+  const { data: featuredProducts, isLoading: featuredLoading } = useFeaturedProducts();
+  const { data: bestSellers, isLoading: bestSellersLoading } = useBestSellers(8);
+  const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { data: homepageReviews, isLoading: reviewsLoading } = useHomepageReviews();
+  const { data: testimonials, isLoading: testimonialsLoading } = useActiveTestimonials();
   const [showAllCategories, setShowAllCategories] = React.useState(false);
 
   // Default promo banner if not set
@@ -64,7 +65,7 @@ export default function Home() {
               African & Caribbean<br />Groceries in Bolton
             </h1>
             <p className="text-lg md:text-xl mb-8 text-white flex items-center gap-2" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}>
-              Fresh food. Affordable prices. Delivery available 🚚
+              Fresh food. Affordable prices. Delivery available
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/products">
@@ -113,9 +114,12 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {categories
-              ?.slice(0, 4)
-              .map((category, index) => {
+            {categoriesLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <CategoryCardSkeleton key={i} />
+              ))
+            ) : (
+              categories?.slice(0, 4).map((category, index) => {
               const icons = ['', '', '', ''];
               const gradients = [
                 'from-red-50 to-orange-50',
@@ -155,7 +159,8 @@ export default function Home() {
                   </div>
                 </div>
               );
-            })}
+            })
+            )}
           </div>
         </div>
       </section>
@@ -170,44 +175,15 @@ export default function Home() {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-            {featuredProducts?.slice(0, 5).map((product, index) => (
-              <div key={product.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition">
-                <div className="relative">
-                  {index === 0 && (
-                    <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">
-                      Best Seller
-                    </div>
-                  )}
-                  {index === 2 && (
-                    <div className="absolute top-2 left-2 bg-omega-orange text-white px-2 py-1 rounded text-xs font-bold">
-                      Save £5
-                    </div>
-                  )}
-                  <div className="aspect-square bg-gray-100">
-                    {product.images?.[0]?.url ? (
-                      <img src={product.images[0].url} alt={product.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        <Package className="w-12 h-12" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="p-3 text-center">
-                  <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 min-h-[2.5rem]">
-                    {product.name}
-                  </h3>
-                  <p className="text-3xl font-black text-omega-orange mb-2">
-                    £{product.variants?.[0]?.price || '0.00'}
-                  </p>
-                  <Link href={`/products/${product.slug}`}>
-                    <button className="w-full bg-omega-green-dark hover:bg-omega-green text-white py-2 rounded text-sm font-bold transition">
-                      {index < 2 ? 'Shop Bundle' : index === 2 ? 'Add to Cart' : 'Shop Now'}
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            ))}
+            {featuredLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))
+            ) : (
+              featuredProducts?.slice(0, 5).map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -223,9 +199,15 @@ export default function Home() {
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
-              {bestSellers.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+              {bestSellersLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <ProductCardSkeleton key={i} />
+                ))
+              ) : (
+                bestSellers.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              )}
             </div>
           </div>
         </section>

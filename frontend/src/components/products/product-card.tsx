@@ -186,8 +186,6 @@ export function ProductCard({ product }: ProductCardProps) {
           >
             {justAdded ? (
               <Check className="w-4 h-4 inline" />
-            ) : hasVariants ? (
-              'Select Options'
             ) : (
               'Add to Cart'
             )}
