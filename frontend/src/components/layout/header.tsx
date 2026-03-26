@@ -12,6 +12,7 @@ import { useSettingsStore } from '@/lib/store/settings-store';
 import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
 import { promotionsApi } from '@/lib/api/promotions';
+import { useCart } from '@/lib/hooks/use-cart';
 
 export function Header() {
   const router = useRouter();
@@ -20,6 +21,9 @@ export function Header() {
   const { items: guestCartItems } = useGuestCartStore();
   const { items: wishlistItems } = useWishlistStore();
   const { settings } = useSettingsStore();
+  
+  // Fetch cart data when authenticated to ensure count is up to date
+  useCart();
   
   // Calculate total cart count (authenticated or guest)
   const totalCartCount = isAuthenticated ? itemCount : guestCartItems.length;

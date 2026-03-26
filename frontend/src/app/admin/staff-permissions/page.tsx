@@ -32,24 +32,6 @@ const AVAILABLE_PERMISSIONS = [
     description: 'View and manage customer information',
     icon: '👥',
   },
-  {
-    id: 'reports',
-    label: 'Reports & Analytics',
-    description: 'Access reports and analytics dashboard',
-    icon: '📊',
-  },
-  {
-    id: 'analytics',
-    label: 'Advanced Analytics',
-    description: 'View detailed analytics and insights',
-    icon: '📈',
-  },
-  {
-    id: 'settings',
-    label: 'System Settings',
-    description: 'Access system configuration settings',
-    icon: '⚙️',
-  },
 ];
 
 export default function StaffPermissionsPage() {

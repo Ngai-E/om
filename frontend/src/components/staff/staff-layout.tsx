@@ -48,16 +48,9 @@ export function StaffLayout({ children }: StaffLayoutProps) {
     {
       label: 'Customers',
       icon: Users,
-      href: '/admin/customers',
-      active: pathname?.startsWith('/admin/customers'),
+      href: '/admin/users',
+      active: pathname?.startsWith('/admin/users'),
       permission: 'customers',
-    },
-    {
-      label: 'Reports',
-      icon: FileText,
-      href: '/admin/reports',
-      active: pathname?.startsWith('/admin/reports'),
-      permission: 'reports',
     },
   ];
 

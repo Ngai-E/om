@@ -2203,7 +2203,7 @@ export class AdminService {
     const staff = await this.getStaffById(id);
 
     // Validate permissions
-    const validPermissions = ['inventory', 'reports', 'customers', 'analytics', 'settings'];
+    const validPermissions = ['inventory', 'customers'];
     const invalidPerms = permissions.filter(p => !validPermissions.includes(p));
     
     if (invalidPerms.length > 0) {
