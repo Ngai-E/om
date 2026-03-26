@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { Search, ShoppingCart, User, Menu, X, LogOut, Heart, Home, Tag, Phone } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, LogOut, Heart, Home, Tag, Phone, ChevronDown, Grid } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useGuestCartStore } from '@/lib/store/guest-cart-store';
@@ -16,6 +16,7 @@ import { useCart } from '@/lib/hooks/use-cart';
 
 export function Header() {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isAuthenticated, clearAuth } = useAuthStore();
   const { itemCount } = useCartStore();
   const { items: guestCartItems } = useGuestCartStore();
@@ -30,7 +31,9 @@ export function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [showCategoriesDropdown, setShowCategoriesDropdown] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const categoriesRef = useRef<HTMLDivElement>(null);
 
   // Check for active promotions
   const { data: activePromotions } = useQuery({
@@ -41,6 +44,20 @@ export function Header() {
   
   const hasActivePromotions = activePromotions && activePromotions.length > 0;
 
+  // Fetch quick categories
+  const { data: quickCategories = [] } = useQuery({
+    queryKey: ['quick-categories'],
+    queryFn: () => productsApi.getQuickCategories(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Fetch all categories for dropdown
+  const { data: allCategories = [] } = useQuery({
+    queryKey: ['all-categories'],
+    queryFn: () => productsApi.getCategories(),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   // Autocomplete query
   const { data: autocompleteResults } = useQuery({
     queryKey: ['autocomplete', searchQuery],
@@ -48,11 +65,14 @@ export function Header() {
     enabled: searchQuery.length >= 2,
   });
 
-  // Close autocomplete when clicking outside
+  // Close autocomplete and categories dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowAutocomplete(false);
+      }
+      if (categoriesRef.current && !categoriesRef.current.contains(event.target as Node)) {
+        setShowCategoriesDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -176,30 +196,43 @@ export function Header() {
             </div>
           </form>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-2">
-            <Link
-              href="/products"
-              className="flex items-center gap-1 px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"
-            >
-              <Home className="w-4 h-4" />
-              Shop
-            </Link>
             {hasActivePromotions && (
               <Link
                 href="/promotions"
-                className="flex items-center gap-1 px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"
+                className="relative flex items-center gap-1 px-4 py-2 bg-gradient-to-r from-orange-400 to-pink-400 text-white rounded-lg hover:from-orange-500 hover:to-pink-500 transition-all duration-500 font-bold text-sm shadow-md animate-gradient-slow"
               >
                 <Tag className="w-4 h-4" />
-                Promotions
+                Deals
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-black animate-bounce">
+                  HOT
+                </span>
               </Link>
             )}
             
-            <Link href="/cart" className="relative p-2 hover:bg-gray-100 rounded-lg transition">
-              <ShoppingCart className="w-6 h-6 text-gray-700" />
+            <Link
+              href="/cart"
+              className="relative flex items-center gap-1 px-3 py-2 text-gray-700 hover:text-omega-green-dark transition"
+              title="Cart"
+            >
+              <ShoppingCart className="w-5 h-5" />
               {totalCartCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-omega-orange text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
                   {totalCartCount}
+                </span>
+              )}
+            </Link>
+
+            <Link
+              href="/wishlist"
+              className="relative flex items-center gap-1 px-3 py-2 text-gray-700 hover:text-omega-green-dark transition"
+              title="Wishlist"
+            >
+              <Heart className="w-5 h-5" />
+              {wishlistItems.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                  {wishlistItems.length}
                 </span>
               )}
             </Link>
@@ -278,11 +311,74 @@ export function Header() {
         </form>
       </div>
 
+      {/* Secondary Navigation - Categories (Desktop Only) - Hide on products page */}
+      {!pathname?.startsWith('/products') && (
+        <div className="hidden md:block border-t border-gray-200 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-1 py-2">
+            {/* All Categories Dropdown */}
+            <div className="relative" ref={categoriesRef}>
+              <button
+                onClick={() => setShowCategoriesDropdown(!showCategoriesDropdown)}
+                className="flex items-center gap-2 px-4 py-2 bg-omega-green-dark text-white rounded-lg hover:bg-omega-green transition font-medium"
+              >
+                <Grid className="w-4 h-4" />
+                All Categories
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              
+              {showCategoriesDropdown && (
+                <div className="absolute top-full left-0 mt-1 w-72 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto">
+                  {allCategories.map((category: any) => (
+                    <Link
+                      key={category.id}
+                      href={`/products?category=${category.slug}`}
+                      onClick={() => setShowCategoriesDropdown(false)}
+                      className="block px-4 py-3 hover:bg-gray-50 transition border-b last:border-b-0"
+                    >
+                      <div className="font-medium text-gray-900">{category.name}</div>
+                      {category.description && (
+                        <div className="text-xs text-gray-500 mt-1 line-clamp-1">
+                          {category.description}
+                        </div>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Quick Categories */}
+            <div className="flex items-center gap-1 ml-2">
+              {quickCategories.map((category: any) => (
+                <Link
+                  key={category.id}
+                  href={`/products?category=${category.slug}`}
+                  className="px-4 py-2 text-gray-700 hover:text-omega-green-dark hover:bg-white rounded-lg transition font-medium text-sm"
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+
+            {/* Shop All Link */}
+            <Link
+              href="/products"
+              className="ml-auto px-4 py-2 text-omega-green-dark hover:text-omega-green font-medium text-sm flex items-center gap-1"
+            >
+              <Home className="w-4 h-4" />
+              Shop All
+            </Link>
+          </div>
+        </div>
+      </div>
+      )}
+
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t bg-white">
-          <nav className="container mx-auto px-4 py-4 space-y-2">
+        <div className="md:hidden fixed inset-x-0 top-[180px] bottom-0 bg-white border-t shadow-xl z-40 overflow-y-auto">
+          <nav className="container mx-auto px-4 py-4 pb-20 space-y-2">
             <Link
               href="/products"
               onClick={() => setMobileMenuOpen(false)}
@@ -290,34 +386,45 @@ export function Header() {
             >
               All Products
             </Link>
-            <Link
-              href="/products?category=grains-staples"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 hover:bg-gray-100 rounded-lg"
-            >
-              Grains & Staples
-            </Link>
-            <Link
-              href="/products?category=spices-seasonings"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 hover:bg-gray-100 rounded-lg"
-            >
-              Spices & Seasonings
-            </Link>
-            <Link
-              href="/products?category=beverages"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block px-4 py-3 hover:bg-gray-100 rounded-lg"
-            >
-              Beverages
-            </Link>
+
+            {/* Categories */}
+            {quickCategories.length > 0 && (
+              <>
+                <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase border-t mt-2 pt-4">
+                  Categories
+                </div>
+                {quickCategories.slice(0, 5).map((category: any) => (
+                  <Link
+                    key={category.id}
+                    href={`/products?category=${category.slug}`}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-4 py-2.5 hover:bg-gray-100 rounded-lg font-medium"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+                <Link
+                  href="/products"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block px-4 py-2.5 text-omega-green-dark hover:bg-gray-100 rounded-lg font-medium"
+                >
+                  View All Categories →
+                </Link>
+              </>
+            )}
             {hasActivePromotions && (
               <Link
                 href="/promotions"
                 onClick={() => setMobileMenuOpen(false)}
-                className="block px-4 py-3 hover:bg-gray-100 rounded-lg text-primary font-medium"
+                className="relative block px-4 py-3 bg-gradient-to-r from-orange-400 to-pink-400 text-white rounded-lg hover:from-orange-500 hover:to-pink-500 transition-all duration-500 font-bold shadow-md animate-gradient-slow"
               >
-                🎉 Promotions
+                <div className="flex items-center gap-2">
+                  <Tag className="w-4 h-4" />
+                  Deals
+                  <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full font-black animate-bounce">
+                    HOT
+                  </span>
+                </div>
               </Link>
             )}
             

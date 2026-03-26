@@ -1,8 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { promotionsApi, Promotion } from '@/lib/api/promotions';
-import { Tag, Calendar, Gift, TrendingUp, Info } from 'lucide-react';
+import { Tag, Calendar, Gift, TrendingUp, Info, Clock, Flame, Zap } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -11,6 +12,47 @@ export default function PromotionsPage() {
     queryKey: ['active-promotions'],
     queryFn: () => promotionsApi.getActivePromotions(),
   });
+
+  const [timeLeft, setTimeLeft] = useState<{ [key: string]: string }>({});
+
+  // Calculate time remaining for each promotion
+  useEffect(() => {
+    if (!promotions) return;
+
+    const interval = setInterval(() => {
+      const newTimeLeft: { [key: string]: string } = {};
+      
+      promotions.forEach((promo) => {
+        if (promo.endAt) {
+          const now = new Date().getTime();
+          const end = new Date(promo.endAt).getTime();
+          const diff = end - now;
+
+          if (diff > 0) {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (days > 0) {
+              newTimeLeft[promo.id] = `${days}d ${hours}h left`;
+            } else if (hours > 0) {
+              newTimeLeft[promo.id] = `${hours}h ${minutes}m left`;
+            } else {
+              newTimeLeft[promo.id] = `${minutes}m left`;
+            }
+          } else {
+            newTimeLeft[promo.id] = 'Expired';
+          }
+        }
+      });
+      
+      setTimeLeft(newTimeLeft);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [promotions]);
+
+  const featuredPromo = promotions?.[0];
 
   const getDiscountDisplay = (promo: Promotion) => {
     if (promo.discountType === 'PERCENT') {
@@ -52,18 +94,78 @@ export default function PromotionsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-primary/80 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto text-center">
-            <Gift className="w-16 h-16 mx-auto mb-4" />
-            <h1 className="text-4xl font-bold mb-4">Active Promotions</h1>
-            <p className="text-lg opacity-90">
-              Save more on your orders with our exclusive offers and discounts
-            </p>
+      {/* Featured Deal */}
+      {featuredPromo && (
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-5xl mx-auto bg-gradient-to-r from-orange-500 to-pink-500 rounded-2xl shadow-2xl overflow-hidden">
+            <div className="grid md:grid-cols-2 gap-0">
+              {/* Left Side - Image */}
+              <div className="relative h-64 md:h-auto">
+                {featuredPromo.imageUrl ? (
+                  <Image
+                    src={featuredPromo.imageUrl}
+                    alt={featuredPromo.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="h-full bg-gradient-to-br from-white/20 to-white/5 flex items-center justify-center">
+                    <Flame className="w-24 h-24 text-white/50" />
+                  </div>
+                )}
+                <div className="absolute top-4 left-4 bg-red-600 text-white px-4 py-2 rounded-full font-black text-sm flex items-center gap-2 animate-bounce">
+                  <Zap className="w-4 h-4" />
+                  FEATURED DEAL
+                </div>
+              </div>
+
+              {/* Right Side - Details */}
+              <div className="p-8 text-white">
+                <div className="mb-4">
+                  <div className="inline-block bg-white text-orange-600 px-6 py-3 rounded-full text-3xl font-black mb-4">
+                    {getDiscountDisplay(featuredPromo)}
+                  </div>
+                </div>
+                
+                <h2 className="text-3xl font-black mb-3">{featuredPromo.name}</h2>
+                
+                {featuredPromo.description && (
+                  <p className="text-white/90 mb-4 text-lg">
+                    {featuredPromo.description}
+                  </p>
+                )}
+
+                {featuredPromo.code && (
+                  <div className="bg-white/20 backdrop-blur-sm border-2 border-white/40 rounded-lg p-4 mb-4">
+                    <div className="text-xs font-semibold mb-1">USE CODE</div>
+                    <div className="text-2xl font-mono font-black">
+                      {featuredPromo.code}
+                    </div>
+                  </div>
+                )}
+
+                {/* Urgency Timer */}
+                {timeLeft[featuredPromo.id] && timeLeft[featuredPromo.id] !== 'Expired' && (
+                  <div className="bg-red-600 rounded-lg p-4 mb-4 flex items-center gap-3">
+                    <Clock className="w-6 h-6 animate-pulse" />
+                    <div>
+                      <div className="text-xs font-semibold">⚡ HURRY! ENDS IN</div>
+                      <div className="text-2xl font-black">{timeLeft[featuredPromo.id]}</div>
+                    </div>
+                  </div>
+                )}
+
+                <Link
+                  href={`/promotions/${featuredPromo.id}`}
+                  className="inline-block bg-white text-orange-600 px-8 py-4 rounded-lg font-black text-lg hover:bg-orange-50 transition shadow-lg"
+                >
+                  Claim This Deal →
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Content */}
       <div className="container mx-auto px-4 py-12">
@@ -87,8 +189,12 @@ export default function PromotionsPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            {promotions.map((promo) => (
+          <div>
+            {promotions.length > 1 && (
+              <h2 className="text-2xl font-bold mb-6 text-center">More Great Deals</h2>
+            )}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+            {promotions.slice(1).map((promo) => (
               <Link
                 key={promo.id}
                 href={`/promotions/${promo.id}`}
@@ -144,6 +250,19 @@ export default function PromotionsPage() {
                     <span>{getEligibilityText(promo)}</span>
                   </div>
 
+                  {/* Urgency - Time Left */}
+                  {timeLeft[promo.id] && timeLeft[promo.id] !== 'Expired' && (
+                    <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg p-3 mb-3 shadow-md">
+                      <div className="flex items-center gap-2 font-bold">
+                        <Clock className="w-5 h-5 animate-pulse" />
+                        <div>
+                          <div className="text-xs">⚡ ENDS IN</div>
+                          <div className="text-lg font-black">{timeLeft[promo.id]}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Expiry */}
                   {promo.endAt && (
                     <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -161,6 +280,7 @@ export default function PromotionsPage() {
                 </div>
               </Link>
             ))}
+          </div>
           </div>
         )}
 

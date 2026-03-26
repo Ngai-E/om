@@ -278,7 +278,7 @@ function ProductsContent() {
             )}
 
             {productsLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {[...Array(10)].map((_, i) => (
                   <div key={i} className="bg-card border rounded-lg overflow-hidden animate-pulse">
                     <div className="aspect-square bg-muted" />
@@ -290,7 +290,7 @@ function ProductsContent() {
                 ))}
               </div>
             ) : filteredAndSortedProducts.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {filteredAndSortedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

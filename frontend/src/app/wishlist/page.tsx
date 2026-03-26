@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,6 +11,8 @@ import { useGuestCartStore } from '@/lib/store/guest-cart-store';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
+import { VariantSelectorModal } from '@/components/products/variant-selector-modal';
+import type { Product } from '@/types';
 
 export default function WishlistPage() {
   const router = useRouter();
@@ -18,6 +21,8 @@ export default function WishlistPage() {
   const addToCart = useAddToCart();
   const guestCart = useGuestCartStore();
   const { setItemCount } = useCartStore();
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showVariantModal, setShowVariantModal] = useState(false);
 
   // Fetch wishlist products by their IDs
   const { data: wishlistProducts, isLoading } = useQuery({
@@ -38,30 +43,45 @@ export default function WishlistPage() {
 
   const wishlistProductsList = wishlistProducts || [];
 
-  const handleAddToCart = async (productId: string, productSlug: string, hasVariants: boolean) => {
-    // If product has variants, redirect to product page for selection
+  const handleAddToCart = async (product: Product) => {
+    const hasVariants = product.variants && product.variants.length > 0;
+    
+    // If product has variants, open variant selector modal
     if (hasVariants) {
-      router.push(`/products/${productSlug}`);
+      setSelectedProduct(product);
+      setShowVariantModal(true);
       return;
     }
 
     if (!isAuthenticated) {
       // Add to guest cart (localStorage)
-      guestCart.addItem(productId, 1);
+      guestCart.addItem(product.id, 1);
       setItemCount(guestCart.getItemCount());
       return;
     }
 
     try {
-      await addToCart.mutateAsync({ productId, quantity: 1 });
+      await addToCart.mutateAsync({ productId: product.id, quantity: 1 });
     } catch (error) {
       console.error('Failed to add to cart:', error);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <>
+      {selectedProduct && (
+        <VariantSelectorModal
+          product={selectedProduct}
+          isOpen={showVariantModal}
+          onClose={() => {
+            setShowVariantModal(false);
+            setSelectedProduct(null);
+          }}
+        />
+      )}
+      
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-black text-[#036637] mb-2">
@@ -197,7 +217,7 @@ export default function WishlistPage() {
                   {/* Actions */}
                   <div className="px-4 pb-4 flex gap-2">
                     <button
-                      onClick={() => handleAddToCart(product.id, product.slug, !!hasVariants)}
+                      onClick={() => handleAddToCart(product)}
                       disabled={!inStock || addToCart.isPending || (hasVariants && !inStock)}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                       title={hasVariants ? 'Select variant' : 'Add to cart'}
@@ -220,5 +240,6 @@ export default function WishlistPage() {
         )}
       </div>
     </div>
+    </>
   );
 }
