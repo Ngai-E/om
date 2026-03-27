@@ -108,6 +108,16 @@ export default function EditPromotionPage() {
     // Clean up data before submission
     const submitData: any = { ...formData };
     
+    // Convert string values to numbers for numeric fields
+    if (submitData.minSubtotal) submitData.minSubtotal = parseFloat(submitData.minSubtotal);
+    if (submitData.discountValue) submitData.discountValue = parseFloat(submitData.discountValue);
+    if (submitData.maxDiscountPerOrder) submitData.maxDiscountPerOrder = parseFloat(submitData.maxDiscountPerOrder);
+    if (submitData.maxTotalDiscountAmount) submitData.maxTotalDiscountAmount = parseFloat(submitData.maxTotalDiscountAmount);
+    if (submitData.maxTotalRedemptions) submitData.maxTotalRedemptions = parseInt(submitData.maxTotalRedemptions);
+    if (submitData.maxRedemptionsPerUser) submitData.maxRedemptionsPerUser = parseInt(submitData.maxRedemptionsPerUser);
+    if (submitData.priority) submitData.priority = parseInt(submitData.priority);
+    if (submitData.usageCount !== undefined) submitData.usageCount = parseInt(submitData.usageCount) || 0;
+    
     // Remove empty optional fields
     if (!submitData.description) delete submitData.description;
     if (!submitData.imageUrl) delete submitData.imageUrl;

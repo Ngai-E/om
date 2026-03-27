@@ -345,6 +345,7 @@ export class AdminService {
     if (dto.tags) updateData.tags = dto.tags;
     if (dto.isFeatured !== undefined) updateData.isFeatured = dto.isFeatured;
     if (dto.isActive !== undefined) updateData.isActive = dto.isActive;
+    if (dto.orderCount !== undefined) updateData.orderCount = dto.orderCount;
     if (categoryId !== product.categoryId) updateData.categoryId = categoryId;
     if (dto.categoryId) updateData.categoryId = dto.categoryId;
 

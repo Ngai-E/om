@@ -239,6 +239,7 @@ export default function EditProductPage() {
         tags: data.tags ? data.tags.split(',').map((t: string) => t.trim()) : [],
         isActive: data.isActive,
         isFeatured: data.isFeatured,
+        orderCount: parseInt(data.orderCount || '0'),
       };
 
       // Always send images array - empty array will delete all images

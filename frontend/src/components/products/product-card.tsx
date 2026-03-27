@@ -20,22 +20,36 @@ interface ProductCardProps {
   product: Product;
 }
 
+// Format large numbers: 10000 → 10k, 1000000 → 1M
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 10000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return num.toLocaleString();
+}
+
 function SocialProofBadge({ product }: { product: Product }) {
   const { data: settings } = useQuery({
     queryKey: ['settings'],
     queryFn: () => settingsApi.getSettings(),
   });
 
-  // Check global setting to show badges
-  if (!settings?.show_product_order_badges || !product.orderCount) return null;
+  // Check global setting to show badges and that count is greater than 0
+  if (!settings?.show_product_order_badges || !product.orderCount || product.orderCount === 0) return null;
 
   const inflation = settings?.product_orders_inflation || 1.0;
   const displayCount = Math.floor(product.orderCount * inflation);
 
+  // Don't show if calculated count is 0
+  if (displayCount === 0) return null;
+
   return (
-    <div className="mb-2 inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
+    <div className="absolute bottom-2 left-2 z-10 inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
       <TrendingUp className="w-3 h-3" />
-      <span>{displayCount.toLocaleString()} orders</span>
+      <span>{formatNumber(displayCount)} orders</span>
     </div>
   );
 }
@@ -117,6 +131,8 @@ export function ProductCard({ product }: ProductCardProps) {
       <Link href={`/products/${product.slug}`}>
         <div className="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition">
         <div className="aspect-square bg-gray-100 relative">
+          {/* Social Proof Badge - positioned absolutely on image */}
+          <SocialProofBadge product={product} />
           {product.images && product.images.length > 0 ? (
             <img
               src={product.images[0].url}
@@ -175,9 +191,6 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <div className="p-3 text-center">
-          {/* Social Proof - Order Count */}
-          <SocialProofBadge product={product} />
-          
           <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 min-h-[2.5rem]">
             {product.name}
           </h3>

@@ -81,6 +81,12 @@ export class CreateProductDto {
   @IsBoolean()
   isActive?: boolean;
 
+  @ApiProperty({ example: 0, required: false, description: 'Order count for social proof (can be manually updated)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  orderCount?: number;
+
   @ApiProperty({ type: [ImageDto], required: false })
   @IsOptional()
   @IsArray()

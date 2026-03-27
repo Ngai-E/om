@@ -129,15 +129,14 @@ export class CreatePromotionDto {
   @Max(100)
   priority: number;
 
-  // Social Proof
-  @ApiProperty({ example: false, required: false })
-  @IsOptional()
-  @IsBoolean()
-  isFeatured?: boolean;
-
-  @ApiProperty({ example: 0, required: false })
+  @ApiProperty({ example: 0, required: false, description: 'Usage count for social proof (can be manually updated)' })
   @IsOptional()
   @IsNumber()
   @Min(0)
   usageCount?: number;
+
+  @ApiProperty({ example: false, required: false, description: 'Mark as featured deal for promotions page' })
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
 }

@@ -326,6 +326,8 @@ export class PromotionsService {
         ...(dto.applyToDeliveryFee !== undefined && { applyToDeliveryFee: dto.applyToDeliveryFee }),
         ...(dto.allowStacking !== undefined && { allowStacking: dto.allowStacking }),
         ...(dto.priority !== undefined && { priority: dto.priority }),
+        ...(dto.usageCount !== undefined && { usageCount: dto.usageCount }),
+        ...(dto.isFeatured !== undefined && { isFeatured: dto.isFeatured }),
       },
     });
 

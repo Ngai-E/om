@@ -8,6 +8,17 @@ import { Tag, Calendar, Gift, TrendingUp, Info, Clock, Flame, Zap, Users } from 
 import Link from 'next/link';
 import Image from 'next/image';
 
+// Format large numbers: 10000 → 10k, 1000000 → 1M
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 10000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return num.toLocaleString();
+}
+
 export default function PromotionsPage() {
   const { data: promotions, isLoading } = useQuery({
     queryKey: ['active-promotions'],
@@ -130,6 +141,14 @@ export default function PromotionsPage() {
 
               {/* Right Side - Details */}
               <div className="p-8 text-white">
+                {/* Social Proof - Usage Count */}
+                {settings?.show_promotion_usage_badges && featuredPromo.usageCount !== undefined && featuredPromo.usageCount > 0 && Math.floor(featuredPromo.usageCount * (settings.promotion_usage_inflation || 1.0)) > 0 && (
+                  <div className="mb-4 inline-flex items-center gap-1 bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-bold shadow-md">
+                    <Users className="w-4 h-4" />
+                    <span>{formatNumber(Math.floor(featuredPromo.usageCount * (settings.promotion_usage_inflation || 1.0)))} people used this</span>
+                  </div>
+                )}
+                
                 <div className="mb-4">
                   <div className="inline-block bg-white text-orange-600 px-6 py-3 rounded-full text-3xl font-black mb-4">
                     {getDiscountDisplay(featuredPromo)}
@@ -227,10 +246,10 @@ export default function PromotionsPage() {
 
                 <div className="p-6">
                   {/* Social Proof - Usage Count */}
-                  {settings?.show_promotion_usage_badges && promo.usageCount !== undefined && (
+                  {settings?.show_promotion_usage_badges && promo.usageCount !== undefined && promo.usageCount > 0 && Math.floor(promo.usageCount * (settings.promotion_usage_inflation || 1.0)) > 0 && (
                     <div className="mb-3 inline-flex items-center gap-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md">
                       <Users className="w-4 h-4" />
-                      <span>{Math.floor(promo.usageCount * (settings.promotion_usage_inflation || 1.0)).toLocaleString()} people used this</span>
+                      <span>{formatNumber(Math.floor(promo.usageCount * (settings.promotion_usage_inflation || 1.0)))} people used this</span>
                     </div>
                   )}
                   
