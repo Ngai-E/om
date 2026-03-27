@@ -25,6 +25,10 @@ export class SettingsController {
     const imageUploadService = await this.settingsService.getImageUploadService();
     const imgbbApiKey = await this.settingsService.getImgbbApiKey();
     const cloudinaryConfig = await this.settingsService.getCloudinaryConfig();
+    const productOrdersInflation = await this.settingsService.getProductOrdersInflation();
+    const promotionUsageInflation = await this.settingsService.getPromotionUsageInflation();
+    const showProductOrderBadges = await this.settingsService.getShowProductOrderBadges();
+    const showPromotionUsageBadges = await this.settingsService.getShowPromotionUsageBadges();
     
     // Return only public settings (hide sensitive API keys/secrets)
     return {
@@ -40,6 +44,10 @@ export class SettingsController {
       image_upload_service: imageUploadService,
       imgbb_api_key: imgbbApiKey ? '***' : null, // Hide actual key
       cloudinary_configured: !!cloudinaryConfig, // Just show if configured
+      product_orders_inflation: productOrdersInflation,
+      promotion_usage_inflation: promotionUsageInflation,
+      show_product_order_badges: showProductOrderBadges,
+      show_promotion_usage_badges: showPromotionUsageBadges,
     };
   }
 
@@ -236,6 +244,74 @@ export class SettingsController {
       service,
       imgbbApiKey,
       cloudinaryConfig,
+    };
+  }
+
+  @Put('social-proof/product-inflation')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update product orders inflation multiplier (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Product orders inflation updated' })
+  async updateProductOrdersInflation(
+    @Body() body: { multiplier: number },
+    @CurrentUser() user: any,
+  ) {
+    await this.settingsService.setProductOrdersInflation(body.multiplier, user.id);
+    return {
+      message: 'Product orders inflation multiplier updated successfully',
+      product_orders_inflation: body.multiplier,
+    };
+  }
+
+  @Put('social-proof/promotion-inflation')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update promotion usage inflation multiplier (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Promotion usage inflation updated' })
+  async updatePromotionUsageInflation(
+    @Body() body: { multiplier: number },
+    @CurrentUser() user: any,
+  ) {
+    await this.settingsService.setPromotionUsageInflation(body.multiplier, user.id);
+    return {
+      message: 'Promotion usage inflation multiplier updated successfully',
+      promotion_usage_inflation: body.multiplier,
+    };
+  }
+
+  @Put('social-proof/show-product-badges')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle product order badges globally (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Product order badges setting updated' })
+  async updateShowProductOrderBadges(
+    @Body() body: { enabled: boolean },
+    @CurrentUser() user: any,
+  ) {
+    await this.settingsService.setShowProductOrderBadges(body.enabled, user.id);
+    return {
+      message: `Product order badges ${body.enabled ? 'enabled' : 'disabled'} globally`,
+      show_product_order_badges: body.enabled,
+    };
+  }
+
+  @Put('social-proof/show-promotion-badges')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle promotion usage badges globally (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Promotion usage badges setting updated' })
+  async updateShowPromotionUsageBadges(
+    @Body() body: { enabled: boolean },
+    @CurrentUser() user: any,
+  ) {
+    await this.settingsService.setShowPromotionUsageBadges(body.enabled, user.id);
+    return {
+      message: `Promotion usage badges ${body.enabled ? 'enabled' : 'disabled'} globally`,
+      show_promotion_usage_badges: body.enabled,
     };
   }
 

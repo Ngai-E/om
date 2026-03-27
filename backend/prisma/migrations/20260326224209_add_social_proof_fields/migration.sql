@@ -1,0 +1,10 @@
+-- AlterTable
+ALTER TABLE "products" ADD COLUMN     "showSoldCount" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "soldCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "soldCountInflation" DOUBLE PRECISION NOT NULL DEFAULT 1.0;
+
+-- AlterTable
+ALTER TABLE "promotions" ADD COLUMN     "isFeatured" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "showUsageCount" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "usageCount" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "usageCountInflation" DOUBLE PRECISION NOT NULL DEFAULT 1.0;

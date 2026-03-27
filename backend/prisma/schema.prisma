@@ -168,6 +168,10 @@ model Product {
   isFeatured      Boolean        @default(false)
   isBestSeller    Boolean        @default(false)
   tags            String[] // e.g., ["vegan", "gluten-free", "halal"]
+  
+  // Social Proof - Trust Building
+  orderCount      Int     @default(0) // Can be manually updated or auto-calculated
+  
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   deletedAt       DateTime? // Soft delete
@@ -588,6 +592,10 @@ model Promotion {
   // Stacking
   allowStacking      Boolean @default(false)
   priority           Int     @default(0) // Higher = evaluated first
+  
+  // Social Proof - Trust Building
+  usageCount      Int     @default(0) // Can be manually updated or auto-calculated
+  isFeatured      Boolean @default(false) // Mark as featured deal for promotions page
   
   // Metadata
   createdBy   String

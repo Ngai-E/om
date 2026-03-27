@@ -98,6 +98,63 @@ export class SettingsService {
     };
   }
 
+  // Social Proof Settings
+  async getProductOrdersInflation(): Promise<number> {
+    const value = await this.getSetting('product_orders_inflation');
+    return value ? parseFloat(value) : 1.0;
+  }
+
+  async setProductOrdersInflation(multiplier: number, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'product_orders_inflation',
+      multiplier.toString(),
+      'Global multiplier for product order count display (e.g., 2.5 = show 2.5x actual orders)',
+      updatedBy,
+    );
+  }
+
+  async getPromotionUsageInflation(): Promise<number> {
+    const value = await this.getSetting('promotion_usage_inflation');
+    return value ? parseFloat(value) : 1.0;
+  }
+
+  async setPromotionUsageInflation(multiplier: number, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'promotion_usage_inflation',
+      multiplier.toString(),
+      'Global multiplier for promotion usage count display (e.g., 3.0 = show 3x actual usage)',
+      updatedBy,
+    );
+  }
+
+  async getShowProductOrderBadges(): Promise<boolean> {
+    const value = await this.getSetting('show_product_order_badges');
+    return value === 'true';
+  }
+
+  async setShowProductOrderBadges(enabled: boolean, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'show_product_order_badges',
+      enabled.toString(),
+      'Global toggle to show/hide order count badges on all product cards',
+      updatedBy,
+    );
+  }
+
+  async getShowPromotionUsageBadges(): Promise<boolean> {
+    const value = await this.getSetting('show_promotion_usage_badges');
+    return value === 'true';
+  }
+
+  async setShowPromotionUsageBadges(enabled: boolean, updatedBy?: string): Promise<void> {
+    await this.setSetting(
+      'show_promotion_usage_badges',
+      enabled.toString(),
+      'Global toggle to show/hide usage count badges on all promotion cards',
+      updatedBy,
+    );
+  }
+
   async setPaymentMethodsConfig(config: PaymentMethodsConfig, updatedBy?: string): Promise<void> {
     await this.setSetting(
       'payment_methods_config',

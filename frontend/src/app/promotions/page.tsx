@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { promotionsApi, Promotion } from '@/lib/api/promotions';
-import { Tag, Calendar, Gift, TrendingUp, Info, Clock, Flame, Zap } from 'lucide-react';
+import { settingsApi } from '@/lib/api/settings';
+import { Tag, Calendar, Gift, TrendingUp, Info, Clock, Flame, Zap, Users } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -11,6 +12,11 @@ export default function PromotionsPage() {
   const { data: promotions, isLoading } = useQuery({
     queryKey: ['active-promotions'],
     queryFn: () => promotionsApi.getActivePromotions(),
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsApi.getSettings(),
   });
 
   const [timeLeft, setTimeLeft] = useState<{ [key: string]: string }>({});
@@ -52,7 +58,10 @@ export default function PromotionsPage() {
     return () => clearInterval(interval);
   }, [promotions]);
 
-  const featuredPromo = promotions?.[0];
+  // Get featured promotion from backend flag, fallback to first promo
+  const featuredPromo = promotions?.find(p => p.isFeatured) || promotions?.[0];
+  // Filter out featured promo from other deals
+  const otherPromos = promotions?.filter(p => p.id !== featuredPromo?.id) || [];
 
   const getDiscountDisplay = (promo: Promotion) => {
     if (promo.discountType === 'PERCENT') {
@@ -190,11 +199,11 @@ export default function PromotionsPage() {
           </div>
         ) : (
           <div>
-            {promotions.length > 1 && (
+            {otherPromos.length > 0 && (
               <h2 className="text-2xl font-bold mb-6 text-center">More Great Deals</h2>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
-            {promotions.slice(1).map((promo) => (
+            {otherPromos.map((promo) => (
               <Link
                 key={promo.id}
                 href={`/promotions/${promo.id}`}
@@ -217,6 +226,14 @@ export default function PromotionsPage() {
                 )}
 
                 <div className="p-6">
+                  {/* Social Proof - Usage Count */}
+                  {settings?.show_promotion_usage_badges && promo.usageCount !== undefined && (
+                    <div className="mb-3 inline-flex items-center gap-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-md">
+                      <Users className="w-4 h-4" />
+                      <span>{Math.floor(promo.usageCount * (settings.promotion_usage_inflation || 1.0)).toLocaleString()} people used this</span>
+                    </div>
+                  )}
+                  
                   {/* Discount Badge */}
                   <div className="inline-block bg-primary text-white px-4 py-2 rounded-full text-lg font-bold mb-3">
                     {getDiscountDisplay(promo)}

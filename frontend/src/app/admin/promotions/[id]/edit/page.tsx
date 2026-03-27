@@ -62,6 +62,9 @@ export default function EditPromotionPage() {
         applyToDeliveryFee: promotion.applyToDeliveryFee,
         allowStacking: promotion.allowStacking,
         priority: promotion.priority,
+        // Social Proof
+        isFeatured: promotion.isFeatured || false,
+        usageCount: promotion.usageCount || 0,
       });
     }
   }, [promotion]);
@@ -549,6 +552,48 @@ export default function EditPromotionPage() {
               />
               <span className="text-sm font-medium text-gray-700">Allow Guest Checkout</span>
             </label>
+          </div>
+        </div>
+
+        {/* Social Proof - Trust Building */}
+        <div className="bg-white rounded-lg border p-6">
+          <h2 className="text-lg font-semibold mb-4">Social Proof & Featured Deal</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Manually set or update the usage count for this promotion. This can be auto-calculated from actual redemptions or manually adjusted.
+            The display multiplier and global show/hide toggle are configured in Settings.
+          </p>
+          
+          <div className="space-y-4">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={formData.isFeatured}
+                onChange={(e) => updateField('isFeatured', e.target.checked)}
+                className="w-4 h-4 text-primary rounded focus:ring-2 focus:ring-primary"
+              />
+              <span className="text-sm font-medium text-gray-700">⭐ Mark as Featured Deal (shows in hero section)</span>
+            </label>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Usage Count
+              </label>
+              <input
+                type="number"
+                value={formData.usageCount || 0}
+                onChange={(e) => updateField('usageCount', parseInt(e.target.value) || 0)}
+                min="0"
+                placeholder="0"
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">Number of times this promotion was used (can be manually updated)</p>
+            </div>
+            
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                ℹ️ <strong>Note:</strong> The display multiplier and global show/hide toggle are configured in <strong>Settings → Social Proof</strong>.
+              </p>
+            </div>
           </div>
         </div>
 

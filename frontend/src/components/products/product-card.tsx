@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ShoppingCart, Check, Heart } from 'lucide-react';
+import { ShoppingCart, Check, Heart, TrendingUp } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { settingsApi } from '@/lib/api/settings';
 import type { Product } from '@/types';
 import { useAddToCart } from '@/lib/hooks/use-cart';
 import { useAuthStore } from '@/lib/store/auth-store';
@@ -16,6 +18,26 @@ import { VariantSelectorModal } from './variant-selector-modal';
 
 interface ProductCardProps {
   product: Product;
+}
+
+function SocialProofBadge({ product }: { product: Product }) {
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsApi.getSettings(),
+  });
+
+  // Check global setting to show badges
+  if (!settings?.show_product_order_badges || !product.orderCount) return null;
+
+  const inflation = settings?.product_orders_inflation || 1.0;
+  const displayCount = Math.floor(product.orderCount * inflation);
+
+  return (
+    <div className="mb-2 inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
+      <TrendingUp className="w-3 h-3" />
+      <span>{displayCount.toLocaleString()} orders</span>
+    </div>
+  );
 }
 
 export function ProductCard({ product }: ProductCardProps) {
@@ -153,6 +175,9 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <div className="p-3 text-center">
+          {/* Social Proof - Order Count */}
+          <SocialProofBadge product={product} />
+          
           <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 min-h-[2.5rem]">
             {product.name}
           </h3>

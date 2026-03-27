@@ -24,6 +24,9 @@ export interface Promotion {
   applyToDeliveryFee: boolean;
   allowStacking: boolean;
   priority: number;
+  // Social Proof
+  isFeatured?: boolean;
+  usageCount?: number; // Can be manually updated or auto-calculated
   createdAt: string;
   updatedAt: string;
   stats?: {
@@ -58,6 +61,9 @@ export interface CreatePromotionDto {
   applyToDeliveryFee: boolean;
   allowStacking: boolean;
   priority: number;
+  // Social Proof
+  isFeatured?: boolean;
+  usageCount?: number;
 }
 
 export const promotionsApi = {

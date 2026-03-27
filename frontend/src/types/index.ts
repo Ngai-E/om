@@ -35,6 +35,8 @@ export interface Product {
   images: ProductImage[];
   inventory?: Inventory;
   variants?: ProductVariant[];
+  // Social Proof
+  orderCount?: number; // Can be manually updated or auto-calculated
   createdAt: string;
   updatedAt: string;
 }

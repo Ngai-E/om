@@ -32,6 +32,8 @@ const productSchema = z.object({
   trackInventory: z.boolean().default(true),
   quantity: z.string().optional(),
   lowStockThreshold: z.string().optional(),
+  // Social Proof
+  orderCount: z.string().optional(),
 });
 
 export default function EditProductPage() {
@@ -87,6 +89,8 @@ export default function EditProductPage() {
         trackInventory: product.inventory?.isTracked || false,
         quantity: product.inventory?.quantity?.toString() || '',
         lowStockThreshold: product.inventory?.lowStockThreshold?.toString() || '',
+        // Social Proof
+        orderCount: product.orderCount?.toString() || '0',
       });
     }
   }, [product, reset]);
@@ -563,6 +567,36 @@ export default function EditProductPage() {
                 <input {...register('isFeatured')} type="checkbox" className="w-4 h-4" />
                 <span className="text-sm font-medium">Featured</span>
               </label>
+            </div>
+          </div>
+
+          {/* Social Proof - Trust Building */}
+          <div className="bg-card border rounded-lg p-6">
+            <h2 className="font-bold text-lg mb-4">Social Proof (Order Count)</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Manually set or update the order count for this product. This can be auto-calculated from actual orders or manually adjusted.
+              The display multiplier and global show/hide toggle are configured in Settings.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Order Count</label>
+                <input
+                  {...register('orderCount')}
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Number of orders for this product (can be manually updated)
+                </p>
+              </div>
+              
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  ℹ️ <strong>Note:</strong> The display multiplier and global show/hide toggle are configured in <strong>Settings → Social Proof</strong>.
+                </p>
+              </div>
             </div>
           </div>
 

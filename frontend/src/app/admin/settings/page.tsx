@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { AdminLayout } from '@/components/admin/admin-layout';
-import { Settings, Store, Bell, CreditCard, Users, Shield, Mail, ShoppingCart, Database } from 'lucide-react';
+import { Settings, Store, Bell, CreditCard, Users, Shield, Mail, ShoppingCart, Database, TrendingUp } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
@@ -198,6 +198,7 @@ export default function SettingsPage() {
     { id: 'checkout', label: 'Checkout', icon: ShoppingCart },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'payments', label: 'Payments', icon: CreditCard },
+    { id: 'social-proof', label: 'Social Proof', icon: TrendingUp },
     { id: 'users', label: 'User Roles', icon: Users },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'system', label: 'System', icon: Database },
@@ -711,6 +712,163 @@ export default function SettingsPage() {
 
         {/* Payments */}
         {activeTab === 'payments' && <PaymentsTab />}
+
+        {/* Social Proof */}
+        {activeTab === 'social-proof' && (
+          <div className="space-y-6">
+            <div className="bg-white border rounded-lg p-6">
+              <h2 className="text-lg font-bold mb-4">Social Proof Configuration</h2>
+              <p className="text-sm text-gray-600 mb-6">
+                Configure global settings for social proof badges displayed on product and promotion cards.
+                These settings apply to all products and promotions across the site.
+              </p>
+
+              {/* Product Order Badges */}
+              <div className="space-y-6">
+                <div className="border-b pb-6">
+                  <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
+                    <ShoppingCart className="w-5 h-5 text-green-600" />
+                    Product Order Badges
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="font-medium text-sm">Show Order Count Badges</label>
+                        <p className="text-xs text-gray-500">Display "X orders" badges on all product cards globally</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const newValue = !systemSettings?.show_product_order_badges;
+                          apiClient.put('/settings/social-proof/show-product-badges', { enabled: newValue })
+                            .then(() => {
+                              queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+                              success(`Product order badges ${newValue ? 'enabled' : 'disabled'} globally`);
+                            })
+                            .catch(() => error('Failed to update setting'));
+                        }}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                          systemSettings?.show_product_order_badges ? 'bg-green-600' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                            systemSettings?.show_product_order_badges ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Order Count Inflation Multiplier</label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="0.1"
+                        value={systemSettings?.product_orders_inflation || 1.0}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 1.0;
+                          apiClient.put('/settings/social-proof/product-inflation', { multiplier: value })
+                            .then(() => {
+                              queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+                              success('Product inflation multiplier updated');
+                            })
+                            .catch(() => error('Failed to update multiplier'));
+                        }}
+                        className="w-full max-w-xs px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Multiply actual order count for display (e.g., 2.5 = show 2.5× actual orders)
+                      </p>
+                      {systemSettings?.product_orders_inflation && systemSettings.product_orders_inflation > 1 && (
+                        <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded text-xs text-green-800">
+                          Example: 100 actual orders → {Math.floor(100 * systemSettings.product_orders_inflation).toLocaleString()} displayed orders
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Promotion Usage Badges */}
+                <div>
+                  <h3 className="text-md font-semibold mb-4 flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-purple-600" />
+                    Promotion Usage Badges
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <label className="font-medium text-sm">Show Usage Count Badges</label>
+                        <p className="text-xs text-gray-500">Display "X people used this" badges on all promotion cards globally</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const newValue = !systemSettings?.show_promotion_usage_badges;
+                          apiClient.put('/settings/social-proof/show-promotion-badges', { enabled: newValue })
+                            .then(() => {
+                              queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+                              success(`Promotion usage badges ${newValue ? 'enabled' : 'disabled'} globally`);
+                            })
+                            .catch(() => error('Failed to update setting'));
+                        }}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                          systemSettings?.show_promotion_usage_badges ? 'bg-purple-600' : 'bg-gray-200'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                            systemSettings?.show_promotion_usage_badges ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Usage Count Inflation Multiplier</label>
+                      <input
+                        type="number"
+                        min="1"
+                        step="0.1"
+                        value={systemSettings?.promotion_usage_inflation || 1.0}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 1.0;
+                          apiClient.put('/settings/social-proof/promotion-inflation', { multiplier: value })
+                            .then(() => {
+                              queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+                              success('Promotion inflation multiplier updated');
+                            })
+                            .catch(() => error('Failed to update multiplier'));
+                        }}
+                        className="w-full max-w-xs px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Multiply actual usage count for display (e.g., 3.0 = show 3× actual usage)
+                      </p>
+                      {systemSettings?.promotion_usage_inflation && systemSettings.promotion_usage_inflation > 1 && (
+                        <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded text-xs text-purple-800">
+                          Example: 500 actual uses → {Math.floor(500 * systemSettings.promotion_usage_inflation).toLocaleString()} displayed uses
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>ℹ️ How it works:</strong>
+                </p>
+                <ul className="text-xs text-blue-700 mt-2 space-y-1 ml-4 list-disc">
+                  <li>Order/usage counts can be manually set per product/promotion in their edit pages</li>
+                  <li>The inflation multiplier applies globally to all displayed counts</li>
+                  <li>The show/hide toggle controls visibility across the entire site</li>
+                  <li>Changes take effect immediately on the frontend</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* User Roles */}
         {activeTab === 'users' && (

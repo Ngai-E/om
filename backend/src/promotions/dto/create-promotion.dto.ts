@@ -128,4 +128,16 @@ export class CreatePromotionDto {
   @Min(0)
   @Max(100)
   priority: number;
+
+  // Social Proof
+  @ApiProperty({ example: false, required: false })
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
+
+  @ApiProperty({ example: 0, required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  usageCount?: number;
 }
