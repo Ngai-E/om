@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, ShoppingCart, Trash2 } from 'lucide-react';
+import { Heart, ShoppingCart, Trash2, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useWishlistStore } from '@/lib/store/wishlist-store';
@@ -13,6 +13,18 @@ import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
 import { VariantSelectorModal } from '@/components/products/variant-selector-modal';
 import type { Product } from '@/types';
+import { settingsApi } from '@/lib/api/settings';
+
+// Format large numbers: 10000 → 10k, 1000000 → 1M
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 10000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return num.toLocaleString();
+}
 
 export default function WishlistPage() {
   const router = useRouter();
@@ -23,6 +35,12 @@ export default function WishlistPage() {
   const { setItemCount } = useCartStore();
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showVariantModal, setShowVariantModal] = useState(false);
+
+  // Fetch settings for social proof
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsApi.getSettings(),
+  });
 
   // Fetch wishlist products by their IDs
   const { data: wishlistProducts, isLoading } = useQuery({
@@ -177,6 +195,18 @@ export default function WishlistPage() {
                       >
                         <Heart className="w-5 h-5 fill-red-500 text-red-500" />
                       </button>
+
+                      {/* Social Proof Badge */}
+                      {settings?.show_product_order_badges && product.orderCount && product.orderCount > 0 && (() => {
+                        const inflation = settings?.product_orders_inflation || 1.0;
+                        const displayCount = Math.floor(product.orderCount * inflation);
+                        return displayCount > 0 ? (
+                          <div className="absolute bottom-2 left-2 z-10 inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
+                            <TrendingUp className="w-3 h-3" />
+                            <span>{formatNumber(displayCount)} orders</span>
+                          </div>
+                        ) : null;
+                      })()}
 
                       {!inStock && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
