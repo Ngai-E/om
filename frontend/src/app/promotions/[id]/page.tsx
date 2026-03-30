@@ -4,9 +4,21 @@ import { useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { promotionsApi } from '@/lib/api/promotions';
-import { ArrowLeft, Calendar, Tag, Info, ShoppingCart, Check } from 'lucide-react';
+import { settingsApi } from '@/lib/api/settings';
+import { ArrowLeft, Calendar, Tag, Info, ShoppingCart, Check, Users } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
+
+// Format large numbers: 10000 → 10k, 1000000 → 1M
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 10000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return num.toLocaleString();
+}
 
 export default function PromotionDetailPage() {
   const params = useParams();
@@ -16,6 +28,12 @@ export default function PromotionDetailPage() {
   const { data: promotion, isLoading, error } = useQuery({
     queryKey: ['promotion-public', promotionId],
     queryFn: () => promotionsApi.getPromotionById(promotionId),
+  });
+
+  // Fetch settings for social proof
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsApi.getSettings(),
   });
 
   if (isLoading) {
@@ -118,6 +136,18 @@ export default function PromotionDetailPage() {
 
             {/* Details */}
             <div className="p-8">
+              {/* Social Proof Badge */}
+              {settings?.show_promotion_usage_badges && promotion.usageCount !== undefined && promotion.usageCount > 0 && (() => {
+                const inflation = settings?.promotion_usage_inflation || 1.0;
+                const displayCount = Math.floor(promotion.usageCount * inflation);
+                return displayCount > 0 ? (
+                  <div className="mb-4 inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-md">
+                    <Users className="w-4 h-4" />
+                    <span>{formatNumber(displayCount)} people used this</span>
+                  </div>
+                ) : null;
+              })()}
+              
               {/* Discount Badge */}
               <div className="inline-block bg-primary text-white px-6 py-3 rounded-full text-2xl font-bold mb-4">
                 {getDiscountDisplay()}

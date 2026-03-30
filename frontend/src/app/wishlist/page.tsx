@@ -12,8 +12,8 @@ import { useCartStore } from '@/lib/store/cart-store';
 import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
 import { VariantSelectorModal } from '@/components/products/variant-selector-modal';
-import type { Product } from '@/types';
 import { settingsApi } from '@/lib/api/settings';
+import type { Product } from '@/types';
 
 // Format large numbers: 10000 → 10k, 1000000 → 1M
 function formatNumber(num: number): string {
@@ -173,6 +173,18 @@ export default function WishlistPage() {
                   <Link href={`/products/${product.slug}`} className="block">
                     {/* Image */}
                     <div className="aspect-square bg-muted relative overflow-hidden">
+                      {/* Social Proof Badge */}
+                      {settings?.show_product_order_badges && product.orderCount && product.orderCount > 0 && (() => {
+                        const inflation = settings?.product_orders_inflation || 1.0;
+                        const displayCount = Math.floor(product.orderCount * inflation);
+                        return displayCount > 0 ? (
+                          <div className="absolute bottom-2 left-2 z-10 inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
+                            <TrendingUp className="w-3 h-3" />
+                            <span>{formatNumber(displayCount)} orders</span>
+                          </div>
+                        ) : null;
+                      })()}
+                      
                       {product.images && product.images[0] ? (
                         <img
                           src={product.images[0].url}
@@ -195,18 +207,6 @@ export default function WishlistPage() {
                       >
                         <Heart className="w-5 h-5 fill-red-500 text-red-500" />
                       </button>
-
-                      {/* Social Proof Badge */}
-                      {settings?.show_product_order_badges && product.orderCount && product.orderCount > 0 && (() => {
-                        const inflation = settings?.product_orders_inflation || 1.0;
-                        const displayCount = Math.floor(product.orderCount * inflation);
-                        return displayCount > 0 ? (
-                          <div className="absolute bottom-2 left-2 z-10 inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md">
-                            <TrendingUp className="w-3 h-3" />
-                            <span>{formatNumber(displayCount)} orders</span>
-                          </div>
-                        ) : null;
-                      })()}
 
                       {!inStock && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">

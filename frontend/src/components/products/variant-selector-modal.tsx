@@ -1,13 +1,26 @@
 'use client';
 
 import { useState } from 'react';
-import { X, ShoppingCart, Check, Package } from 'lucide-react';
+import { X, ShoppingCart, Check, Package, TrendingUp } from 'lucide-react';
 import type { Product } from '@/types';
 import { useAddToCart } from '@/lib/hooks/use-cart';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useGuestCartStore } from '@/lib/store/guest-cart-store';
 import { useCartStore } from '@/lib/store/cart-store';
+import { useQuery } from '@tanstack/react-query';
+import { settingsApi } from '@/lib/api/settings';
 import Link from 'next/link';
+
+// Format large numbers: 10000 → 10k, 1000000 → 1M
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 10000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return num.toLocaleString();
+}
 
 interface VariantSelectorModalProps {
   product: Product;
@@ -26,6 +39,12 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
   const addToCart = useAddToCart();
   const guestCart = useGuestCartStore();
   const { setItemCount } = useCartStore();
+
+  // Fetch settings for social proof
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsApi.getSettings(),
+  });
 
   const selectedVariant = product.variants?.find(v => v.id === selectedVariantId);
 
@@ -80,7 +99,7 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
         <div className="p-6">
           {/* Product Info */}
           <div className="flex gap-4 mb-6">
-            <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+            <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0 relative">
               {product.images?.[0]?.url ? (
                 <img
                   src={product.images[0].url}
@@ -92,6 +111,17 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
                   <Package className="w-8 h-8 text-gray-400" />
                 </div>
               )}
+              {/* Social Proof Badge */}
+              {settings?.show_product_order_badges && product.orderCount && product.orderCount > 0 && (() => {
+                const inflation = settings?.product_orders_inflation || 1.0;
+                const displayCount = Math.floor(product.orderCount * inflation);
+                return displayCount > 0 ? (
+                  <div className="absolute bottom-1 left-1 inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-md">
+                    <TrendingUp className="w-2.5 h-2.5" />
+                    <span>{formatNumber(displayCount)}</span>
+                  </div>
+                ) : null;
+              })()}
             </div>
             <div className="flex-1">
               <h3 className="font-bold text-lg text-gray-900 mb-1">{product.name}</h3>

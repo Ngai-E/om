@@ -3,13 +3,26 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, ShoppingCart, Plus, Minus } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Plus, Minus, TrendingUp } from 'lucide-react';
 import { useProductBySlug } from '@/lib/hooks/use-products';
 import { useAddToCart } from '@/lib/hooks/use-cart';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useGuestCartStore } from '@/lib/store/guest-cart-store';
 import { useCartStore } from '@/lib/store/cart-store';
 import { ProductReviews } from '@/components/products/product-reviews';
+import { useQuery } from '@tanstack/react-query';
+import { settingsApi } from '@/lib/api/settings';
+
+// Format large numbers: 10000 → 10k, 1000000 → 1M
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 10000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return num.toLocaleString();
+}
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -24,6 +37,12 @@ export default function ProductDetailPage() {
   const addToCart = useAddToCart();
   const guestCart = useGuestCartStore();
   const { setItemCount } = useCartStore();
+
+  // Fetch settings for social proof
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsApi.getSettings(),
+  });
 
   // Get selected variant or use product defaults
   const selectedVariant = product?.variants?.find(v => v.id === selectedVariantId);
@@ -128,7 +147,7 @@ export default function ProductDetailPage() {
 
         <div className="grid md:grid-cols-2 gap-8">
           {/* Product Image */}
-          <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+          <div className="aspect-square bg-muted rounded-lg overflow-hidden relative">
             {product.images && product.images.length > 0 ? (
               <img
                 src={product.images[0].url}
@@ -140,6 +159,17 @@ export default function ProductDetailPage() {
                 No Image Available
               </div>
             )}
+            {/* Social Proof Badge */}
+            {settings?.show_product_order_badges && product.orderCount && product.orderCount > 0 && (() => {
+              const inflation = settings?.product_orders_inflation || 1.0;
+              const displayCount = Math.floor(product.orderCount * inflation);
+              return displayCount > 0 ? (
+                <div className="absolute bottom-4 left-4 inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
+                  <TrendingUp className="w-4 h-4" />
+                  <span>{formatNumber(displayCount)} orders</span>
+                </div>
+              ) : null;
+            })()}
           </div>
 
           {/* Product Info */}

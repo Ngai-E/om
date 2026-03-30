@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Trash2, Plus, Minus, ShoppingBag, X } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, X, TrendingUp } from 'lucide-react';
 import { useCart, useUpdateCartItem, useRemoveCartItem } from '@/lib/hooks/use-cart';
 import { useRouter } from 'next/navigation';
 import { cartApi } from '@/lib/api/cart';
@@ -11,6 +11,18 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useGuestCartStore } from '@/lib/store/guest-cart-store';
 import { Product } from '@/types';
+import { useQuery } from '@tanstack/react-query';
+
+// Format large numbers: 10000 → 10k, 1000000 → 1M
+function formatNumber(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 10000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+  }
+  return num.toLocaleString();
+}
 
 export default function CartPage() {
   const router = useRouter();
@@ -30,6 +42,12 @@ export default function CartPage() {
   const [showClearModal, setShowClearModal] = useState(false);
   
   const [isClearing, setIsClearing] = useState(false);
+
+  // Fetch settings for social proof
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: () => settingsApi.getSettings(),
+  });
 
   // Check if any cart items have products with variants but no variant selected
   const hasInvalidVariants = cart?.items.some(item => {
@@ -221,11 +239,24 @@ export default function CartPage() {
                 <div key={item.product.id} className="bg-card border rounded-lg p-4">
                   <div className="flex gap-4">
                     {item.product.images && item.product.images.length > 0 && (
-                      <img
-                        src={item.product.images[0].url}
-                        alt={item.product.images[0].altText || item.product.name}
-                        className="w-24 h-24 object-cover rounded"
-                      />
+                      <div className="relative">
+                        <img
+                          src={item.product.images[0].url}
+                          alt={item.product.images[0].altText || item.product.name}
+                          className="w-24 h-24 object-cover rounded"
+                        />
+                        {/* Social Proof Badge */}
+                        {settings?.show_product_order_badges && item.product.orderCount && item.product.orderCount > 0 && (() => {
+                          const inflation = settings?.product_orders_inflation || 1.0;
+                          const displayCount = Math.floor(item.product.orderCount * inflation);
+                          return displayCount > 0 ? (
+                            <div className="absolute bottom-1 left-1 inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-md">
+                              <TrendingUp className="w-2.5 h-2.5" />
+                              <span>{formatNumber(displayCount)}</span>
+                            </div>
+                          ) : null;
+                        })()}
+                      </div>
                     )}
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg">{item.product.name}</h3>
@@ -361,7 +392,7 @@ export default function CartPage() {
                 {/* Product Image */}
                 <Link
                   href={`/products/${item.product.slug}`}
-                  className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0"
+                  className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0 relative"
                 >
                   {item.product.images && item.product.images.length > 0 ? (
                     <img
@@ -374,6 +405,17 @@ export default function CartPage() {
                       No Image
                     </div>
                   )}
+                  {/* Social Proof Badge */}
+                  {settings?.show_product_order_badges && item.product.orderCount && item.product.orderCount > 0 && (() => {
+                    const inflation = settings?.product_orders_inflation || 1.0;
+                    const displayCount = Math.floor(item.product.orderCount * inflation);
+                    return displayCount > 0 ? (
+                      <div className="absolute bottom-1 left-1 inline-flex items-center gap-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-2 py-0.5 rounded-full text-xs font-bold shadow-md">
+                        <TrendingUp className="w-2.5 h-2.5" />
+                        <span>{formatNumber(displayCount)}</span>
+                      </div>
+                    ) : null;
+                  })()}
                 </Link>
 
                 {/* Product Info */}
