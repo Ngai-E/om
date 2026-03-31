@@ -6,12 +6,14 @@ import {
   Param,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
 import { DeliveryService } from './delivery.service';
 import { CheckPostcodeDto, GetDeliverySlotsDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Request } from 'express';
 
 @ApiTags('delivery')
 @Controller('delivery')
@@ -21,15 +23,15 @@ export class DeliveryController {
   @Post('check-postcode')
   @ApiOperation({ summary: 'Check if postcode is in delivery zone' })
   @ApiResponse({ status: 200, description: 'Postcode checked' })
-  async checkPostcode(@Body() dto: CheckPostcodeDto) {
-    return this.deliveryService.checkPostcode(dto);
+  async checkPostcode(@Req() req: Request, @Body() dto: CheckPostcodeDto) {
+    return this.deliveryService.checkPostcode(dto, (req as any).tenantId);
   }
 
   @Get('zones')
   @ApiOperation({ summary: 'Get all delivery zones' })
   @ApiResponse({ status: 200, description: 'Zones retrieved' })
-  async getZones() {
-    return this.deliveryService.getZones();
+  async getZones(@Req() req: Request) {
+    return this.deliveryService.getZones((req as any).tenantId);
   }
 
   @Get('slots')
@@ -37,8 +39,8 @@ export class DeliveryController {
   @ApiQuery({ name: 'zoneId', required: false, description: 'Filter by zone ID' })
   @ApiQuery({ name: 'date', required: false, description: 'Filter by date (YYYY-MM-DD)' })
   @ApiResponse({ status: 200, description: 'Slots retrieved' })
-  async getAvailableSlots(@Query() dto: GetDeliverySlotsDto) {
-    return this.deliveryService.getAvailableSlots(dto);
+  async getAvailableSlots(@Req() req: Request, @Query() dto: GetDeliverySlotsDto) {
+    return this.deliveryService.getAvailableSlots(dto, (req as any).tenantId);
   }
 
   @Get('slots/:id')
@@ -70,9 +72,10 @@ export class DeliveryController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Validate cart against delivery zone requirements' })
   async validateCart(
+    @Req() req: Request,
     @CurrentUser() user: any,
     @Query('addressId') addressId?: string,
   ) {
-    return this.deliveryService.validateCartForDelivery(user.id, addressId);
+    return this.deliveryService.validateCartForDelivery(user.id, addressId, (req as any).tenantId);
   }
 }

@@ -11,6 +11,7 @@ export class ProductsService {
   ) {}
 
   async findAll(filters?: {
+    tenantId?: string;
     categoryId?: string;
     categorySlug?: string;
     search?: string;
@@ -26,6 +27,10 @@ export class ProductsService {
       deletedAt: null,
     };
 
+    if (filters?.tenantId) {
+      where.tenantId = filters.tenantId;
+    }
+
     // Only filter by isActive if not explicitly including inactive products
     if (!filters?.includeInactive) {
       where.isActive = true;
@@ -37,8 +42,8 @@ export class ProductsService {
     } else if (filters?.categorySlug) {
       // Find category by slug first
       console.log('[ProductsService] Looking up category by slug:', filters.categorySlug);
-      const category = await this.prisma.category.findUnique({
-        where: { slug: filters.categorySlug },
+      const category = await this.prisma.category.findFirst({
+        where: { slug: filters.categorySlug, ...(filters?.tenantId && { tenantId: filters.tenantId }) },
       });
       if (category) {
         console.log('[ProductsService] Found category:', category.name, 'ID:', category.id);
@@ -144,8 +149,8 @@ export class ProductsService {
     return result;
   }
 
-  async findOne(id: string) {
-    const cacheKey = `product:${id}`;
+  async findOne(id: string, tenantId?: string) {
+    const cacheKey = `product:${tenantId || 'global'}:${id}`;
     
     // Try to get from cache
     try {
@@ -187,8 +192,8 @@ export class ProductsService {
     return product;
   }
 
-  async findBySlug(slug: string) {
-    const cacheKey = `product:slug:${slug}`;
+  async findBySlug(slug: string, tenantId?: string) {
+    const cacheKey = `product:${tenantId || 'global'}:slug:${slug}`;
     
     // Try to get from cache
     try {
@@ -203,8 +208,8 @@ export class ProductsService {
 
     console.log('💾 Cache MISS:', cacheKey);
 
-    const product = await this.prisma.product.findUnique({
-      where: { slug },
+    const product = await this.prisma.product.findFirst({
+      where: { slug, ...(tenantId && { tenantId }) },
       include: {
         category: true,
         images: { orderBy: { sortOrder: 'asc' } },
@@ -247,12 +252,13 @@ export class ProductsService {
     }
   }
 
-  async getFeatured(limit = 8) {
+  async getFeatured(limit = 8, tenantId?: string) {
     return this.prisma.product.findMany({
       where: {
         isFeatured: true,
         isActive: true,
         deletedAt: null,
+        ...(tenantId && { tenantId }),
       },
       include: {
         category: true,
@@ -268,12 +274,13 @@ export class ProductsService {
     });
   }
 
-  async getBestSellers(limit = 8) {
+  async getBestSellers(limit = 8, tenantId?: string) {
     return this.prisma.product.findMany({
       where: {
         isBestSeller: true,
         isActive: true,
         deletedAt: null,
+        ...(tenantId && { tenantId }),
       },
       include: {
         category: true,
@@ -289,9 +296,9 @@ export class ProductsService {
     });
   }
 
-  async getCategories() {
+  async getCategories(tenantId?: string) {
     return this.prisma.category.findMany({
-      where: { isActive: true },
+      where: { isActive: true, ...(tenantId && { tenantId }) },
       include: {
         children: true,
         _count: {
@@ -302,12 +309,13 @@ export class ProductsService {
     });
   }
 
-  async getQuickCategories() {
+  async getQuickCategories(tenantId?: string) {
     // First try to get categories marked as quick categories
     const quickCategories = await this.prisma.category.findMany({
       where: { 
         isActive: true,
         isQuickCategory: true,
+        ...(tenantId && { tenantId }),
       },
       include: {
         _count: {
@@ -324,7 +332,7 @@ export class ProductsService {
 
     // Otherwise, return top 5 categories by product count
     const topCategories = await this.prisma.category.findMany({
-      where: { isActive: true },
+      where: { isActive: true, ...(tenantId && { tenantId }) },
       include: {
         _count: {
           select: { products: true },

@@ -9,6 +9,7 @@ import {
   UseGuards,
   ParseIntPipe,
   DefaultValuePipe,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Request } from 'express';
 
 @ApiTags('orders')
 @Controller('orders')
@@ -30,8 +32,8 @@ export class OrdersController {
   @ApiResponse({ status: 201, description: 'Order created successfully' })
   @ApiResponse({ status: 400, description: 'Cart is empty or validation failed' })
   @ApiResponse({ status: 404, description: 'Address or delivery slot not found' })
-  async create(@CurrentUser() user: any, @Body() dto: CreateOrderDto) {
-    return this.ordersService.create(user.id, dto);
+  async create(@Req() req: Request, @CurrentUser() user: any, @Body() dto: CreateOrderDto) {
+    return this.ordersService.create(user.id, dto, (req as any).tenantId);
   }
 
   @Get()
@@ -40,11 +42,12 @@ export class OrdersController {
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 10)' })
   @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
   async findAll(
+    @Req() req: Request,
     @CurrentUser() user: any,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
   ) {
-    return this.ordersService.findAll(user.id, page, limit);
+    return this.ordersService.findAll(user.id, page, limit, (req as any).tenantId);
   }
 
   @Get(':id')
@@ -52,8 +55,8 @@ export class OrdersController {
   @ApiParam({ name: 'id', description: 'Order ID' })
   @ApiResponse({ status: 200, description: 'Order found' })
   @ApiResponse({ status: 404, description: 'Order not found' })
-  async findOne(@CurrentUser() user: any, @Param('id') orderId: string) {
-    return this.ordersService.findOne(user.id, orderId);
+  async findOne(@Req() req: Request, @CurrentUser() user: any, @Param('id') orderId: string) {
+    return this.ordersService.findOne(user.id, orderId, (req as any).tenantId);
   }
 
   @Patch(':id/status')
@@ -73,7 +76,7 @@ export class OrdersController {
   @ApiResponse({ status: 200, description: 'Order cancelled' })
   @ApiResponse({ status: 400, description: 'Order cannot be cancelled' })
   @ApiResponse({ status: 404, description: 'Order not found' })
-  async cancel(@CurrentUser() user: any, @Param('id') orderId: string) {
-    return this.ordersService.cancel(user.id, orderId);
+  async cancel(@Req() req: Request, @CurrentUser() user: any, @Param('id') orderId: string) {
+    return this.ordersService.cancel(user.id, orderId, (req as any).tenantId);
   }
 }

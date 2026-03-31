@@ -7,12 +7,14 @@ import {
   Body,
   Param,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { TestimonialsService, CreateTestimonialDto, UpdateTestimonialDto } from './testimonials.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { Request } from 'express';
 
 @ApiTags('testimonials')
 @Controller('testimonials')
@@ -26,8 +28,8 @@ export class TestimonialsController {
   @Get('active')
   @ApiOperation({ summary: 'Get active testimonials for homepage (Public)' })
   @ApiResponse({ status: 200, description: 'Active testimonials retrieved' })
-  async getActiveTestimonials() {
-    return this.testimonialsService.findActive();
+  async getActiveTestimonials(@Req() req: Request) {
+    return this.testimonialsService.findActive((req as any).tenantId);
   }
 
   // ============================================
@@ -40,8 +42,8 @@ export class TestimonialsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create testimonial (Admin/Staff only)' })
   @ApiResponse({ status: 201, description: 'Testimonial created' })
-  async create(@Body() dto: CreateTestimonialDto) {
-    return this.testimonialsService.create(dto);
+  async create(@Req() req: Request, @Body() dto: CreateTestimonialDto) {
+    return this.testimonialsService.create(dto, (req as any).tenantId);
   }
 
   @Get()
@@ -50,8 +52,8 @@ export class TestimonialsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all testimonials (Admin/Staff only)' })
   @ApiResponse({ status: 200, description: 'All testimonials retrieved' })
-  async findAll() {
-    return this.testimonialsService.findAll();
+  async findAll(@Req() req: Request) {
+    return this.testimonialsService.findAll((req as any).tenantId);
   }
 
   @Get(':id')

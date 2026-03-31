@@ -20,17 +20,18 @@ export class AdminService {
   // DASHBOARD & STATS
   // ============================================
 
-  async getBadgeCounts() {
+  async getBadgeCounts(tenantId?: string) {
     // Count pending orders (RECEIVED status - newly placed orders)
     const pendingOrders = await this.prisma.order.count({
       where: {
         status: 'RECEIVED',
+        ...(tenantId && { tenantId }),
       },
     });
 
     // Get variant-aware low stock count
     const products = await this.prisma.product.findMany({
-      where: { isActive: true },
+      where: { isActive: true, ...(tenantId && { tenantId }) },
       include: {
         variants: {
           where: { isActive: true },
@@ -72,10 +73,15 @@ export class AdminService {
     entity?: string,
     action?: string,
     userId?: string,
+    tenantId?: string,
   ) {
     const skip = (page - 1) * limit;
     
     const where: any = {};
+
+    if (tenantId) {
+      where.tenantId = tenantId;
+    }
 
     if (search) {
       where.OR = [
@@ -149,7 +155,7 @@ export class AdminService {
     return product;
   }
 
-  async createProduct(dto: CreateProductDto, userId?: string) {
+  async createProduct(dto: CreateProductDto, userId?: string, tenantId?: string) {
     // Generate slug from name
     const slug = dto.name
       .toLowerCase()
@@ -157,8 +163,8 @@ export class AdminService {
       .replace(/^-|-$/g, '');
 
     // Check if slug already exists
-    const existing = await this.prisma.product.findUnique({
-      where: { slug },
+    const existing = await this.prisma.product.findFirst({
+      where: { slug, ...(tenantId && { tenantId }) },
     });
 
     if (existing) {
@@ -170,7 +176,7 @@ export class AdminService {
     if (!categoryId && dto.category) {
       // Legacy: Find or create category by name
       let category = await this.prisma.category.findFirst({
-        where: { name: dto.category },
+        where: { name: dto.category, ...(tenantId && { tenantId }) },
       });
 
       if (!category) {
@@ -180,15 +186,15 @@ export class AdminService {
           .replace(/^-|-$/g, '');
         
         // Check if slug already exists and append number if needed
-        let slugExists = await this.prisma.category.findUnique({
-          where: { slug: categorySlug },
+        let slugExists = await this.prisma.category.findFirst({
+          where: { slug: categorySlug, ...(tenantId && { tenantId }) },
         });
         
         let counter = 1;
         while (slugExists) {
           categorySlug = `${dto.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${counter}`;
-          slugExists = await this.prisma.category.findUnique({
-            where: { slug: categorySlug },
+          slugExists = await this.prisma.category.findFirst({
+            where: { slug: categorySlug, ...(tenantId && { tenantId }) },
           });
           counter++;
         }
@@ -197,6 +203,7 @@ export class AdminService {
           data: {
             name: dto.category,
             slug: categorySlug,
+            ...(tenantId && { tenantId }),
           },
         });
       }
@@ -211,6 +218,7 @@ export class AdminService {
       data: {
         name: dto.name,
         slug,
+        ...(tenantId && { tenantId }),
         description: dto.description,
         price: dto.price,
         compareAtPrice: dto.compareAtPrice || null,
@@ -265,7 +273,7 @@ export class AdminService {
     return product;
   }
 
-  async updateProduct(productId: string, dto: UpdateProductDto) {
+  async updateProduct(productId: string, dto: UpdateProductDto, tenantId?: string) {
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
     });
@@ -283,8 +291,8 @@ export class AdminService {
         .replace(/^-|-$/g, '');
 
       // Check if new slug conflicts
-      const existing = await this.prisma.product.findUnique({
-        where: { slug },
+      const existing = await this.prisma.product.findFirst({
+        where: { slug, ...(tenantId && { tenantId }) },
       });
 
       if (existing && existing.id !== productId) {
@@ -296,7 +304,7 @@ export class AdminService {
     let categoryId = product.categoryId;
     if (dto.category) {
       let category = await this.prisma.category.findFirst({
-        where: { name: dto.category },
+        where: { name: dto.category, ...(tenantId && { tenantId }) },
       });
 
       if (!category) {
@@ -306,15 +314,15 @@ export class AdminService {
           .replace(/^-|-$/g, '');
         
         // Check if slug already exists and append number if needed
-        let slugExists = await this.prisma.category.findUnique({
-          where: { slug: categorySlug },
+        let slugExists = await this.prisma.category.findFirst({
+          where: { slug: categorySlug, ...(tenantId && { tenantId }) },
         });
         
         let counter = 1;
         while (slugExists) {
           categorySlug = `${dto.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${counter}`;
-          slugExists = await this.prisma.category.findUnique({
-            where: { slug: categorySlug },
+          slugExists = await this.prisma.category.findFirst({
+            where: { slug: categorySlug, ...(tenantId && { tenantId }) },
           });
           counter++;
         }
@@ -323,6 +331,7 @@ export class AdminService {
           data: {
             name: dto.category,
             slug: categorySlug,
+            ...(tenantId && { tenantId }),
           },
         });
       }
@@ -537,8 +546,9 @@ export class AdminService {
   // CATEGORY MANAGEMENT
   // ============================================
 
-  async getAllCategories() {
+  async getAllCategories(tenantId?: string) {
     return this.prisma.category.findMany({
+      where: { ...(tenantId && { tenantId }) },
       include: {
         children: true,
         parent: true,
@@ -569,11 +579,11 @@ export class AdminService {
     return category;
   }
 
-  async createCategory(name: string, description?: string, image?: string, parentId?: string) {
+  async createCategory(name: string, description?: string, image?: string, parentId?: string, tenantId?: string) {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     
-    const existing = await this.prisma.category.findUnique({
-      where: { slug },
+    const existing = await this.prisma.category.findFirst({
+      where: { slug, ...(tenantId && { tenantId }) },
     });
 
     if (existing) {
@@ -587,6 +597,7 @@ export class AdminService {
         description,
         image,
         parentId,
+        ...(tenantId && { tenantId }),
       },
     });
   }
@@ -825,7 +836,7 @@ export class AdminService {
     const slug = baseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     
     // Check if base product exists
-    let product = await this.prisma.product.findUnique({ where: { slug } });
+    let product = await this.prisma.product.findFirst({ where: { slug } });
 
     if (!product) {
       // Create base product
@@ -1072,10 +1083,10 @@ export class AdminService {
     });
   }
 
-  async exportProductsToCSV(includeInactive = false) {
+  async exportProductsToCSV(includeInactive = false, tenantId?: string) {
     // Fetch all products with their relationships
     const products = await this.prisma.product.findMany({
-      where: includeInactive ? {} : { isActive: true },
+      where: { ...(includeInactive ? {} : { isActive: true }), ...(tenantId && { tenantId }) },
       include: {
         category: true,
         images: { orderBy: { sortOrder: 'asc' } },
@@ -1184,9 +1195,9 @@ export class AdminService {
   // ORDER MANAGEMENT
   // ============================================
 
-  async getAllOrders(page = 1, limit = 20, status?: string, isPhoneOrder?: boolean) {
+  async getAllOrders(page = 1, limit = 20, status?: string, isPhoneOrder?: boolean, tenantId?: string) {
     const skip = (page - 1) * limit;
-    const where: any = {};
+    const where: any = { ...(tenantId && { tenantId }) };
 
     if (status) {
       where.status = status;
@@ -1323,7 +1334,7 @@ export class AdminService {
   // USER MANAGEMENT
   // ============================================
 
-  async getAllUsers(page = 1, limit = 20) {
+  async getAllUsers(page = 1, limit = 20, tenantId?: string) {
     const skip = (page - 1) * limit;
 
     const [users, total] = await Promise.all([
@@ -1404,7 +1415,7 @@ export class AdminService {
   // DASHBOARD STATS
   // ============================================
 
-  async getDashboardStats() {
+  async getDashboardStats(tenantId?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -1424,12 +1435,13 @@ export class AdminService {
       deliverySlots,
     ] = await Promise.all([
       // Total orders
-      this.prisma.order.count(),
+      this.prisma.order.count({ where: { ...(tenantId && { tenantId }) } }),
 
       // Total revenue
       this.prisma.order.aggregate({
         _sum: { total: true },
         where: {
+          ...(tenantId && { tenantId }),
           payment: {
             status: 'SUCCEEDED',
           },
@@ -1438,16 +1450,17 @@ export class AdminService {
 
       // Total customers
       this.prisma.user.count({
-        where: { role: 'CUSTOMER' },
+        where: { role: 'CUSTOMER', ...(tenantId && { tenantId }) },
       }),
 
       // Total products
       this.prisma.product.count({
-        where: { isActive: true },
+        where: { isActive: true, ...(tenantId && { tenantId }) },
       }),
 
       // Recent orders (last 10)
       this.prisma.order.findMany({
+        where: { ...(tenantId && { tenantId }) },
         take: 10,
         orderBy: { createdAt: 'desc' },
         include: {
@@ -1474,6 +1487,7 @@ export class AdminService {
           },
           product: {
             isActive: true,
+            ...(tenantId && { tenantId }),
           },
         },
         include: {
@@ -1486,12 +1500,14 @@ export class AdminService {
       // Orders by status
       this.prisma.order.groupBy({
         by: ['status'],
+        where: { ...(tenantId && { tenantId }) },
         _count: true,
       }),
 
       // NEW: Orders created today
       this.prisma.order.count({
         where: {
+          ...(tenantId && { tenantId }),
           createdAt: {
             gte: today,
             lt: tomorrow,
@@ -1502,6 +1518,7 @@ export class AdminService {
       // NEW: Orders with pending payment
       this.prisma.order.count({
         where: {
+          ...(tenantId && { tenantId }),
           payment: {
             status: 'PENDING',
           },
@@ -1512,6 +1529,7 @@ export class AdminService {
       this.prisma.order.aggregate({
         _sum: { total: true },
         where: {
+          ...(tenantId && { tenantId }),
           createdAt: {
             gte: today,
             lt: tomorrow,
@@ -1526,7 +1544,7 @@ export class AdminService {
 
       // NEW: Delivery slots utilization
       this.prisma.deliverySlot.findMany({
-        where: { isActive: true },
+        where: { isActive: true, ...(tenantId && { tenantId }) },
         orderBy: { startTime: 'asc' },
       }),
     ]);
@@ -1593,7 +1611,7 @@ export class AdminService {
     });
   }
 
-  async duplicateProduct(productId: string, nameSuffix: string) {
+  async duplicateProduct(productId: string, nameSuffix: string, tenantId?: string) {
     const sourceProduct = await this.prisma.product.findUnique({
       where: { id: productId },
       include: {
@@ -1616,7 +1634,7 @@ export class AdminService {
     // Ensure unique slug
     let slug = baseSlug;
     let counter = 1;
-    while (await this.prisma.product.findUnique({ where: { slug } })) {
+    while (await this.prisma.product.findFirst({ where: { slug, ...(tenantId && { tenantId }) } })) {
       slug = `${baseSlug}-${counter}`;
       counter++;
     }
@@ -1626,6 +1644,7 @@ export class AdminService {
       data: {
         name: newName,
         slug,
+        ...(tenantId && { tenantId }),
         description: sourceProduct.description,
         price: sourceProduct.price,
         compareAtPrice: sourceProduct.compareAtPrice,
@@ -1814,14 +1833,15 @@ export class AdminService {
   // ============================================
 
   // Delivery Zones
-  async getAllDeliveryZones() {
+  async getAllDeliveryZones(tenantId?: string) {
     const zones = await this.prisma.deliveryZone.findMany({
+      where: { ...(tenantId && { tenantId }) },
       orderBy: { name: 'asc' },
     });
     return zones;
   }
 
-  async createDeliveryZone(data: any) {
+  async createDeliveryZone(data: any, tenantId?: string) {
     const zone = await this.prisma.deliveryZone.create({
       data: {
         name: data.name,
@@ -1830,6 +1850,7 @@ export class AdminService {
         minOrderValue: data.minOrderValue,
         freeDeliveryThreshold: data.freeDeliveryThreshold || null,
         isActive: data.isActive ?? true,
+        ...(tenantId && { tenantId }),
       },
     });
     return zone;
@@ -1858,8 +1879,8 @@ export class AdminService {
   }
 
   // Delivery Slots
-  async getAllDeliverySlots(date?: string) {
-    const where: any = {};
+  async getAllDeliverySlots(date?: string, tenantId?: string) {
+    const where: any = { ...(tenantId && { tenantId }) };
     
     if (date) {
       where.date = new Date(date);
@@ -1892,7 +1913,7 @@ export class AdminService {
     }));
   }
 
-  async createDeliverySlot(data: any) {
+  async createDeliverySlot(data: any, tenantId?: string) {
     const slot = await this.prisma.deliverySlot.create({
       data: {
         date: new Date(data.date),
@@ -1900,6 +1921,7 @@ export class AdminService {
         endTime: data.endTime,
         capacity: parseInt(data.capacity),
         isActive: data.isActive ?? true,
+        ...(tenantId && { tenantId }),
       },
       include: {
         _count: {
@@ -1963,7 +1985,7 @@ export class AdminService {
   // STAFF MANAGEMENT
   // ============================================
 
-  async createStaff(dto: CreateStaffDto, adminId: string) {
+  async createStaff(dto: CreateStaffDto, adminId: string, tenantId?: string) {
     // Check if email already exists
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -1987,6 +2009,7 @@ export class AdminService {
         role: dto.role,
         emailVerified: true, // Staff accounts are pre-verified
         isActive: true,
+        ...(tenantId && { tenantId }),
       },
       select: {
         id: true,
@@ -2018,7 +2041,7 @@ export class AdminService {
     return staff;
   }
 
-  async getAllStaff(page = 1, limit = 50) {
+  async getAllStaff(page = 1, limit = 50, tenantId?: string) {
     const skip = (page - 1) * limit;
 
     const [staff, total] = await Promise.all([
@@ -2027,6 +2050,7 @@ export class AdminService {
           role: {
             in: ['STAFF', 'PICKER', 'DRIVER'],
           },
+          ...(tenantId && { tenantId }),
         },
         select: {
           id: true,
@@ -2048,6 +2072,7 @@ export class AdminService {
           role: {
             in: ['STAFF', 'PICKER', 'DRIVER'],
           },
+          ...(tenantId && { tenantId }),
         },
       }),
     ]);
@@ -2247,10 +2272,10 @@ export class AdminService {
   // INVENTORY STATS
   // ============================================
 
-  async getInventoryStats() {
+  async getInventoryStats(tenantId?: string) {
     // Get all products with their variants
     const products = await this.prisma.product.findMany({
-      where: { isActive: true },
+      where: { isActive: true, ...(tenantId && { tenantId }) },
       include: {
         variants: {
           where: { isActive: true },

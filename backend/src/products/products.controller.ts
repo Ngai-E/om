@@ -1,6 +1,7 @@
-import { Controller, Get, Query, Param, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import { Controller, Get, Query, Param, ParseIntPipe, DefaultValuePipe, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
+import { Request } from 'express';
 
 @ApiTags('products')
 @Controller('products')
@@ -21,6 +22,7 @@ export class ProductsController {
   @ApiQuery({ name: 'includeInactive', required: false, type: Boolean, description: 'Include inactive products (admin only)' })
   @ApiResponse({ status: 200, description: 'Products retrieved successfully' })
   async findAll(
+    @Req() req: Request,
     @Query('categoryId') categoryId?: string,
     @Query('category') categorySlug?: string,
     @Query('search') search?: string,
@@ -33,6 +35,7 @@ export class ProductsController {
     @Query('includeInactive') includeInactive?: boolean,
   ) {
     return this.productsService.findAll({
+      tenantId: (req as any).tenantId,
       categoryId,
       categorySlug,
       search,
@@ -50,30 +53,30 @@ export class ProductsController {
   @ApiOperation({ summary: 'Get featured products' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of products to return (default: 8)' })
   @ApiResponse({ status: 200, description: 'Featured products retrieved successfully' })
-  async getFeatured(@Query('limit', new DefaultValuePipe(8), ParseIntPipe) limit?: number) {
-    return this.productsService.getFeatured(limit);
+  async getFeatured(@Req() req: Request, @Query('limit', new DefaultValuePipe(8), ParseIntPipe) limit?: number) {
+    return this.productsService.getFeatured(limit, (req as any).tenantId);
   }
 
   @Get('best-sellers')
   @ApiOperation({ summary: 'Get best seller products' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of products to return (default: 8)' })
   @ApiResponse({ status: 200, description: 'Best seller products retrieved successfully' })
-  async getBestSellers(@Query('limit', new DefaultValuePipe(8), ParseIntPipe) limit?: number) {
-    return this.productsService.getBestSellers(limit);
+  async getBestSellers(@Req() req: Request, @Query('limit', new DefaultValuePipe(8), ParseIntPipe) limit?: number) {
+    return this.productsService.getBestSellers(limit, (req as any).tenantId);
   }
 
   @Get('categories')
   @ApiOperation({ summary: 'Get all categories with product counts' })
   @ApiResponse({ status: 200, description: 'Categories retrieved successfully' })
-  async getCategories() {
-    return this.productsService.getCategories();
+  async getCategories(@Req() req: Request) {
+    return this.productsService.getCategories((req as any).tenantId);
   }
 
   @Get('categories/quick')
   @ApiOperation({ summary: 'Get quick categories or top 5 by product count' })
   @ApiResponse({ status: 200, description: 'Quick categories retrieved successfully' })
-  async getQuickCategories() {
-    return this.productsService.getQuickCategories();
+  async getQuickCategories(@Req() req: Request) {
+    return this.productsService.getQuickCategories((req as any).tenantId);
   }
 
   @Get('slug/:slug')
@@ -81,8 +84,8 @@ export class ProductsController {
   @ApiParam({ name: 'slug', description: 'Product slug' })
   @ApiResponse({ status: 200, description: 'Product found' })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  async findBySlug(@Param('slug') slug: string) {
-    return this.productsService.findBySlug(slug);
+  async findBySlug(@Req() req: Request, @Param('slug') slug: string) {
+    return this.productsService.findBySlug(slug, (req as any).tenantId);
   }
 
   @Get(':id')
@@ -90,7 +93,7 @@ export class ProductsController {
   @ApiParam({ name: 'id', description: 'Product ID' })
   @ApiResponse({ status: 200, description: 'Product found' })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  async findOne(@Param('id') id: string) {
-    return this.productsService.findOne(id);
+  async findOne(@Req() req: Request, @Param('id') id: string) {
+    return this.productsService.findOne(id, (req as any).tenantId);
   }
 }

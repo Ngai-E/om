@@ -107,11 +107,10 @@ async function main() {
 
   const createdCategories = {};
   for (const category of categories) {
-    const created = await prisma.category.upsert({
-      where: { slug: category.slug },
-      update: {},
-      create: category,
-    });
+    let created = await prisma.category.findFirst({ where: { slug: category.slug } });
+    if (!created) {
+      created = await prisma.category.create({ data: category });
+    }
     createdCategories[category.slug] = created;
   }
 
@@ -318,19 +317,20 @@ async function main() {
 
   for (const product of products) {
     const { stock, ...productData } = product;
-    await prisma.product.upsert({
-      where: { slug: product.slug },
-      update: {},
-      create: {
-        ...productData,
-        inventory: {
-          create: {
-            quantity: stock,
-            lowStockThreshold: 10,
+    const existing = await prisma.product.findFirst({ where: { slug: product.slug } });
+    if (!existing) {
+      await prisma.product.create({
+        data: {
+          ...productData,
+          inventory: {
+            create: {
+              quantity: stock,
+              lowStockThreshold: 10,
+            },
           },
         },
-      },
-    });
+      });
+    }
   }
 
   console.log('✅ Products created');
@@ -402,22 +402,23 @@ async function main() {
     date.setDate(date.getDate() + i);
 
     for (const slot of timeSlots) {
-      await prisma.deliverySlot.upsert({
+      const existingSlot = await prisma.deliverySlot.findFirst({
         where: {
-          date_startTime_endTime: {
-            date: date,
-            startTime: slot.startTime,
-            endTime: slot.endTime,
-          },
-        },
-        update: {},
-        create: {
           date: date,
           startTime: slot.startTime,
           endTime: slot.endTime,
-          capacity: 10,
         },
       });
+      if (!existingSlot) {
+        await prisma.deliverySlot.create({
+          data: {
+            date: date,
+            startTime: slot.startTime,
+            endTime: slot.endTime,
+            capacity: 10,
+          },
+        });
+      }
     }
   }
 

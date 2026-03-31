@@ -7,6 +7,7 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import { useRouter } from 'next/navigation';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Toast } from '@/components/ui/toast';
+import { tenantFetch } from '@/lib/tenant';
 
 interface Category {
   id: string;
@@ -55,7 +56,7 @@ export default function AdminCategoriesPage() {
   const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -189,7 +190,7 @@ export default function AdminCategoriesPage() {
 
   const handleToggleQuickCategory = async (id: string) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories/${id}/quick-category`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories/${id}/quick-category`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -214,7 +215,7 @@ export default function AdminCategoriesPage() {
     }
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories/${id}`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,

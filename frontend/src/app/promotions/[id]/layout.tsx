@@ -1,8 +1,9 @@
 import { Metadata } from 'next';
+import { tenantFetch } from '@/lib/tenant';
 
 export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/promotions/${params.id}/public`, {
+    const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/promotions/${params.id}/public`, {
       cache: 'no-store',
     });
 

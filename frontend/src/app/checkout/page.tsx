@@ -13,6 +13,7 @@ import { MapPin, Clock, CreditCard, Truck, Store, AlertCircle, ShoppingBag, Tren
 import { useCart } from '@/lib/hooks/use-cart';
 import { useCreateOrder } from '@/lib/hooks/use-orders';
 import { useQuery } from '@tanstack/react-query';
+import { tenantFetch } from '@/lib/tenant';
 import { useDeliverySlots } from '@/lib/hooks/use-delivery';
 import { StripePaymentElement } from '@/components/checkout/stripe-payment-element';
 import { useCartValidation } from '@/lib/hooks/use-cart-validation';
@@ -44,7 +45,7 @@ export default function CheckoutPage() {
   const { data: paymentSettings } = useQuery({
     queryKey: ['payment-settings'],
     queryFn: async () => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings`);
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/settings`);
       if (!response.ok) throw new Error('Failed to fetch settings');
       return response.json();
     },
@@ -160,7 +161,7 @@ export default function CheckoutPage() {
       sessionStorage.setItem('orderId', order.id);
 
       // Create payment
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/create`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/payments/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

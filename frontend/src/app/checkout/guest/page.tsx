@@ -7,6 +7,7 @@ import { useGuestCartStore } from '@/lib/store/guest-cart-store';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { MapPin, User, Mail, Phone, ShoppingBag, Truck, Store, CreditCard, Clock } from 'lucide-react';
+import { tenantFetch } from '@/lib/tenant';
 
 export default function GuestCheckoutPage() {
   const router = useRouter();
@@ -34,7 +35,7 @@ export default function GuestCheckoutPage() {
 
     try {
       // Step 1: Create/find guest user
-      const guestResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/guest/checkout`, {
+      const guestResponse = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/guest/checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,7 +53,7 @@ export default function GuestCheckoutPage() {
 
       // Step 2: Add items to cart using guest token
       for (const item of guestItems) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/items`, {
+        await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/cart/items`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -76,7 +77,7 @@ export default function GuestCheckoutPage() {
         orderData.addressId = user.addresses[0].id;
       }
 
-      const orderResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
+      const orderResponse = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/orders`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

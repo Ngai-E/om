@@ -1,9 +1,10 @@
-import { Controller, Get, Patch, Post, Param, Query, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Post, Param, Query, Body, UseGuards, Req } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { CustomersService } from './customers.service';
+import { Request } from 'express';
 
 @Controller('admin/customers')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -13,6 +14,7 @@ export class CustomersController {
 
   @Get()
   async getAllCustomers(
+    @Req() req: Request,
     @Query('search') search?: string,
     @Query('riskLevel') riskLevel?: any,
     @Query('isBlocked') isBlocked?: string,
@@ -25,12 +27,13 @@ export class CustomersController {
       isBlocked: isBlocked === 'true' ? true : isBlocked === 'false' ? false : undefined,
       page: page ? parseInt(page) : undefined,
       limit: limit ? parseInt(limit) : undefined,
+      tenantId: (req as any).tenantId,
     });
   }
 
   @Get('stats')
-  async getStats() {
-    return this.customersService.getCustomerStats();
+  async getStats(@Req() req: Request) {
+    return this.customersService.getCustomerStats((req as any).tenantId);
   }
 
   @Get(':id')

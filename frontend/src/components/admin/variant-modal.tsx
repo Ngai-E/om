@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { tenantFetch } from '@/lib/tenant';
 
 const variantSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -112,7 +113,7 @@ export function VariantModal({ isOpen, onClose, onSubmit, variant, productId }: 
         const formData = new FormData();
         formData.append('image', imageFile);
 
-        const uploadResponse = await fetch(
+        const uploadResponse = await tenantFetch(
           `${process.env.NEXT_PUBLIC_API_URL}/upload/variant-image`,
           {
             method: 'POST',

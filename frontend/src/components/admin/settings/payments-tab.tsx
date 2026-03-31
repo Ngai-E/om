@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/lib/hooks/use-toast';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { CheckCircle2, CreditCard, Banknote, Store } from 'lucide-react';
+import { tenantFetch } from '@/lib/tenant';
 
 type PaymentMethod = 'stripe_checkout' | 'stripe_elements';
 
@@ -36,7 +37,7 @@ export function PaymentsTab() {
   const { data: paymentData } = useQuery({
     queryKey: ['payment-method'],
     queryFn: async () => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/payment-method`);
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/payment-method`);
       if (!response.ok) throw new Error('Failed to fetch payment method');
       return response.json();
     },
@@ -46,7 +47,7 @@ export function PaymentsTab() {
   const { data: paymentMethodsData } = useQuery({
     queryKey: ['payment-methods-config'],
     queryFn: async () => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/payment-methods`);
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/payment-methods`);
       if (!response.ok) throw new Error('Failed to fetch payment methods config');
       return response.json();
     },
@@ -67,7 +68,7 @@ export function PaymentsTab() {
   // Update payment method mutation
   const updatePaymentMethod = useMutation({
     mutationFn: async (method: PaymentMethod) => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/payment-method`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/payment-method`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +96,7 @@ export function PaymentsTab() {
   // Update payment methods configuration mutation
   const updatePaymentMethodsConfig = useMutation({
     mutationFn: async (config: PaymentMethodsConfig) => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/payment-methods`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/payment-methods`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

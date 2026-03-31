@@ -9,6 +9,7 @@ import {
   UseGuards,
   ParseIntPipe,
   DefaultValuePipe,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { StaffService } from './staff.service';
@@ -17,6 +18,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Request } from 'express';
 
 @ApiTags('staff')
 @Controller('staff')
@@ -30,16 +32,16 @@ export class StaffController {
   @ApiOperation({ summary: 'Create phone order (Staff/Admin only)' })
   @ApiResponse({ status: 201, description: 'Phone order created' })
   @ApiResponse({ status: 400, description: 'Validation failed' })
-  async createPhoneOrder(@CurrentUser() user: any, @Body() dto: CreatePhoneOrderDto) {
-    return this.staffService.createPhoneOrder(user.id, dto);
+  async createPhoneOrder(@Req() req: Request, @CurrentUser() user: any, @Body() dto: CreatePhoneOrderDto) {
+    return this.staffService.createPhoneOrder(user.id, dto, (req as any).tenantId);
   }
 
   @Get('customers/search')
   @ApiOperation({ summary: 'Search customers (Staff/Admin only)' })
   @ApiQuery({ name: 'q', description: 'Search query (email, phone, name)' })
   @ApiResponse({ status: 200, description: 'Customers found' })
-  async searchCustomers(@Query('q') query: string) {
-    return this.staffService.searchCustomers(query);
+  async searchCustomers(@Req() req: Request, @Query('q') query: string) {
+    return this.staffService.searchCustomers(query, (req as any).tenantId);
   }
 
   @Get('customers/:customerId/addresses')
@@ -52,8 +54,8 @@ export class StaffController {
   @Get('dashboard/tasks')
   @ApiOperation({ summary: 'Get staff dashboard task counts (Staff/Admin only)' })
   @ApiResponse({ status: 200, description: 'Task counts retrieved' })
-  async getDashboardTasks() {
-    return this.staffService.getDashboardTasks();
+  async getDashboardTasks(@Req() req: Request) {
+    return this.staffService.getDashboardTasks((req as any).tenantId);
   }
 
   @Get('orders/recent')
@@ -61,17 +63,18 @@ export class StaffController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Recent orders retrieved' })
   async getRecentOrders(
+    @Req() req: Request,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
-    return this.staffService.getRecentOrders(limit);
+    return this.staffService.getRecentOrders(limit, (req as any).tenantId);
   }
 
   @Get('orders')
   @ApiOperation({ summary: 'Get orders for staff (Staff/Admin only)' })
   @ApiQuery({ name: 'status', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Orders retrieved' })
-  async getOrders(@Query('status') status?: string) {
-    return this.staffService.getStaffOrders(status);
+  async getOrders(@Req() req: Request, @Query('status') status?: string) {
+    return this.staffService.getStaffOrders(status, (req as any).tenantId);
   }
 
   @Get('orders/:orderId')

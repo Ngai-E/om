@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ReviewsService } from './reviews.service';
@@ -16,6 +17,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Request } from 'express';
 
 @ApiTags('reviews')
 @Controller('reviews')
@@ -33,8 +35,8 @@ export class ReviewsController {
   @ApiOperation({ summary: 'Create a product review (Customer only)' })
   @ApiResponse({ status: 201, description: 'Review created (pending approval)' })
   @ApiResponse({ status: 400, description: 'Validation failed or already reviewed' })
-  async createReview(@CurrentUser() user: any, @Body() dto: CreateReviewDto) {
-    return this.reviewsService.createReview(user.id, dto);
+  async createReview(@Req() req: Request, @CurrentUser() user: any, @Body() dto: CreateReviewDto) {
+    return this.reviewsService.createReview(user.id, dto, (req as any).tenantId);
   }
 
   @Get('my-reviews')
@@ -65,15 +67,15 @@ export class ReviewsController {
   @Get('product/:productId')
   @ApiOperation({ summary: 'Get approved reviews for a product (Public)' })
   @ApiResponse({ status: 200, description: 'Product reviews retrieved' })
-  async getProductReviews(@Param('productId') productId: string) {
-    return this.reviewsService.getProductReviews(productId, false);
+  async getProductReviews(@Req() req: Request, @Param('productId') productId: string) {
+    return this.reviewsService.getProductReviews(productId, false, (req as any).tenantId);
   }
 
   @Get('homepage')
   @ApiOperation({ summary: 'Get approved reviews for homepage display (Public)' })
   @ApiResponse({ status: 200, description: 'Homepage reviews retrieved' })
-  async getHomepageReviews() {
-    return this.reviewsService.getHomepageReviews();
+  async getHomepageReviews(@Req() req: Request) {
+    return this.reviewsService.getHomepageReviews((req as any).tenantId);
   }
 
   // ============================================
@@ -86,8 +88,8 @@ export class ReviewsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all pending reviews (Staff/Admin only)' })
   @ApiResponse({ status: 200, description: 'Pending reviews retrieved' })
-  async getPendingReviews() {
-    return this.reviewsService.getPendingReviews();
+  async getPendingReviews(@Req() req: Request) {
+    return this.reviewsService.getPendingReviews((req as any).tenantId);
   }
 
   @Get('all')
@@ -97,8 +99,8 @@ export class ReviewsController {
   @ApiOperation({ summary: 'Get all reviews with optional status filter (Staff/Admin only)' })
   @ApiQuery({ name: 'status', required: false, enum: ['PENDING', 'APPROVED', 'REJECTED'] })
   @ApiResponse({ status: 200, description: 'All reviews retrieved' })
-  async getAllReviews(@Query('status') status?: string) {
-    return this.reviewsService.getAllReviews(status);
+  async getAllReviews(@Req() req: Request, @Query('status') status?: string) {
+    return this.reviewsService.getAllReviews(status, (req as any).tenantId);
   }
 
   @Patch(':reviewId/approve')

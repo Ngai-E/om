@@ -15,7 +15,7 @@ export class StaffService {
   /**
    * Create order via phone (staff feature)
    */
-  async createPhoneOrder(staffId: string, dto: CreatePhoneOrderDto) {
+  async createPhoneOrder(staffId: string, dto: CreatePhoneOrderDto, tenantId?: string) {
     // Find customer
     const user = await this.prisma.user.findUnique({
       where: { id: dto.customerId },
@@ -129,6 +129,7 @@ export class StaffService {
         deliverySlotId: dto.deliverySlotId || undefined, // Convert empty string to undefined
         notes: dto.notes || undefined,
         staffNotes: `Phone order created by staff ID: ${staffId}`,
+        ...(tenantId && { tenantId }),
         items: {
           create: orderItems,
         },
@@ -244,7 +245,7 @@ export class StaffService {
   /**
    * Search customers by email, phone, or name
    */
-  async searchCustomers(query: string) {
+  async searchCustomers(query: string, tenantId?: string) {
     if (!query || query.trim().length === 0) {
       return [];
     }
@@ -254,6 +255,7 @@ export class StaffService {
     const customers = await this.prisma.user.findMany({
       where: {
         role: 'CUSTOMER',
+        ...(tenantId && { tenantId }),
         OR: [
           { email: { contains: searchTerm, mode: 'insensitive' } },
           { phone: { contains: searchTerm } },
@@ -308,16 +310,16 @@ export class StaffService {
   /**
    * Get dashboard task counts for staff
    */
-  async getDashboardTasks() {
+  async getDashboardTasks(tenantId?: string) {
     const [newOrders, picking, ready] = await Promise.all([
       this.prisma.order.count({
-        where: { status: 'RECEIVED' },
+        where: { status: 'RECEIVED', ...(tenantId && { tenantId }) },
       }),
       this.prisma.order.count({
-        where: { status: 'PICKING' },
+        where: { status: 'PICKING', ...(tenantId && { tenantId }) },
       }),
       this.prisma.order.count({
-        where: { status: 'OUT_FOR_DELIVERY' },
+        where: { status: 'OUT_FOR_DELIVERY', ...(tenantId && { tenantId }) },
       }),
     ]);
 
@@ -331,8 +333,8 @@ export class StaffService {
   /**
    * Get orders for staff (simplified view)
    */
-  async getStaffOrders(status?: string) {
-    const where: any = {};
+  async getStaffOrders(status?: string, tenantId?: string) {
+    const where: any = { ...(tenantId && { tenantId }) };
     
     if (status) {
       where.status = status;
@@ -431,8 +433,9 @@ export class StaffService {
   /**
    * Get recent orders for quick reference
    */
-  async getRecentOrders(limit = 20) {
+  async getRecentOrders(limit = 20, tenantId?: string) {
     const orders = await this.prisma.order.findMany({
+      where: { ...(tenantId && { tenantId }) },
       take: limit,
       orderBy: { createdAt: 'desc' },
       include: {

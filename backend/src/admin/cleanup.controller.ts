@@ -1,9 +1,10 @@
-import { Controller, Post, Body, UseGuards, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, UnauthorizedException, BadRequestException, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { PrismaService } from '../prisma/prisma.service';
+import { Request } from 'express';
 
 @ApiTags('admin')
 @Controller('admin/cleanup')
@@ -15,7 +16,7 @@ export class CleanupController {
 
   @Post('preview')
   @ApiOperation({ summary: 'Preview what will be deleted (Admin only)' })
-  async previewCleanup(@Body() body: { 
+  async previewCleanup(@Req() req: Request, @Body() body: { 
     code: string;
     components?: {
       customers?: boolean;
@@ -28,6 +29,7 @@ export class CleanupController {
     };
   }) {
     const { code, components = {} } = body;
+    const tenantId = (req as any).tenantId;
     const DEVELOPER_CODE = process.env.CLEANUP_SECRET_CODE;
 
     if (!DEVELOPER_CODE || code !== DEVELOPER_CODE) {
@@ -45,39 +47,46 @@ export class CleanupController {
       products: components.products !== false,
     };
 
+    const tw: any = tenantId ? { tenantId } : {};
     const willDelete: any = {};
 
     // Count based on selected components
     if (cleanupConfig.customers) {
       willDelete.customers = await this.prisma.user.count({
-        where: { role: 'CUSTOMER' },
+        where: { role: 'CUSTOMER', ...tw },
       });
     }
 
     if (cleanupConfig.orders) {
-      willDelete.orders = await this.prisma.order.count();
+      willDelete.orders = await this.prisma.order.count({ where: { ...tw } });
     }
 
     if (cleanupConfig.carts) {
-      willDelete.carts = await this.prisma.cart.count();
-      willDelete.cartItems = await this.prisma.cartItem.count();
+      willDelete.carts = await this.prisma.cart.count({ where: { ...tw } });
+      willDelete.cartItems = await this.prisma.cartItem.count({
+        where: { cart: { ...tw } },
+      });
     }
 
     if (cleanupConfig.addresses) {
-      willDelete.addresses = await this.prisma.address.count();
+      willDelete.addresses = await this.prisma.address.count({
+        where: { user: { ...tw } },
+      });
     }
 
     if (cleanupConfig.deliverySlots) {
-      willDelete.deliverySlots = await this.prisma.deliverySlot.count();
+      willDelete.deliverySlots = await this.prisma.deliverySlot.count({ where: { ...tw } });
     }
 
     if (cleanupConfig.auditLogs) {
-      willDelete.auditLogs = await this.prisma.auditLog.count();
+      willDelete.auditLogs = await this.prisma.auditLog.count({ where: { ...tw } });
     }
 
     if (cleanupConfig.products) {
-      willDelete.products = await this.prisma.product.count();
-      willDelete.productVariants = await this.prisma.productVariant.count();
+      willDelete.products = await this.prisma.product.count({ where: { ...tw } });
+      willDelete.productVariants = await this.prisma.productVariant.count({
+        where: { product: { ...tw } },
+      });
     }
 
     const warnings = [];
@@ -100,7 +109,7 @@ export class CleanupController {
 
   @Post()
   @ApiOperation({ summary: 'Clean database - DANGER ZONE (Admin only)' })
-  async cleanupDatabase(@Body() body: {
+  async cleanupDatabase(@Req() req: Request, @Body() body: {
     code: string;
     components?: {
       customers?: boolean;
@@ -113,6 +122,7 @@ export class CleanupController {
     };
   }) {
     const { code, components = {} } = body;
+    const tenantId = (req as any).tenantId;
     const DEVELOPER_CODE = process.env.CLEANUP_SECRET_CODE;
 
     if (!DEVELOPER_CODE || code !== DEVELOPER_CODE) {
@@ -130,51 +140,58 @@ export class CleanupController {
       products: components.products !== false,
     };
 
+    const tw: any = tenantId ? { tenantId } : {};
     const results: any = {};
 
     // Delete in correct order to avoid foreign key constraints
 
     // 1. Delete audit logs (if selected)
     if (cleanupConfig.auditLogs) {
-      const deletedAuditLogs = await this.prisma.auditLog.deleteMany({});
+      const deletedAuditLogs = await this.prisma.auditLog.deleteMany({ where: { ...tw } });
       results.auditLogs = deletedAuditLogs.count;
     }
 
     // 2. Delete cart items (if carts selected - references products)
     if (cleanupConfig.carts) {
-      const deletedCartItems = await this.prisma.cartItem.deleteMany({});
+      const deletedCartItems = await this.prisma.cartItem.deleteMany({
+        where: { cart: { ...tw } },
+      });
       results.cartItems = deletedCartItems.count;
 
       // 3. Delete carts
-      const deletedCarts = await this.prisma.cart.deleteMany({});
+      const deletedCarts = await this.prisma.cart.deleteMany({ where: { ...tw } });
       results.carts = deletedCarts.count;
     }
 
     // 4. Delete delivery slots (if selected)
     if (cleanupConfig.deliverySlots) {
-      const deletedSlots = await this.prisma.deliverySlot.deleteMany({});
+      const deletedSlots = await this.prisma.deliverySlot.deleteMany({ where: { ...tw } });
       results.deliverySlots = deletedSlots.count;
     }
 
     // 5. Delete orders (if selected - cascade will handle order items)
     if (cleanupConfig.orders) {
-      const deletedOrders = await this.prisma.order.deleteMany({});
+      const deletedOrders = await this.prisma.order.deleteMany({ where: { ...tw } });
       results.orders = deletedOrders.count;
     }
 
     // 6. Delete addresses (if selected)
     if (cleanupConfig.addresses) {
-      const deletedAddresses = await this.prisma.address.deleteMany({});
+      const deletedAddresses = await this.prisma.address.deleteMany({
+        where: { user: { ...tw } },
+      });
       results.addresses = deletedAddresses.count;
     }
 
     // 7. Delete customer profiles and users (if customers selected)
     if (cleanupConfig.customers) {
-      await this.prisma.customerProfile.deleteMany({});
+      await this.prisma.customerProfile.deleteMany({
+        where: { user: { ...tw } },
+      });
 
       // Delete all CUSTOMER users (preserve ADMIN and STAFF)
       const deletedCustomers = await this.prisma.user.deleteMany({
-        where: { role: 'CUSTOMER' },
+        where: { role: 'CUSTOMER', ...tw },
       });
       results.customers = deletedCustomers.count;
     }
@@ -184,28 +201,38 @@ export class CleanupController {
       // Delete cart items first (references products and variants)
       // Must delete even if carts cleanup is disabled
       if (!cleanupConfig.carts) {
-        const deletedCartItems = await this.prisma.cartItem.deleteMany({});
+        const deletedCartItems = await this.prisma.cartItem.deleteMany({
+          where: { cart: { ...tw } },
+        });
         results.cartItems = deletedCartItems.count;
       }
 
       // Delete order items (references products and variants)
-      const deletedOrderItems = await this.prisma.orderItem.deleteMany({});
+      const deletedOrderItems = await this.prisma.orderItem.deleteMany({
+        where: { order: { ...tw } },
+      });
       results.orderItems = deletedOrderItems.count;
 
       // Delete product images (references products)
-      const deletedImages = await this.prisma.productImage.deleteMany({});
+      const deletedImages = await this.prisma.productImage.deleteMany({
+        where: { product: { ...tw } },
+      });
       results.productImages = deletedImages.count;
 
       // Delete inventory (references products)
-      const deletedInventory = await this.prisma.inventory.deleteMany({});
+      const deletedInventory = await this.prisma.inventory.deleteMany({
+        where: { product: { ...tw } },
+      });
       results.inventory = deletedInventory.count;
 
       // Delete variants (references products)
-      const deletedVariants = await this.prisma.productVariant.deleteMany({});
+      const deletedVariants = await this.prisma.productVariant.deleteMany({
+        where: { product: { ...tw } },
+      });
       results.productVariants = deletedVariants.count;
 
       // Finally delete products
-      const deletedProducts = await this.prisma.product.deleteMany({});
+      const deletedProducts = await this.prisma.product.deleteMany({ where: { ...tw } });
       results.products = deletedProducts.count;
     }
 

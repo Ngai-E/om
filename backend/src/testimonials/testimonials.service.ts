@@ -22,7 +22,7 @@ export interface UpdateTestimonialDto {
 export class TestimonialsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateTestimonialDto) {
+  async create(dto: CreateTestimonialDto, tenantId?: string) {
     return this.prisma.testimonial.create({
       data: {
         videoUrl: dto.videoUrl,
@@ -30,12 +30,15 @@ export class TestimonialsService {
         title: dto.title,
         description: dto.description,
         sortOrder: dto.sortOrder || 0,
+        ...(tenantId && { tenantId }),
       },
     });
   }
 
-  async findAll() {
+  async findAll(tenantId?: string) {
+    const where: any = tenantId ? { tenantId } : {};
     return this.prisma.testimonial.findMany({
+      where,
       orderBy: [
         { sortOrder: 'asc' },
         { createdAt: 'desc' },
@@ -43,9 +46,9 @@ export class TestimonialsService {
     });
   }
 
-  async findActive() {
+  async findActive(tenantId?: string) {
     return this.prisma.testimonial.findMany({
-      where: { isActive: true },
+      where: { isActive: true, ...(tenantId && { tenantId }) },
       orderBy: [
         { sortOrder: 'asc' },
         { createdAt: 'desc' },

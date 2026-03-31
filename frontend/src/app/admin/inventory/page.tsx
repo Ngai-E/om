@@ -10,6 +10,7 @@ import { productsApi } from '@/lib/api/products';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { getProductImageUrl } from '@/lib/utils/image';
+import { tenantFetch } from '@/lib/tenant';
 
 export default function InventoryManagementPage() {
   const [searchInput, setSearchInput] = useState('');
@@ -40,7 +41,7 @@ export default function InventoryManagementPage() {
         limit: pageSize.toString(),
       });
       if (searchTerm) params.append('search', searchTerm);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products?${params}`);
+      const res = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/products?${params}`);
       if (!res.ok) throw new Error('Failed to fetch products');
       return res.json();
     },
@@ -50,7 +51,7 @@ export default function InventoryManagementPage() {
     queryKey: ['inventory-stats'],
     queryFn: async () => {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/inventory/stats`, {
+      const res = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/inventory/stats`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -63,7 +64,7 @@ export default function InventoryManagementPage() {
   const updateInventory = useMutation({
     mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId}/inventory`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId}/inventory`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

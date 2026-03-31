@@ -11,6 +11,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
 import { settingsApi } from '@/lib/api/settings';
 import { useCategories } from '@/lib/hooks/use-products';
+import { tenantFetch } from '@/lib/tenant';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { useToast } from '@/lib/hooks/use-toast';
 import { SuccessToast } from '@/components/ui/success-toast';
@@ -103,7 +104,7 @@ export default function NewProductPage() {
 
     setIsCreatingCategory(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { handleApiError } from './error-handler';
+import { getTenantSlug } from '../tenant';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
 
@@ -18,7 +19,7 @@ export const apiClient = axios.create({
   withCredentials: true, // Important for cookies
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and tenant context
 apiClient.interceptors.request.use(
   (config) => {
     // Get token from localStorage
@@ -27,6 +28,9 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Add tenant slug header for multi-tenancy
+    config.headers['X-Tenant-Slug'] = getTenantSlug();
     
     return config;
   },

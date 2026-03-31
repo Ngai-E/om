@@ -13,7 +13,7 @@ export class ReviewsService {
   /**
    * Create a new review (Customer only)
    */
-  async createReview(userId: string, dto: CreateReviewDto) {
+  async createReview(userId: string, dto: CreateReviewDto, tenantId?: string) {
     // Check if user exists
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -70,6 +70,7 @@ export class ReviewsService {
     const review = await this.prisma.review.create({
       data: {
         userId,
+        ...(tenantId && { tenantId }),
         productId: dto.productId,
         orderId: dto.orderId,
         rating: dto.rating,
@@ -116,8 +117,8 @@ export class ReviewsService {
   /**
    * Get reviews for a product (approved only for public)
    */
-  async getProductReviews(productId: string, includeAll = false) {
-    const where: any = { productId };
+  async getProductReviews(productId: string, includeAll = false, tenantId?: string) {
+    const where: any = { productId, ...(tenantId && { tenantId }) };
     
     if (!includeAll) {
       where.status = 'APPROVED';
@@ -192,11 +193,12 @@ export class ReviewsService {
   /**
    * Get approved reviews for homepage display (Public)
    */
-  async getHomepageReviews() {
+  async getHomepageReviews(tenantId?: string) {
     return this.prisma.review.findMany({
       where: {
         status: 'APPROVED',
         showOnHomepage: true,
+        ...(tenantId && { tenantId }),
       },
       include: {
         user: {
@@ -224,9 +226,9 @@ export class ReviewsService {
   /**
    * Get all pending reviews (Admin/Staff only)
    */
-  async getPendingReviews() {
+  async getPendingReviews(tenantId?: string) {
     return this.prisma.review.findMany({
-      where: { status: 'PENDING' },
+      where: { status: 'PENDING', ...(tenantId && { tenantId }) },
       include: {
         user: {
           select: {
@@ -253,8 +255,8 @@ export class ReviewsService {
   /**
    * Get all reviews with filters (Admin/Staff only)
    */
-  async getAllReviews(status?: string) {
-    const where: any = {};
+  async getAllReviews(status?: string, tenantId?: string) {
+    const where: any = { ...(tenantId && { tenantId }) };
     
     if (status) {
       where.status = status;

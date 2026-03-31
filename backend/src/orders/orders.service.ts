@@ -15,10 +15,10 @@ export class OrdersService {
     private promotionsService: PromotionsService,
   ) {}
 
-  async create(userId: string, dto: CreateOrderDto) {
+  async create(userId: string, dto: CreateOrderDto, tenantId?: string) {
     // Get user's cart
     const cart = await this.prisma.cart.findFirst({
-      where: { userId },
+      where: { userId, ...(tenantId && { tenantId }) },
       include: {
         items: {
           include: {
@@ -175,6 +175,7 @@ export class OrdersService {
     const order = await this.prisma.order.create({
       data: {
         userId,
+        ...(tenantId && { tenantId }),
         orderNumber: this.generateOrderNumber(),
         status: 'RECEIVED',
         fulfillmentType: dto.fulfillmentType,
@@ -290,12 +291,12 @@ export class OrdersService {
     return order;
   }
 
-  async findAll(userId: string, page = 1, limit = 10) {
+  async findAll(userId: string, page = 1, limit = 10, tenantId?: string) {
     const skip = (page - 1) * limit;
 
     const [orders, total] = await Promise.all([
       this.prisma.order.findMany({
-        where: { userId },
+        where: { userId, ...(tenantId && { tenantId }) },
         include: {
           items: {
             include: {
@@ -313,7 +314,7 @@ export class OrdersService {
         skip,
         take: limit,
       }),
-      this.prisma.order.count({ where: { userId } }),
+      this.prisma.order.count({ where: { userId, ...(tenantId && { tenantId }) } }),
     ]);
 
     return {
@@ -327,9 +328,9 @@ export class OrdersService {
     };
   }
 
-  async findOne(userId: string, orderId: string) {
+  async findOne(userId: string, orderId: string, tenantId?: string) {
     const order = await this.prisma.order.findFirst({
-      where: { id: orderId, userId },
+      where: { id: orderId, userId, ...(tenantId && { tenantId }) },
       include: {
         items: {
           include: {
@@ -398,9 +399,9 @@ export class OrdersService {
     return updatedOrder;
   }
 
-  async cancel(userId: string, orderId: string) {
+  async cancel(userId: string, orderId: string, tenantId?: string) {
     const order = await this.prisma.order.findFirst({
-      where: { id: orderId, userId },
+      where: { id: orderId, userId, ...(tenantId && { tenantId }) },
       include: {
         items: {
           include: {
