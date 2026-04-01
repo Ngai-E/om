@@ -69,8 +69,8 @@ export function DeliverySlotPicker({ onSlotSelect, selectedSlotId, minHoursAhead
               onClick={() => setSelectedDate(date)}
               className={`p-2 text-sm border-2 rounded-lg transition ${
                 selectedDate === date
-                  ? 'border-green-600 bg-green-50 text-green-900 font-semibold'
-                  : 'border-gray-200 hover:border-green-300'
+                  ? 'border-primary bg-primary/5 text-primary font-semibold'
+                  : 'border-gray-200 hover:border-primary/30'
               }`}
             >
               {formatDate(date)}
@@ -108,7 +108,7 @@ export function DeliverySlotPicker({ onSlotSelect, selectedSlotId, minHoursAhead
                   disabled={!isAvailable}
                   className={`p-3 border-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
                     selectedSlotId === slot.id
-                      ? 'border-green-600 bg-green-50'
+                      ? 'border-primary bg-primary/5'
                       : !isAvailable
                       ? 'border-red-200 bg-red-50'
                       : isLowCapacity

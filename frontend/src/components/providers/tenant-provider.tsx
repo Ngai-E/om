@@ -161,6 +161,18 @@ export function TenantProvider({ children }: { children: ReactNode }) {
           setBranding(data.branding);
           applyBrandingCssVars(data.branding);
 
+          // Cache branding colors in localStorage for the blocking script
+          // to apply on next page load (prevents color flash)
+          try {
+            localStorage.setItem('tenant-branding-cache', JSON.stringify({
+              primaryColor: data.branding.primaryColor,
+              secondaryColor: data.branding.secondaryColor,
+              accentColor: data.branding.accentColor,
+            }));
+          } catch {
+            // Ignore storage errors
+          }
+
           if (data.branding.faviconUrl) {
             applyFavicon(data.branding.faviconUrl);
           }

@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { AdminLayout } from '@/components/admin/admin-layout';
-import { Settings, Store, Bell, CreditCard, Users, Shield, Mail, ShoppingCart, Database, TrendingUp } from 'lucide-react';
+import { Settings, Store, Bell, CreditCard, Users, Shield, Mail, ShoppingCart, Database, TrendingUp, Paintbrush } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { useSettingsStore } from '@/lib/store/settings-store';
 import { useTenant } from '@/components/providers/tenant-provider';
 import { PaymentsTab } from '@/components/admin/settings/payments-tab';
+import { BrandingTab } from '@/components/admin/settings/branding-tab';
 import { SystemCleanupSection } from '@/components/admin/settings/system-cleanup-section';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api/client';
@@ -197,6 +198,7 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'store', label: 'Store Settings', icon: Store },
+    { id: 'branding', label: 'Branding', icon: Paintbrush },
     { id: 'checkout', label: 'Checkout', icon: ShoppingCart },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'payments', label: 'Payments', icon: CreditCard },
@@ -594,6 +596,11 @@ export default function SettingsPage() {
               </button>
             </div>
           </div>
+        )}
+
+        {/* Branding */}
+        {activeTab === 'branding' && (
+          <BrandingTab onSuccess={success} onError={error} />
         )}
 
         {/* Checkout Settings */}

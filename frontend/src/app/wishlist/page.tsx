@@ -102,7 +102,7 @@ export default function WishlistPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-black text-[#036637] mb-2">
+          <h1 className="text-3xl md:text-4xl font-black text-primary mb-2">
             My Wishlist
           </h1>
           <div className="flex items-center justify-between">
@@ -150,7 +150,7 @@ export default function WishlistPage() {
               Start adding your favorite products to your wishlist!
             </p>
             <Link href="/products">
-              <button className="bg-[#FF7730] hover:bg-[#FF6520] text-white px-6 py-3 rounded-lg font-semibold transition">
+              <button className="bg-secondary hover:bg-secondary/80 text-white px-6 py-3 rounded-lg font-semibold transition">
                 Browse Products
               </button>
             </Link>

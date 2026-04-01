@@ -4,6 +4,7 @@ import { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductDto, UpdateProductDto, UpdateInventoryDto, InventoryAction, CreateStaffDto, UpdateStaffDto } from './dto';
 import { AuditService } from '../audit/audit.service';
+import { UploadService } from '../upload/upload.service';
 import { Readable } from 'stream';
 import * as csvParser from 'csv-parser';
 import * as bcrypt from 'bcrypt';
@@ -14,6 +15,7 @@ export class AdminService {
     private prisma: PrismaService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private auditService: AuditService,
+    private uploadService: UploadService,
   ) {}
 
   // ============================================
@@ -2320,5 +2322,55 @@ export class AdminService {
       lowStockCount,
       outOfStockCount,
     };
+  }
+
+  // ============================================
+  // BRANDING
+  // ============================================
+
+  async getBranding(tenantId: string) {
+    const branding = await this.prisma.tenantBranding.findUnique({
+      where: { tenantId },
+    });
+    if (!branding) {
+      throw new NotFoundException('Branding not found for this tenant');
+    }
+    return branding;
+  }
+
+  async updateBranding(tenantId: string, dto: any) {
+    return this.prisma.tenantBranding.upsert({
+      where: { tenantId },
+      update: {
+        ...(dto.logoUrl !== undefined && { logoUrl: dto.logoUrl }),
+        ...(dto.faviconUrl !== undefined && { faviconUrl: dto.faviconUrl }),
+        ...(dto.primaryColor && { primaryColor: dto.primaryColor }),
+        ...(dto.secondaryColor && { secondaryColor: dto.secondaryColor }),
+        ...(dto.accentColor !== undefined && { accentColor: dto.accentColor }),
+        ...(dto.fontHeading && { fontHeading: dto.fontHeading }),
+        ...(dto.fontBody && { fontBody: dto.fontBody }),
+        ...(dto.heroConfig !== undefined && { heroConfig: dto.heroConfig }),
+        ...(dto.themeKey && { themeKey: dto.themeKey }),
+        ...(dto.customCss !== undefined && { customCss: dto.customCss }),
+      },
+      create: {
+        tenantId,
+        logoUrl: dto.logoUrl,
+        faviconUrl: dto.faviconUrl,
+        primaryColor: dto.primaryColor || '#036637',
+        secondaryColor: dto.secondaryColor || '#FF7730',
+        accentColor: dto.accentColor,
+        fontHeading: dto.fontHeading || 'Inter',
+        fontBody: dto.fontBody || 'Inter',
+        heroConfig: dto.heroConfig,
+        themeKey: dto.themeKey || 'default',
+        customCss: dto.customCss,
+      },
+    });
+  }
+
+  async uploadBrandingAsset(file: Express.Multer.File): Promise<{ url: string }> {
+    const result = await this.uploadService.uploadImage(file);
+    return { url: result.url };
   }
 }

@@ -50,13 +50,23 @@ export class OnboardingService {
         },
       });
 
-      // 2. Create default branding
+      // 2. Create default branding with hero config from signup data
       await tx.tenantBranding.create({
         data: {
           tenantId: tenant.id,
           primaryColor: '#036637',
           secondaryColor: '#FF7730',
           themeKey: 'default',
+          heroConfig: {
+            heading: dto.storeName,
+            subheading: dto.description || 'Quality products. Great prices. Fast delivery.',
+            imageUrl: null,
+            trustBadges: [
+              'Same-day home delivery',
+              'Fast & easy ordering',
+              '1000+ happy customers',
+            ],
+          },
         },
       });
 

@@ -154,7 +154,7 @@ export function ProductCard({ product }: ProductCardProps) {
           
           {/* Discount Tag */}
           {product.compareAtPrice && parseFloat(product.compareAtPrice) > parseFloat(product.price) && (
-            <div className="absolute top-2 left-2 bg-omega-orange text-white px-2 py-1 rounded text-xs font-bold" style={{ marginTop: product.isBestSeller ? '32px' : '0' }}>
+            <div className="absolute top-2 left-2 bg-secondary text-white px-2 py-1 rounded text-xs font-bold" style={{ marginTop: product.isBestSeller ? '32px' : '0' }}>
               Save £{(parseFloat(product.compareAtPrice) - parseFloat(product.price)).toFixed(2)}
             </div>
           )}
@@ -194,7 +194,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 min-h-[2.5rem]">
             {product.name}
           </h3>
-          <p className="text-3xl font-black text-omega-orange mb-1">
+          <p className="text-3xl font-black text-secondary mb-1">
             £{parseFloat(product.price).toFixed(2)}
           </p>
           {hasVariants && product.variants && product.variants.length > 1 && (
@@ -211,8 +211,8 @@ export function ProductCard({ product }: ProductCardProps) {
                 : !inStock
                 ? 'bg-gray-400 text-white'
                 : hasVariants
-                ? 'bg-omega-green-dark hover:bg-omega-green text-white'
-                : 'bg-omega-green-dark hover:bg-omega-green text-white'
+                ? 'bg-primary hover:bg-primary/80 text-white'
+                : 'bg-primary hover:bg-primary/80 text-white'
             }`}
             title={
               !inStock 

@@ -206,7 +206,7 @@ export default function CheckoutPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <h1 className="text-3xl md:text-4xl font-black text-[#036637] mb-8">
+          <h1 className="text-3xl md:text-4xl font-black text-primary mb-8">
             Checkout
           </h1>
 
@@ -223,7 +223,7 @@ export default function CheckoutPage() {
               Add some products before checking out.
             </p>
             <Link href="/products">
-              <button className="bg-[#FF7730] hover:bg-[#FF6520] text-white px-6 py-3 rounded-lg font-semibold transition">
+              <button className="bg-secondary hover:bg-secondary/80 text-white px-6 py-3 rounded-lg font-semibold transition">
                 Browse Products
               </button>
             </Link>
@@ -254,7 +254,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20 lg:pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl md:text-4xl font-black text-[#036637] mb-8">Checkout</h1>
+        <h1 className="text-3xl md:text-4xl font-black text-primary mb-8">Checkout</h1>
 
         {/* Progress Steps */}
         <div className="mb-8">
@@ -270,9 +270,9 @@ export default function CheckoutPage() {
                     <div
                       className={`w-12 h-12 rounded-full flex items-center justify-center border-2 transition-colors ${
                         isCompleted
-                          ? 'bg-[#036637] border-[#036637] text-white'
+                          ? 'bg-primary border-primary text-white'
                           : isActive
-                          ? 'bg-[#FF7730] border-[#FF7730] text-white'
+                          ? 'bg-secondary border-secondary text-white'
                           : 'bg-white border-gray-300 text-gray-400'
                       }`}
                     >
@@ -284,7 +284,7 @@ export default function CheckoutPage() {
                     </div>
                     <p
                       className={`text-sm mt-2 ${
-                        isActive || isCompleted ? 'text-[#036637] font-semibold' : 'text-gray-500'
+                        isActive || isCompleted ? 'text-primary font-semibold' : 'text-gray-500'
                       }`}
                     >
                       {s.title}
@@ -293,7 +293,7 @@ export default function CheckoutPage() {
                   {index < steps.length - 1 && (
                     <div
                       className={`h-0.5 flex-1 mx-2 ${
-                        step > s.number ? 'bg-[#036637]' : 'bg-gray-300'
+                        step > s.number ? 'bg-primary' : 'bg-gray-300'
                       }`}
                     />
                   )}
@@ -467,7 +467,7 @@ export default function CheckoutPage() {
                           </Link>
                           <button
                             onClick={() => setFulfillmentType('COLLECTION')}
-                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+                            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-primary/80 transition"
                           >
                             <Package className="w-4 h-4" />
                             Switch to Pick Up from Store

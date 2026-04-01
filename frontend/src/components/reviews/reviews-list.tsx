@@ -17,7 +17,7 @@ export function ReviewsList({ reviews, averageRating, totalReviews }: ReviewsLis
           <Star
             key={star}
             className={`w-4 h-4 ${
-              star <= rating ? 'fill-[#FF7730] text-[#FF7730]' : 'text-gray-300'
+              star <= rating ? 'fill-secondary text-secondary' : 'text-gray-300'
             }`}
           />
         ))}
@@ -49,7 +49,7 @@ export function ReviewsList({ reviews, averageRating, totalReviews }: ReviewsLis
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center gap-4">
           <div className="text-center">
-            <div className="text-4xl font-bold text-[#036637]">
+            <div className="text-4xl font-bold text-primary">
               {averageRating.toFixed(1)}
             </div>
             <div className="flex justify-center mt-1">
@@ -70,7 +70,7 @@ export function ReviewsList({ reviews, averageRating, totalReviews }: ReviewsLis
                   <span className="text-sm text-gray-600 w-8">{rating}★</span>
                   <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[#FF7730]"
+                      className="h-full bg-secondary"
                       style={{ width: `${percentage}%` }}
                     />
                   </div>

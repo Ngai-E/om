@@ -66,7 +66,7 @@ export function PromoCodeSelector({ selectedCode, onSelectCode, onClearCode }: P
 
       {/* Selected Code Display */}
       {selectedCode && (
-        <div className="bg-green-100 border border-green-300 rounded-lg p-3 mb-3 flex items-center justify-between">
+        <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-green-600" />
             <span className="font-mono font-bold text-green-800">{selectedCode}</span>
@@ -109,7 +109,7 @@ export function PromoCodeSelector({ selectedCode, onSelectCode, onClearCode }: P
                   disabled={selectedCode === promo.code}
                   className={`w-full text-left p-3 rounded-lg border-2 transition ${
                     selectedCode === promo.code
-                      ? 'bg-green-50 border-green-300'
+                      ? 'bg-primary/5 border-primary/30'
                       : 'bg-white border-gray-200 hover:border-blue-300 hover:bg-blue-50'
                   }`}
                 >

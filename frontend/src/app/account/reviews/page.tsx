@@ -62,7 +62,7 @@ export default function MyReviewsPage() {
           <Star
             key={star}
             className={`w-4 h-4 ${
-              star <= rating ? 'fill-[#FF7730] text-[#FF7730]' : 'text-gray-300'
+              star <= rating ? 'fill-secondary text-secondary' : 'text-gray-300'
             }`}
           />
         ))}
@@ -88,7 +88,7 @@ export default function MyReviewsPage() {
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#036637] mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
             <p className="text-gray-600 mt-4">Loading your reviews...</p>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function MyReviewsPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-black text-[#036637] mb-2">My Reviews</h1>
+          <h1 className="text-3xl font-black text-primary mb-2">My Reviews</h1>
           <p className="text-gray-600">Manage your product reviews</p>
         </div>
 
@@ -112,7 +112,7 @@ export default function MyReviewsPage() {
               You haven't written any reviews yet. Start reviewing products you've purchased!
             </p>
             <Link href="/products">
-              <button className="bg-[#036637] hover:bg-[#014D29] text-white px-6 py-3 rounded-lg font-semibold transition">
+              <button className="bg-primary hover:bg-primary/80 text-white px-6 py-3 rounded-lg font-semibold transition">
                 Browse Products
               </button>
             </Link>
@@ -126,7 +126,7 @@ export default function MyReviewsPage() {
                     <div className="flex items-center gap-3 mb-2">
                       <Link
                         href={`/products/${review.product?.slug}`}
-                        className="font-semibold text-gray-900 hover:text-[#036637] transition"
+                        className="font-semibold text-gray-900 hover:text-primary transition"
                       >
                         {review.product?.name}
                       </Link>

@@ -43,7 +43,7 @@ function OrderConfirmationContent() {
           <p className="text-gray-600 mb-6">No order ID provided.</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold"
+            className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/80 transition font-semibold"
           >
             <Home className="w-5 h-5" />
             Go to Homepage
@@ -76,7 +76,7 @@ function OrderConfirmationContent() {
           <p className="text-gray-600 mb-6">We couldn't find your order. Please contact support if you need assistance.</p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold"
+            className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/80 transition font-semibold"
           >
             <Home className="w-5 h-5" />
             Go to Homepage
@@ -260,7 +260,7 @@ function OrderConfirmationContent() {
           </button>
           <Link
             href="/"
-            className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-semibold"
+            className="flex-1 flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/80 transition font-semibold"
           >
             <Home className="w-5 h-5" />
             Continue Shopping

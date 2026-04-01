@@ -221,7 +221,7 @@ export default function ProductDetailPage() {
                         disabled={isOutOfStock}
                         className={`relative border-2 rounded-lg p-3 transition text-left ${
                           isSelected
-                            ? 'border-omega-green-dark bg-green-50'
+                            ? 'border-primary bg-primary/5'
                             : isOutOfStock
                             ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
                             : 'border-gray-200 hover:border-gray-300'
@@ -244,7 +244,7 @@ export default function ProductDetailPage() {
                         </div>
                         
                         {/* Variant Price */}
-                        <div className="text-lg font-black text-omega-orange">
+                        <div className="text-lg font-black text-secondary">
                           £{parseFloat(variant.price).toFixed(2)}
                         </div>
 
@@ -265,7 +265,7 @@ export default function ProductDetailPage() {
 
                         {/* Selected Indicator */}
                         {isSelected && (
-                          <div className="absolute top-2 right-2 bg-omega-green-dark text-white rounded-full p-1">
+                          <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1">
                             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>

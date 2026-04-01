@@ -10,11 +10,13 @@ import { useActiveTestimonials } from '@/lib/hooks/use-testimonials';
 import { ProductCard } from '@/components/products/product-card';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useSettingsStore } from '@/lib/store/settings-store';
+import { useTenant } from '@/components/providers/tenant-provider';
 import { ProductCardSkeleton, CategoryCardSkeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
   const { isAuthenticated } = useAuthStore();
   const { settings } = useSettingsStore();
+  const { tenant, branding } = useTenant();
   const { data: featuredProducts, isLoading: featuredLoading } = useFeaturedProducts();
   const { data: bestSellers, isLoading: bestSellersLoading } = useBestSellers(8);
   const { data: categories, isLoading: categoriesLoading } = useQuickCategories();
@@ -22,17 +24,33 @@ export default function Home() {
   const { data: testimonials, isLoading: testimonialsLoading } = useActiveTestimonials();
   const [showAllCategories, setShowAllCategories] = React.useState(false);
 
-  // Default promo banner if not set
-  const promoBanner = settings.promoBanner || '🎉 Weekly Deal: 20% off all Grains & Staples | Free delivery over £50';
-  
+  // Hero config from tenant branding (JSON field)
+  const heroConfig = (branding as any)?.heroConfig as {
+    heading?: string;
+    subheading?: string;
+    imageUrl?: string;
+    trustBadges?: string[];
+  } | null;
+
+  const storeName = settings.storeName || tenant?.name || 'Our Store';
+  const heroHeading = heroConfig?.heading || storeName;
+  const heroSubheading = heroConfig?.subheading || settings.deliveryMessage || 'Quality products. Great prices. Fast delivery.';
+  const heroImageUrl = heroConfig?.imageUrl || '/hero-bg.png';
+  const trustBadges = heroConfig?.trustBadges || [
+    'Same-day home delivery',
+    'Fast & easy ordering',
+    '1000+ happy customers',
+  ];
+
   // Format WhatsApp number for URL (remove spaces and special chars except +)
-  const whatsappNumber = (settings.whatsappNumber || '+44 7535 316253').replace(/\s/g, '');
+  const whatsappNumber = (settings.whatsappNumber || '').replace(/\s/g, '');
+  const phoneNumber = settings.phoneNumber || '';
   
-  // Default Google Maps URL if not configured
-  const googleMapsUrl = settings.googleMapsEmbedUrl || 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2373.123456789!2d-2.428!3d53.577!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNTPCsDM0JzM3LjIiTiAywrAyNScwNC44Ilc!5e0!3m2!1sen!2suk!4v1234567890';
+  // Google Maps URL from settings
+  const googleMapsUrl = settings.googleMapsEmbedUrl || '';
   
-  // Default opening hours if not configured
-  const openingHours = settings.openingHours || 'Mon-Sat: 9:00 AM - 8:00 PM\nSunday: 10:00 AM - 6:00 PM';
+  // Opening hours from settings
+  const openingHours = settings.openingHours || '';
 
   // Helper to format category names to Title Case
   const toTitleCase = (str: string) => {
@@ -56,49 +74,45 @@ export default function Home() {
         {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: 'url(/hero-bg.png)' }}
+          style={{ backgroundImage: `url(${heroImageUrl})` }}
         ></div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
           <div className="max-w-2xl">
             <h1 className="text-4xl md:text-6xl font-black mb-4 leading-tight" style={{ textShadow: '2px 2px 8px rgba(0,0,0,0.8)' }}>
-              African & Caribbean<br />Groceries in Bolton
+              {heroHeading}
             </h1>
             <p className="text-lg md:text-xl mb-8 text-white flex items-center gap-2" style={{ textShadow: '1px 1px 4px rgba(0,0,0,0.8)' }}>
-              Fresh food. Affordable prices. Delivery available
+              {heroSubheading}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/products">
-                <button className="bg-omega-green-dark hover:bg-omega-green text-white px-8 py-4 rounded-lg font-bold inline-flex items-center justify-center gap-2 w-full sm:w-auto transition">
+                <button className="bg-primary hover:bg-primary/80 text-white px-8 py-4 rounded-lg font-bold inline-flex items-center justify-center gap-2 w-full sm:w-auto transition">
                   Shop Now
                 </button>
               </Link>
-              <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer">
-                <button className="bg-omega-orange hover:bg-omega-orange-light text-white px-8 py-4 rounded-lg font-bold inline-flex items-center justify-center gap-2 w-full sm:w-auto transition">
-                  <MessageCircle className="w-5 h-5" />
-                  Order via WhatsApp
-                </button>
-              </a>
+              {whatsappNumber && (
+                <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer">
+                  <button className="bg-secondary hover:bg-secondary/80 text-white px-8 py-4 rounded-lg font-bold inline-flex items-center justify-center gap-2 w-full sm:w-auto transition">
+                    <MessageCircle className="w-5 h-5" />
+                    Order via WhatsApp
+                  </button>
+                </a>
+              )}
             </div>
           </div>
         </div>
         
         {/* Trust Badges */}
-        <div className="relative bg-omega-green-dark/90 backdrop-blur-sm">
+        <div className="relative bg-primary/90 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex flex-wrap justify-center md:justify-between gap-4 text-sm text-white">
-              <div className="flex items-center gap-2">
-                <span className="text-yellow-400">👍</span>
-                <span>Trusted by the Bolton & Manchester African community</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-yellow-400">🚚</span>
-                <span>Same-day home delivery</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-yellow-400">⚡</span>
-                <span>Order in 2 minutes via WhatsApp</span>
-              </div>
+              {trustBadges.map((badge, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="text-yellow-400">{['👍', '🚚', '⚡'][i % 3]}</span>
+                  <span>{badge}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -150,9 +164,9 @@ export default function Home() {
                     <h3 className="text-base font-bold text-gray-900 text-center leading-tight">{category.name}</h3>
                   </div>
                   <div className="bg-white p-6 text-center">
-                    <p className="text-3xl font-black text-omega-orange mb-4">{prices[index % prices.length]}</p>
+                    <p className="text-3xl font-black text-secondary mb-4">{prices[index % prices.length]}</p>
                     <Link href={`/products?category=${category.slug}`}>
-                      <button className="w-full bg-omega-green-dark hover:bg-omega-green text-white py-3 rounded-lg font-bold transition">
+                      <button className="w-full bg-primary hover:bg-primary/80 text-white py-3 rounded-lg font-bold transition">
                         Shop Bundle
                       </button>
                     </Link>
@@ -251,7 +265,7 @@ export default function Home() {
                   <img src="/hero-bg.png" alt="Customer testimonial 1" className="w-full h-full object-cover opacity-70" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <button className="bg-white/90 hover:bg-white rounded-full p-4 transition">
-                      <Play className="w-8 h-8 text-omega-green-dark" fill="currentColor" />
+                      <Play className="w-8 h-8 text-primary" fill="currentColor" />
                     </button>
                   </div>
                 </div>
@@ -259,7 +273,7 @@ export default function Home() {
                   <img src="/hero-bg.png" alt="Customer testimonial 2" className="w-full h-full object-cover opacity-70" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <button className="bg-white/90 hover:bg-white rounded-full p-4 transition">
-                      <Play className="w-8 h-8 text-omega-green-dark" fill="currentColor" />
+                      <Play className="w-8 h-8 text-primary" fill="currentColor" />
                     </button>
                   </div>
                 </div>
@@ -267,7 +281,7 @@ export default function Home() {
                   <img src="/hero-bg.png" alt="Customer testimonial 3" className="w-full h-full object-cover opacity-70" />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <button className="bg-white/90 hover:bg-white rounded-full p-4 transition">
-                      <Play className="w-8 h-8 text-omega-green-dark" fill="currentColor" />
+                      <Play className="w-8 h-8 text-primary" fill="currentColor" />
                     </button>
                   </div>
                 </div>
@@ -300,7 +314,7 @@ export default function Home() {
                     <p className="text-sm font-semibold text-gray-900">
                       {review.user.firstName} {review.user.lastName}
                     </p>
-                    <Link href={`/products/${review.product.slug}`} className="text-sm text-omega-green-dark hover:underline">
+                    <Link href={`/products/${review.product.slug}`} className="text-sm text-primary hover:underline">
                       {review.product.name}
                     </Link>
                   </div>
@@ -310,7 +324,7 @@ export default function Home() {
               <>
                 <div className="flex items-start gap-2">
                   <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 flex-shrink-0 mt-1" />
-                  <p className="text-lg font-semibold text-gray-900">Best African shop in Bolton!"</p>
+                  <p className="text-lg font-semibold text-gray-900">Best shop around!"</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <Star className="w-5 h-5 text-yellow-500 fill-yellow-500 flex-shrink-0 mt-1" />
@@ -327,52 +341,60 @@ export default function Home() {
       </section>
 
       {/* CTA Section - Before Footer */}
-      <section className="relative py-10 md:py-12 bg-cover bg-center" style={{ backgroundImage: 'url(/hero-bg.png)' }}>
-        <div className="absolute inset-0 bg-omega-green-dark/85"></div>
+      <section className="relative py-10 md:py-12 bg-cover bg-center" style={{ backgroundImage: `url(${heroImageUrl})` }}>
+        <div className="absolute inset-0 bg-primary/85"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
             <div className="text-white">
               <h2 className="text-2xl md:text-3xl font-black mb-3">
-                Ready to cook? Shop now or order via WhatsApp 🛒
+                {settings.deliveryMessage || `Shop now at ${storeName}`} 🛒
               </h2>
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link href="/products">
-                  <button className="bg-white text-omega-green-dark hover:bg-gray-100 px-8 py-3 rounded-lg font-bold transition">
+                  <button className="bg-white text-primary hover:bg-gray-100 px-8 py-3 rounded-lg font-bold transition">
                     Shop Now
                   </button>
                 </Link>
-                <a href="tel:07535316253">
-                  <button className="bg-omega-orange hover:bg-omega-orange-light text-white px-8 py-3 rounded-lg font-bold transition">
-                    Call Now
-                  </button>
-                </a>
-                <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer">
-                  <button className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-bold transition inline-flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5" />
-                    WhatsApp Us
-                  </button>
-                </a>
+                {phoneNumber && (
+                  <a href={`tel:${phoneNumber.replace(/\s/g, '')}`}>
+                    <button className="bg-secondary hover:bg-secondary/80 text-white px-8 py-3 rounded-lg font-bold transition">
+                      Call Now
+                    </button>
+                  </a>
+                )}
+                {whatsappNumber && (
+                  <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer">
+                    <button className="bg-primary hover:bg-primary/80 text-white px-8 py-3 rounded-lg font-bold transition inline-flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5" />
+                      WhatsApp Us
+                    </button>
+                  </a>
+                )}
               </div>
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-xl">
-              <div className="flex items-center gap-2 mb-3">
-                <MapPin className="w-6 h-6 text-omega-green-dark" />
-                <div>
-                  <p className="font-bold text-gray-900">📍 07355-316259</p>
-                  <p className="text-sm text-gray-600">Map</p>
+            {(googleMapsUrl || settings.address) && (
+              <div className="bg-white rounded-lg p-4 shadow-xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <MapPin className="w-6 h-6 text-primary" />
+                  <div>
+                    <p className="font-bold text-gray-900">{settings.address || storeName}</p>
+                    {phoneNumber && <p className="text-sm text-gray-600">{phoneNumber}</p>}
+                  </div>
                 </div>
+                {googleMapsUrl && (
+                  <div className="aspect-video bg-gray-200 rounded overflow-hidden">
+                    <iframe
+                      src={googleMapsUrl}
+                      width="100%"
+                      height="100%"
+                      style={{ border: 0 }}
+                      allowFullScreen
+                      loading="lazy"
+                    ></iframe>
+                  </div>
+                )}
               </div>
-              <div className="aspect-video bg-gray-200 rounded overflow-hidden">
-                <iframe
-                  src={googleMapsUrl}
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  allowFullScreen
-                  loading="lazy"
-                ></iframe>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
@@ -382,20 +404,20 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
             <div>
-              <h3 className="font-bold text-lg mb-3 text-omega-green-dark">About Us</h3>
+              <h3 className="font-bold text-lg mb-3 text-primary">About Us</h3>
               <p className="text-gray-600">
                 {settings.aboutUs}
               </p>
             </div>
             <div>
-              <h3 className="font-bold text-lg mb-3 text-omega-green-dark">Contact</h3>
+              <h3 className="font-bold text-lg mb-3 text-primary">Contact</h3>
               <p className="text-gray-600">
                 Email: {settings.contactEmail}<br />
                 Phone: {settings.whatsappNumber}
               </p>
             </div>
             <div>
-              <h3 className="font-bold text-lg mb-3 text-omega-green-dark">Opening Hours</h3>
+              <h3 className="font-bold text-lg mb-3 text-primary">Opening Hours</h3>
               <p className="text-gray-600 whitespace-pre-line">
                 {openingHours}
               </p>

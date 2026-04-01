@@ -15,10 +15,11 @@ import {
   UseInterceptors,
   Res,
   Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Request, Response } from 'express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiConsumes } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { CreateProductDto, UpdateProductDto, UpdateInventoryDto, CreateStaffDto, UpdateStaffDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -564,5 +565,44 @@ export class AdminController {
     @CurrentUser() user: any,
   ) {
     return this.adminService.updateStaffPermissions(id, permissions, user.id);
+  }
+
+  // ============================================
+  // BRANDING
+  // ============================================
+
+  @Get('branding')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Get tenant branding (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Branding retrieved' })
+  async getBranding(@Req() req: Request) {
+    const tenantId = (req as any).tenantId;
+    return this.adminService.getBranding(tenantId);
+  }
+
+  @Put('branding')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Update tenant branding (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Branding updated' })
+  async updateBranding(@Req() req: Request, @Body() dto: any) {
+    const tenantId = (req as any).tenantId;
+    return this.adminService.updateBranding(tenantId, dto);
+  }
+
+  @Post('branding/upload')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Upload branding asset (logo, favicon, hero image)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Asset uploaded' })
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadBrandingAsset(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    const result = await this.adminService.uploadBrandingAsset(file);
+    return {
+      message: 'Branding asset uploaded successfully',
+      url: result.url,
+    };
   }
 }

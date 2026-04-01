@@ -44,7 +44,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
   if (isLoading) {
     return (
       <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#036637] mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
         <p className="text-gray-600 mt-4">Loading reviews...</p>
       </div>
     );
@@ -65,7 +65,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
       {!showReviewForm && stats.totalReviews > 0 && isAuthenticated && user?.role === 'CUSTOMER' && (
         <button
           onClick={() => setShowReviewForm(true)}
-          className="w-full md:w-auto px-6 py-3 bg-[#036637] hover:bg-[#014D29] text-white rounded-lg transition font-semibold"
+          className="w-full md:w-auto px-6 py-3 bg-primary hover:bg-primary/80 text-white rounded-lg transition font-semibold"
         >
           Write a Review
         </button>
@@ -81,7 +81,7 @@ export function ProductReviews({ productId, productName }: ProductReviewsProps) 
           {isAuthenticated && user?.role === 'CUSTOMER' && !showReviewForm && (
             <button
               onClick={() => setShowReviewForm(true)}
-              className="px-6 py-3 bg-[#036637] hover:bg-[#014D29] text-white rounded-lg transition font-semibold"
+              className="px-6 py-3 bg-primary hover:bg-primary/80 text-white rounded-lg transition font-semibold"
             >
               Write a Review
             </button>

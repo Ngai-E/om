@@ -147,7 +147,7 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
                     disabled={isOutOfStock}
                     className={`relative border-2 rounded-lg p-3 transition ${
                       isSelected
-                        ? 'border-omega-green-dark bg-green-50'
+                        ? 'border-primary bg-primary/5'
                         : isOutOfStock
                         ? 'border-gray-200 bg-gray-50 opacity-50 cursor-not-allowed'
                         : 'border-gray-200 hover:border-gray-300'
@@ -170,7 +170,7 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
                     </div>
                     
                     {/* Variant Price */}
-                    <div className="text-lg font-black text-omega-orange">
+                    <div className="text-lg font-black text-secondary">
                       £{parseFloat(variant.price).toFixed(2)}
                     </div>
 
@@ -187,7 +187,7 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
 
                     {/* Selected Indicator */}
                     {isSelected && (
-                      <div className="absolute top-2 right-2 bg-omega-green-dark text-white rounded-full p-1">
+                      <div className="absolute top-2 right-2 bg-primary text-white rounded-full p-1">
                         <Check className="w-4 h-4" />
                       </div>
                     )}
@@ -237,7 +237,7 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <div className="flex items-center justify-between">
                 <span className="text-gray-700 font-medium">Total:</span>
-                <span className="text-2xl font-black text-omega-orange">
+                <span className="text-2xl font-black text-secondary">
                   £{(parseFloat(selectedVariant.price) * quantity).toFixed(2)}
                 </span>
               </div>
@@ -261,7 +261,7 @@ export function VariantSelectorModal({ product, isOpen, onClose }: VariantSelect
               className={`flex-1 px-6 py-3 rounded-lg font-bold transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
                 justAdded
                   ? 'bg-green-600 text-white'
-                  : 'bg-omega-green-dark hover:bg-omega-green text-white'
+                  : 'bg-primary hover:bg-primary/80 text-white'
               }`}
             >
               {justAdded ? (
