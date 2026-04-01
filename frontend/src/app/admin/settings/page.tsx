@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { useSettingsStore } from '@/lib/store/settings-store';
+import { useTenant } from '@/components/providers/tenant-provider';
 import { PaymentsTab } from '@/components/admin/settings/payments-tab';
 import { SystemCleanupSection } from '@/components/admin/settings/system-cleanup-section';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -17,19 +18,20 @@ export default function SettingsPage() {
   const { toast, success, error, hideToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const { settings, updateSettings } = useSettingsStore();
+  const { tenant } = useTenant();
 
   const [formData, setFormData] = useState({
-    storeName: settings.storeName,
-    storeEmail: settings.storeEmail,
-    phoneNumber: settings.phoneNumber,
-    whatsappNumber: settings.whatsappNumber || '+44 7535 316253',
-    address: settings.address,
-    deliveryMessage: settings.deliveryMessage,
-    promoBanner: settings.promoBanner,
-    aboutUs: settings.aboutUs,
-    contactEmail: settings.contactEmail,
-    openingHours: settings.openingHours,
-    googleMapsEmbedUrl: settings.googleMapsEmbedUrl,
+    storeName: settings.storeName || '',
+    storeEmail: settings.storeEmail || '',
+    phoneNumber: settings.phoneNumber || '',
+    whatsappNumber: settings.whatsappNumber || '',
+    address: settings.address || '',
+    deliveryMessage: settings.deliveryMessage || '',
+    promoBanner: settings.promoBanner || '',
+    aboutUs: settings.aboutUs || '',
+    contactEmail: settings.contactEmail || '',
+    openingHours: settings.openingHours || '',
+    googleMapsEmbedUrl: settings.googleMapsEmbedUrl || '',
   });
 
   // Image upload configuration state
@@ -40,22 +42,22 @@ export default function SettingsPage() {
     apiSecret: '',
   });
 
-  // Sync form data with settings when they change
+  // Sync form data with settings when they change, fall back to tenant info for new stores
   useEffect(() => {
     setFormData({
-      storeName: settings.storeName,
-      storeEmail: settings.storeEmail,
-      phoneNumber: settings.phoneNumber,
-      whatsappNumber: settings.whatsappNumber || '+44 7535 316253',
-      address: settings.address,
-      deliveryMessage: settings.deliveryMessage,
-      promoBanner: settings.promoBanner,
-      aboutUs: settings.aboutUs,
-      contactEmail: settings.contactEmail,
-      openingHours: settings.openingHours,
-      googleMapsEmbedUrl: settings.googleMapsEmbedUrl,
+      storeName: settings.storeName || tenant?.name || '',
+      storeEmail: settings.storeEmail || tenant?.email || '',
+      phoneNumber: settings.phoneNumber || tenant?.phone || '',
+      whatsappNumber: settings.whatsappNumber || '',
+      address: settings.address || '',
+      deliveryMessage: settings.deliveryMessage || '',
+      promoBanner: settings.promoBanner || '',
+      aboutUs: settings.aboutUs || tenant?.description || '',
+      contactEmail: settings.contactEmail || tenant?.email || '',
+      openingHours: settings.openingHours || '',
+      googleMapsEmbedUrl: settings.googleMapsEmbedUrl || '',
     });
-  }, [settings]);
+  }, [settings, tenant]);
 
   const handleSaveSettings = async () => {
     setIsSaving(true);

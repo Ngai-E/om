@@ -39,7 +39,9 @@ export default function LoginPage() {
       setAuth(response.user, response.accessToken);
 
       // Redirect based on role
-      if (response.user.role === 'ADMIN') {
+      if (response.user.role === 'SUPER_ADMIN') {
+        router.push('/platform');
+      } else if (response.user.role === 'ADMIN') {
         router.push('/admin');
       } else if (response.user.role === 'STAFF') {
         router.push('/staff/dashboard');
@@ -129,6 +131,9 @@ export default function LoginPage() {
             </div>
             <div className="bg-muted/50 p-2 rounded">
               <strong>Admin:</strong> admin@omegaafroshop.com / Admin123!
+            </div>
+            <div className="bg-muted/50 p-2 rounded">
+              <strong>Super Admin:</strong> superadmin@omegaafroshop.com / SuperAdmin123!
             </div>
           </div>
         </div>

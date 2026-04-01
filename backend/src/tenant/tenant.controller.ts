@@ -7,13 +7,16 @@ import {
   Body,
   Param,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { TenantService } from './tenant.service';
 import { CreateTenantDto, UpdateTenantDto, UpdateBrandingDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { LicensingService } from '../licensing/licensing.service';
 
 @Controller('platform/tenants')
 export class TenantController {
@@ -130,7 +133,10 @@ export class TenantController {
 
 @Controller('storefront')
 export class StorefrontTenantController {
-  constructor(private readonly tenantService: TenantService) {}
+  constructor(
+    private readonly tenantService: TenantService,
+    private readonly licensingService: LicensingService,
+  ) {}
 
   @Get('resolve')
   async resolveByDomain(@Query('domain') domain: string) {
@@ -147,5 +153,14 @@ export class StorefrontTenantController {
   @Get('store/:slug')
   async getStoreBySlug(@Param('slug') slug: string) {
     return this.tenantService.findBySlug(slug);
+  }
+
+  @Get('entitlements')
+  async getEntitlements(@Req() req: Request) {
+    const tenantId = (req as any).tenantId;
+    if (!tenantId) {
+      return { error: 'Tenant context required' };
+    }
+    return this.licensingService.getTenantEntitlements(tenantId);
   }
 }

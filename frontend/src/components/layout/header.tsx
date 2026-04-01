@@ -13,6 +13,7 @@ import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
 import { promotionsApi } from '@/lib/api/promotions';
 import { useCart } from '@/lib/hooks/use-cart';
+import { useTenant } from '@/components/providers/tenant-provider';
 
 export function Header() {
   const router = useRouter();
@@ -22,6 +23,7 @@ export function Header() {
   const { items: guestCartItems } = useGuestCartStore();
   const { items: wishlistItems } = useWishlistStore();
   const { settings } = useSettingsStore();
+  const { tenant, branding } = useTenant();
   
   // Fetch cart data when authenticated to ensure count is up to date
   useCart();
@@ -112,15 +114,18 @@ export function Header() {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between text-xs md:text-sm">
             <div className="flex items-center gap-4">
-              <span className="font-medium">💰 Prices • 1,000+ Products</span>
-              <span className="hidden md:inline">🎁 Free ATI Programs</span>
+              <span className="font-medium">
+                {settings.promoBanner || tenant?.name || 'Welcome to our store'}
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Phone className="w-3 h-3 md:w-4 md:h-4" />
-              <a href="tel:07355316253" className="hover:text-omega-orange transition">
-                Call us: 07355 316253
-              </a>
-            </div>
+            {settings.phoneNumber && (
+              <div className="flex items-center gap-2">
+                <Phone className="w-3 h-3 md:w-4 md:h-4" />
+                <a href={`tel:${settings.phoneNumber.replace(/\s/g, '')}`} className="hover:text-omega-orange transition">
+                  Call us: {settings.phoneNumber}
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -131,8 +136,8 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <img 
-              src="/omega-logo.png" 
-              alt="OMEGA Afro Caribbean Superstore" 
+              src={branding?.logoUrl || '/omega-logo.png'} 
+              alt={tenant?.name || 'OMEGA Afro Caribbean Superstore'} 
               className="h-12 w-auto object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
@@ -140,7 +145,7 @@ export function Header() {
               }}
             />
             <div className="hidden font-black text-2xl text-omega-green-dark">
-              OMEGA
+              {tenant?.name || 'OMEGA'}
             </div>
           </Link>
 

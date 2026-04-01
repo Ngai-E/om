@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Put, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { SettingsService, PaymentMethod, PaymentMethodsConfig, PaymentType, ImageUploadService } from './settings.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -333,6 +333,20 @@ export class SettingsController {
     };
   }
 
+  @Get('public')
+  @ApiOperation({ summary: 'Get public storefront settings (tenant-scoped with platform fallback)' })
+  @ApiResponse({ status: 200, description: 'Public settings retrieved' })
+  async getPublicSettings(@Req() req: Request) {
+    const tenantId = (req as any).tenantId;
+    return {
+      guest_checkout_enabled: await this.settingsService.getGuestCheckoutEnabled(tenantId),
+      payment_methods_config: await this.settingsService.getPaymentMethodsConfig(tenantId),
+      enabled_payment_types: await this.settingsService.getEnabledPaymentTypes(tenantId),
+      allow_image_upload: await this.settingsService.getAllowImageUpload(tenantId),
+      allow_image_link: await this.settingsService.getAllowImageLink(tenantId),
+    };
+  }
+
   @Put()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
@@ -349,5 +363,64 @@ export class SettingsController {
       await this.settingsService.setSetting(key, JSON.stringify(value), undefined, user.id, tenantId);
     }
     return { message: 'Settings updated successfully' };
+  }
+}
+
+// ============================================
+// PLATFORM SETTINGS (Super Admin only)
+// ============================================
+
+@ApiTags('platform-settings')
+@Controller('platform/settings')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('SUPER_ADMIN')
+@ApiBearerAuth()
+export class PlatformSettingsController {
+  constructor(private settingsService: SettingsService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get all platform-level settings (Super Admin only)' })
+  async getPlatformSettings() {
+    const settings = await this.settingsService.getAllPlatformSettings();
+    return {
+      settings,
+      platformOnlyKeys: [
+        'platform_name',
+        'platform_domain',
+        'platform_subdomain_suffix',
+        'platform_maintenance_mode',
+        'default_trial_days',
+        'default_plan_id',
+        'marketplace_enabled',
+        'marketplace_commission_percent',
+        'global_rate_limit',
+        'signup_enabled',
+      ],
+    };
+  }
+
+  @Put()
+  @ApiOperation({ summary: 'Update platform-level settings (Super Admin only)' })
+  async updatePlatformSettings(
+    @Body() body: Record<string, any>,
+    @CurrentUser() user: any,
+  ) {
+    for (const [key, value] of Object.entries(body)) {
+      const strValue = typeof value === 'string' ? value : JSON.stringify(value);
+      await this.settingsService.setPlatformSetting(key, strValue, undefined, user.id);
+    }
+    return { message: 'Platform settings updated successfully' };
+  }
+
+  @Put(':key')
+  @ApiOperation({ summary: 'Update a single platform setting (Super Admin only)' })
+  async updatePlatformSetting(
+    @Param('key') key: string,
+    @Body() body: { value: any; description?: string },
+    @CurrentUser() user: any,
+  ) {
+    const strValue = typeof body.value === 'string' ? body.value : JSON.stringify(body.value);
+    await this.settingsService.setPlatformSetting(key, strValue, body.description, user.id);
+    return { message: `Platform setting '${key}' updated successfully` };
   }
 }

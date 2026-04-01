@@ -20,6 +20,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequireFeature } from '../auth/decorators/feature-gate.decorator';
+import { FeatureGateGuard } from '../auth/guards/feature-gate.guard';
 import { Request } from 'express';
 
 @ApiTags('promotions')
@@ -67,8 +69,9 @@ export class PromotionsController {
   // ============================================
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, FeatureGateGuard)
   @Roles('ADMIN')
+  @RequireFeature('promotions')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create promotion (Admin only)' })
   @ApiResponse({ status: 201, description: 'Promotion created' })

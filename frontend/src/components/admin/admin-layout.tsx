@@ -28,6 +28,7 @@ import {
   Video
 } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useTenant } from '@/components/providers/tenant-provider';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 
@@ -39,6 +40,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, clearAuth } = useAuthStore();
+  const { tenant, branding } = useTenant();
   const [globalSearch, setGlobalSearch] = useState('');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -186,14 +188,20 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
           <Link href="/admin" className="flex items-center gap-3">
-            <Image
-              src="/omega-logo.png"
-              alt="OMEGA Logo"
-              width={100}
-              height={100}
-              className="object-contain"
-              priority
-            />
+            {branding?.logoUrl ? (
+              <Image
+                src={branding.logoUrl}
+                alt={tenant?.name || 'Store'}
+                width={100}
+                height={100}
+                className="object-contain"
+                priority
+              />
+            ) : (
+              <span className="text-lg font-bold text-gray-900 truncate max-w-[160px]">
+                {tenant?.name || 'Store Admin'}
+              </span>
+            )}
           </Link>
           
           {/* Close button for mobile */}

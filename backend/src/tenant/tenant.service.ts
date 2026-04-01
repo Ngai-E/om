@@ -58,7 +58,23 @@ export class TenantService {
         },
       });
 
-      return this.findById(tenant.id);
+      // Return full tenant with includes (must use tx, not this.prisma)
+      return tx.tenant.findUnique({
+        where: { id: tenant.id },
+        include: {
+          branding: true,
+          domains: true,
+          _count: {
+            select: {
+              users: true,
+              products: true,
+              orders: true,
+              categories: true,
+              promotions: true,
+            },
+          },
+        },
+      });
     });
   }
 

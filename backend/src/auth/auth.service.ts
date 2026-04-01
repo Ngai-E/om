@@ -72,6 +72,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    // Resolve tenant slug for the user
+    let tenantSlug: string | null = null;
+    if (user.tenantId) {
+      const tenant = await this.prisma.tenant.findUnique({
+        where: { id: user.tenantId },
+        select: { slug: true },
+      });
+      tenantSlug = tenant?.slug || null;
+    }
+
     // Generate JWT
     const accessToken = this.generateToken(user.id, user.email, user.role);
 
@@ -82,7 +92,8 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        permissions: user.permissions || [],
+        permissions: (user as any).permissions || [],
+        tenantSlug,
       },
       accessToken,
       expiresIn: 604800, // 7 days in seconds

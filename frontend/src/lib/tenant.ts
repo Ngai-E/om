@@ -44,19 +44,37 @@ function extractSlugFromHost(host: string): string | null {
 
 /**
  * Get the current tenant slug. Safe to call on both server and client.
+ *
+ * Resolution order:
+ * 1. Env var override (local dev)
+ * 2. Subdomain from hostname
+ * 3. Logged-in user's tenantSlug (from persisted auth store)
+ * 4. Fallback to default tenant
  */
 export function getTenantSlug(): string {
   // 1. Env var override (useful for local dev)
   const envSlug = process.env.NEXT_PUBLIC_TENANT_SLUG;
   if (envSlug) return envSlug;
 
-  // 2. Extract from browser hostname
+  // 2. Extract from browser hostname (subdomain takes priority)
   if (typeof window !== 'undefined') {
     const slug = extractSlugFromHost(window.location.host);
     if (slug) return slug;
+
+    // 3. Check logged-in user's tenant from persisted auth store
+    try {
+      const raw = localStorage.getItem('auth-storage');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        const tenantSlug = parsed?.state?.user?.tenantSlug;
+        if (tenantSlug) return tenantSlug;
+      }
+    } catch {
+      // Ignore parse errors
+    }
   }
 
-  // 3. Fallback
+  // 4. Fallback
   return DEFAULT_TENANT_SLUG;
 }
 

@@ -30,20 +30,85 @@ export interface PaymentMethodsConfig {
   };
 }
 
+/**
+ * Settings that only SUPER_ADMIN can manage at the platform level.
+ * Tenants cannot override these.
+ */
+const PLATFORM_ONLY_KEYS = new Set([
+  'platform_name',
+  'platform_maintenance_mode',
+  'default_trial_days',
+  'default_plan_id',
+  'marketplace_enabled',
+  'marketplace_commission_percent',
+  'global_rate_limit',
+  'signup_enabled',
+]);
+
 @Injectable()
 export class SettingsService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Get a setting value with tenant → platform fallback.
+   * 1. If tenantId provided, look for tenant-specific value first
+   * 2. Fall back to platform default (tenantId IS NULL)
+   * 3. Return null if neither exists
+   */
   async getSetting(key: string, tenantId?: string): Promise<string | null> {
+    if (tenantId) {
+      // Try tenant-specific first
+      const tenantSetting = await this.prisma.systemSettings.findFirst({
+        where: { key, tenantId },
+      });
+      if (tenantSetting) return tenantSetting.value;
+    }
+
+    // Fall back to platform default (tenantId = null)
+    const platformSetting = await this.prisma.systemSettings.findFirst({
+      where: { key, tenantId: null },
+    });
+    return platformSetting?.value || null;
+  }
+
+  /**
+   * Get a platform-level setting only (no tenant fallback).
+   */
+  async getPlatformSetting(key: string): Promise<string | null> {
     const setting = await this.prisma.systemSettings.findFirst({
-      where: { key, ...(tenantId && { tenantId }) },
+      where: { key, tenantId: null },
     });
     return setting?.value || null;
   }
 
-  async setSetting(key: string, value: string, description?: string, updatedBy?: string, tenantId?: string): Promise<void> {
+  /**
+   * Set a platform-level setting (tenantId = null).
+   */
+  async setPlatformSetting(key: string, value: string, description?: string, updatedBy?: string): Promise<void> {
     const existing = await this.prisma.systemSettings.findFirst({
-      where: { key, ...(tenantId && { tenantId }) },
+      where: { key, tenantId: null },
+    });
+
+    if (existing) {
+      await this.prisma.systemSettings.update({
+        where: { id: existing.id },
+        data: { value, description, updatedBy },
+      });
+    } else {
+      await this.prisma.systemSettings.create({
+        data: { key, value, description, updatedBy },
+      });
+    }
+  }
+
+  async setSetting(key: string, value: string, description?: string, updatedBy?: string, tenantId?: string): Promise<void> {
+    // Platform-only keys cannot be set at tenant level
+    if (tenantId && PLATFORM_ONLY_KEYS.has(key)) {
+      throw new Error(`Setting '${key}' can only be configured at the platform level`);
+    }
+
+    const existing = await this.prisma.systemSettings.findFirst({
+      where: { key, ...(tenantId ? { tenantId } : { tenantId: null }) },
     });
 
     if (existing) {
@@ -56,6 +121,31 @@ export class SettingsService {
         data: { key, value, description, updatedBy, ...(tenantId && { tenantId }) },
       });
     }
+  }
+
+  /**
+   * Check if a setting key is platform-only.
+   */
+  isPlatformOnly(key: string): boolean {
+    return PLATFORM_ONLY_KEYS.has(key);
+  }
+
+  /**
+   * Get all platform-level settings (for super admin console).
+   */
+  async getAllPlatformSettings(): Promise<Record<string, any>> {
+    const settings = await this.prisma.systemSettings.findMany({
+      where: { tenantId: null },
+    });
+    const result: Record<string, any> = {};
+    for (const setting of settings) {
+      try {
+        result[setting.key] = JSON.parse(setting.value);
+      } catch {
+        result[setting.key] = setting.value;
+      }
+    }
+    return result;
   }
 
   async getPaymentMethod(tenantId?: string): Promise<PaymentMethod> {

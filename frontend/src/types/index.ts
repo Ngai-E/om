@@ -5,8 +5,9 @@ export interface User {
   firstName: string;
   lastName: string;
   phone?: string;
-  role: 'CUSTOMER' | 'STAFF' | 'ADMIN';
+  role: 'CUSTOMER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN';
   permissions?: string[]; // Fine-grained permissions for staff (e.g., ['inventory', 'reports'])
+  tenantSlug?: string | null; // The tenant this user belongs to
   emailVerified: boolean;
   isActive: boolean;
   createdAt: string;

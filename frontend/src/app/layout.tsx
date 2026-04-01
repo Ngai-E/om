@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ConditionalLayout } from "@/components/layout/conditional-layout";
+import { TenantProvider } from "@/components/providers/tenant-provider";
 
 export const metadata: Metadata = {
   title: "OMEGA Afro Caribbean Superstore",
@@ -51,7 +52,9 @@ export default function RootLayout({
     <html lang="en">
       <body className="font-sans antialiased" suppressHydrationWarning>
         <QueryProvider>
-          <ConditionalLayout>{children}</ConditionalLayout>
+          <TenantProvider>
+            <ConditionalLayout>{children}</ConditionalLayout>
+          </TenantProvider>
         </QueryProvider>
       </body>
     </html>

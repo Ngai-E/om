@@ -27,6 +27,8 @@ import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequireFeature, RequireLimit } from '../auth/decorators/feature-gate.decorator';
+import { FeatureGateGuard, LimitGateGuard } from '../auth/guards/feature-gate.guard';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -117,6 +119,8 @@ export class AdminController {
   }
 
   @Post('products')
+  @UseGuards(LimitGateGuard)
+  @RequireLimit('products')
   @ApiOperation({ summary: 'Create new product (Admin only)' })
   @ApiResponse({ status: 201, description: 'Product created' })
   async createProduct(@Req() req: Request, @Body() dto: CreateProductDto) {
