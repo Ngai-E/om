@@ -352,38 +352,18 @@ export function PaymentsTab() {
       </div>
       )}
 
-      {/* Stripe Configuration Info */}
+      {/* Note about platform-managed Stripe */}
       {paymentConfig.card.enabled && (
-      <div className="bg-white border rounded-lg p-6">
-        <h2 className="text-lg font-bold mb-4">Stripe API Keys</h2>
-        <p className="text-sm text-gray-600 mb-4">
-          Configure your Stripe API keys in your environment variables:
-        </p>
-        <div className="space-y-3 bg-gray-50 p-4 rounded-lg font-mono text-sm">
-          <div>
-            <span className="text-gray-600">Backend (.env):</span>
-            <div className="mt-1 text-gray-800">
-              STRIPE_SECRET_KEY=sk_test_...
-            </div>
-          </div>
-          <div>
-            <span className="text-gray-600">Frontend (.env.local):</span>
-            <div className="mt-1 text-gray-800">
-              NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
-            </div>
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-5 h-5 text-blue-600 mt-0.5">ℹ️</div>
+          <div className="flex-1">
+            <h3 className="font-medium text-blue-900 mb-1">Platform-Managed Payments</h3>
+            <p className="text-sm text-blue-700">
+              Stripe is configured at the platform level. All payments are processed through the platform's centralized Stripe account. You don't need to configure your own API keys.
+            </p>
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-3">
-          Get your API keys from the{' '}
-          <a 
-            href="https://dashboard.stripe.com/apikeys" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            Stripe Dashboard
-          </a>
-        </p>
       </div>
       )}
     </div>

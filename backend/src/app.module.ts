@@ -22,6 +22,7 @@ import { LicensingModule } from './licensing/licensing.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { TenantModule } from './tenant/tenant.module';
+import { PlatformModule } from './platform/platform.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -70,6 +71,7 @@ import { AppController } from './app.controller';
     LicensingModule,
     ReviewsModule,
     TestimonialsModule,
+    PlatformModule,
   ],
   controllers: [AppController],
 })

@@ -87,4 +87,123 @@ export const platformApi = {
     const { data } = await apiClient.put('/platform/settings', settings);
     return data;
   },
+
+  // Platform Configuration
+  getPlatformConfig: async () => {
+    const { data } = await apiClient.get('/platform/config');
+    return data;
+  },
+
+  updatePlatformConfig: async (config: { key: string; value: string; description?: string }) => {
+    const { data } = await apiClient.put('/platform/config', config);
+    return data;
+  },
+
+  getPlatformConfigValue: async (key: string) => {
+    const { data } = await apiClient.get(`/platform/config/${key}`);
+    return data;
+  },
+
+  // Platform Fees
+  getPlatformFees: async () => {
+    const { data } = await apiClient.get('/platform/fees');
+    return data;
+  },
+
+  updatePlatformFees: async (fees: {
+    platformFeePercent?: number;
+    taxPercent?: number;
+    minimumPayout?: number;
+    payoutSchedule?: string;
+  }) => {
+    const { data } = await apiClient.put('/platform/fees', fees);
+    return data;
+  },
+
+  // Tenant Balances
+  getTenantBalances: async () => {
+    const { data } = await apiClient.get('/platform/balances');
+    return data;
+  },
+
+  getTenantBalance: async (tenantId: string) => {
+    const { data } = await apiClient.get(`/platform/balances/${tenantId}`);
+    return data;
+  },
+
+  // Payouts
+  getPayouts: async (filters?: {
+    tenantId?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const params = new URLSearchParams();
+    if (filters?.tenantId) params.append('tenantId', filters.tenantId);
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    
+    const { data } = await apiClient.get(`/platform/payouts?${params}`);
+    return data;
+  },
+
+  createPayout: async (payout: {
+    tenantId: string;
+    amount: number;
+    paymentMethod: string;
+    bankAccountName?: string;
+    bankAccountNumber?: string;
+    bankSortCode?: string;
+    reference?: string;
+    notes?: string;
+  }) => {
+    const { data } = await apiClient.post('/platform/payouts', payout);
+    return data;
+  },
+
+  updatePayoutStatus: async (payoutId: string, status: string, stripePayoutId?: string) => {
+    const { data } = await apiClient.put(`/platform/payouts/${payoutId}/status`, { status, stripePayoutId });
+    return data;
+  },
+
+  getPayoutStats: async () => {
+    const { data } = await apiClient.get('/platform/payouts/stats');
+    return data;
+  },
+
+  // Image Upload Configuration
+  getImageUploadConfig: async () => {
+    const { data } = await apiClient.get('/platform/image-upload');
+    return data;
+  },
+
+  updateImageUploadConfig: async (config: {
+    service: 'imgbb' | 'cloudinary';
+    imgbbApiKey?: string;
+    cloudinaryConfig?: {
+      cloudName: string;
+      apiKey: string;
+      apiSecret: string;
+    };
+  }) => {
+    const { data } = await apiClient.put('/platform/image-upload', config);
+    return data;
+  },
+
+  // Stripe Configuration
+  getStripeConfig: async () => {
+    const { data } = await apiClient.get('/platform/stripe');
+    return data;
+  },
+
+  updateStripeConfig: async (config: {
+    publishableKey?: string;
+    secretKey?: string;
+    webhookSecret?: string;
+    connectAccountId?: string;
+  }) => {
+    const { data } = await apiClient.put('/platform/stripe', config);
+    return data;
+  },
 };

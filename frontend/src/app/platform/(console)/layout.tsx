@@ -12,12 +12,14 @@ import {
   BarChart3,
   LogOut,
   Shield,
+  BookOpen,
 } from 'lucide-react';
 
 const navItems = [
   { href: '/platform', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/platform/tenants', label: 'Tenants', icon: Store },
   { href: '/platform/packages', label: 'Packages', icon: Package },
+  { href: '/platform/payouts', label: 'Payouts', icon: BarChart3 },
   { href: '/platform/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -70,18 +72,17 @@ export default function ConsoleLayout({ children }: { children: React.ReactNode 
 
         <nav className="flex-1 p-4 space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || 
+            const isActive = pathname === item.href ||
               (item.href !== '/platform' && pathname?.startsWith(item.href));
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium text-sm ${
-                  isActive
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition font-medium text-sm ${isActive
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                }`}
+                  }`}
               >
                 <Icon className="w-5 h-5" />
                 {item.label}
@@ -97,6 +98,13 @@ export default function ConsoleLayout({ children }: { children: React.ReactNode 
           >
             <BarChart3 className="w-4 h-4" />
             Back to Store Admin
+          </Link>
+          <Link
+            href="/admin/docs"
+            className="flex items-center gap-3 px-4 py-2 text-gray-400 hover:text-white transition text-sm"
+          >
+            <BookOpen className="w-4 h-4" />
+            Documentation
           </Link>
           <button
             onClick={() => {

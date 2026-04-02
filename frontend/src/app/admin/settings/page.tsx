@@ -423,159 +423,18 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Image Upload Service Configuration */}
+            {/* Note about platform-managed image upload */}
             {systemSettings?.allow_image_upload && (
-              <div className="bg-white border rounded-lg p-6">
-                <h2 className="text-lg font-bold mb-4">Image Upload Service</h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Choose which service to use for uploading product images.
-                </p>
-
-                {/* Service Selection */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-2">Upload Service</label>
-                  <select
-                    value={systemSettings?.image_upload_service || 'imgbb'}
-                    onChange={(e) => updateUploadService.mutate(e.target.value as 'imgbb' | 'cloudinary')}
-                    disabled={updateUploadService.isPending}
-                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="imgbb">ImgBB (Free, No Account Required)</option>
-                    <option value="cloudinary">Cloudinary (Requires Account)</option>
-                  </select>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 text-blue-600 mt-0.5">ℹ️</div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-blue-900 mb-1">Platform-Managed Image Upload</h3>
+                    <p className="text-sm text-blue-700">
+                      Image upload service is configured at the platform level. Contact your platform administrator if you need to change the upload service or API keys.
+                    </p>
+                  </div>
                 </div>
-
-                {/* ImgBB Configuration */}
-                {systemSettings?.image_upload_service === 'imgbb' && (
-                  <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div>
-                      <h3 className="font-medium mb-2">ImgBB Configuration</h3>
-                      <p className="text-sm text-gray-600 mb-3">
-                        Get your free API key from{' '}
-                        <a
-                          href="https://api.imgbb.com/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          ImgBB API
-                        </a>
-                      </p>
-                      <label className="block text-sm font-medium mb-2">API Key</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={imgbbApiKey}
-                          onChange={(e) => setImgbbApiKey(e.target.value)}
-                          placeholder="Enter your ImgBB API key"
-                          className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                        <button
-                          onClick={() => {
-                            if (imgbbApiKey.trim()) {
-                              updateImgbbKey.mutate(imgbbApiKey.trim());
-                              setImgbbApiKey('');
-                            }
-                          }}
-                          disabled={updateImgbbKey.isPending || !imgbbApiKey.trim()}
-                          className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {updateImgbbKey.isPending ? 'Saving...' : 'Save'}
-                        </button>
-                      </div>
-                      {systemSettings?.imgbb_api_key && (
-                        <p className="text-sm text-green-600 mt-2">✓ API key configured</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Cloudinary Configuration */}
-                {systemSettings?.image_upload_service === 'cloudinary' && (
-                  <div className="space-y-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                    <div>
-                      <h3 className="font-medium mb-2">Cloudinary Configuration</h3>
-                      <p className="text-sm text-gray-600 mb-3">
-                        Get your credentials from{' '}
-                        <a
-                          href="https://cloudinary.com/console"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-purple-600 hover:underline"
-                        >
-                          Cloudinary Console
-                        </a>
-                      </p>
-
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Cloud Name</label>
-                          <input
-                            type="text"
-                            value={cloudinaryConfig.cloudName}
-                            onChange={(e) =>
-                              setCloudinaryConfig({ ...cloudinaryConfig, cloudName: e.target.value })
-                            }
-                            placeholder="your-cloud-name"
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-1">API Key</label>
-                          <input
-                            type="text"
-                            value={cloudinaryConfig.apiKey}
-                            onChange={(e) =>
-                              setCloudinaryConfig({ ...cloudinaryConfig, apiKey: e.target.value })
-                            }
-                            placeholder="123456789012345"
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-1">API Secret</label>
-                          <input
-                            type="password"
-                            value={cloudinaryConfig.apiSecret}
-                            onChange={(e) =>
-                              setCloudinaryConfig({ ...cloudinaryConfig, apiSecret: e.target.value })
-                            }
-                            placeholder="Enter API secret"
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                          />
-                        </div>
-
-                        <button
-                          onClick={() => {
-                            if (
-                              cloudinaryConfig.cloudName.trim() &&
-                              cloudinaryConfig.apiKey.trim() &&
-                              cloudinaryConfig.apiSecret.trim()
-                            ) {
-                              updateCloudinaryConfig.mutate(cloudinaryConfig);
-                              setCloudinaryConfig({ cloudName: '', apiKey: '', apiSecret: '' });
-                            }
-                          }}
-                          disabled={
-                            updateCloudinaryConfig.isPending ||
-                            !cloudinaryConfig.cloudName.trim() ||
-                            !cloudinaryConfig.apiKey.trim() ||
-                            !cloudinaryConfig.apiSecret.trim()
-                          }
-                          className="w-full px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {updateCloudinaryConfig.isPending ? 'Saving...' : 'Save Configuration'}
-                        </button>
-
-                        {systemSettings?.cloudinary_configured && (
-                          <p className="text-sm text-green-600">✓ Cloudinary configured</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
