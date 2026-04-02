@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, BadRequestException } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PlatformService } from './platform.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -10,30 +10,32 @@ import { Decimal } from '@prisma/client/runtime/library';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class TenantPayoutsController {
-  constructor(private platformService: PlatformService) {}
+  constructor(private platformService: PlatformService) { }
 
   @Get('balance')
   @ApiOperation({ summary: 'Get current tenant balance and earnings' })
   @ApiResponse({ status: 200, description: 'Tenant balance retrieved' })
-  async getTenantBalance(@CurrentUser() user: any) {
-    if (!user.tenantId) {
-      throw new Error('No tenant found for user');
+  async getTenantBalance(@Req() req: any) {
+    const tenantId = req.tenantId;
+    if (!tenantId) {
+      throw new BadRequestException('No tenant found for request');
     }
 
-    const balance = await this.platformService.getTenantBalance(user.tenantId);
+    const balance = await this.platformService.getTenantBalance(tenantId);
     return { balance };
   }
 
   @Get('requests')
   @ApiOperation({ summary: 'Get tenant\'s payout requests' })
   @ApiResponse({ status: 200, description: 'Payout requests retrieved' })
-  async getPayoutRequests(@CurrentUser() user: any) {
-    if (!user.tenantId) {
-      throw new Error('No tenant found for user');
+  async getPayoutRequests(@Req() req: any) {
+    const tenantId = req.tenantId;
+    if (!tenantId) {
+      throw new BadRequestException('No tenant found for request');
     }
 
     const result = await this.platformService.getPayouts(
-      user.tenantId,
+      tenantId,
       undefined,
       1,
       20
@@ -53,14 +55,15 @@ export class TenantPayoutsController {
       bankSortCode?: string;
       notes?: string;
     },
-    @CurrentUser() user: any,
+    @Req() req: any,
   ) {
-    if (!user.tenantId) {
-      throw new Error('No tenant found for user');
+    const tenantId = req.tenantId;
+    if (!tenantId) {
+      throw new BadRequestException('No tenant found for request');
     }
 
     // Check if tenant has sufficient balance
-    const balance = await this.platformService.getTenantBalance(user.tenantId);
+    const balance = await this.platformService.getTenantBalance(tenantId);
     if (!balance || new Decimal(balance.currentBalance).lt(body.amount)) {
       throw new Error('Insufficient balance for payout request');
     }
@@ -74,7 +77,7 @@ export class TenantPayoutsController {
 
     // Create payout request
     const payout = await this.platformService.createPayout({
-      tenantId: user.tenantId,
+      tenantId,
       amount: netAmount,
       grossAmount,
       platformFee,
@@ -87,9 +90,9 @@ export class TenantPayoutsController {
       processedBy: null, // Will be set when approved by admin
     });
 
-    return { 
+    return {
       message: 'Payout request submitted successfully',
-      payout 
+      payout
     };
   }
 }

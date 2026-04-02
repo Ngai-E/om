@@ -16,7 +16,7 @@ export class AdminService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private auditService: AuditService,
     private uploadService: UploadService,
-  ) {}
+  ) { }
 
   // ============================================
   // DASHBOARD & STATS
@@ -46,7 +46,7 @@ export class AdminService {
 
     for (const product of products) {
       const threshold = product.inventory?.lowStockThreshold || 10;
-      
+
       if (product.variants && product.variants.length > 0) {
         // Count variants with low stock (including out of stock for badge alert)
         for (const variant of product.variants) {
@@ -78,7 +78,7 @@ export class AdminService {
     tenantId?: string,
   ) {
     const skip = (page - 1) * limit;
-    
+
     const where: any = {};
 
     if (tenantId) {
@@ -186,12 +186,12 @@ export class AdminService {
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-|-$/g, '');
-        
+
         // Check if slug already exists and append number if needed
         let slugExists = await this.prisma.category.findFirst({
           where: { slug: categorySlug, ...(tenantId && { tenantId }) },
         });
-        
+
         let counter = 1;
         while (slugExists) {
           categorySlug = `${dto.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${counter}`;
@@ -200,7 +200,7 @@ export class AdminService {
           });
           counter++;
         }
-        
+
         category = await this.prisma.category.create({
           data: {
             name: dto.category,
@@ -314,12 +314,12 @@ export class AdminService {
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-|-$/g, '');
-        
+
         // Check if slug already exists and append number if needed
         let slugExists = await this.prisma.category.findFirst({
           where: { slug: categorySlug, ...(tenantId && { tenantId }) },
         });
-        
+
         let counter = 1;
         while (slugExists) {
           categorySlug = `${dto.category.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${counter}`;
@@ -328,7 +328,7 @@ export class AdminService {
           });
           counter++;
         }
-        
+
         category = await this.prisma.category.create({
           data: {
             name: dto.category,
@@ -363,7 +363,7 @@ export class AdminService {
     // Handle image updates
     if (dto.images !== undefined && Array.isArray(dto.images)) {
       console.log(`Updating images for product ${productId}: deleting old images, adding ${dto.images.length} new images`);
-      
+
       // Delete existing images
       await this.prisma.productImage.deleteMany({
         where: { productId },
@@ -433,7 +433,7 @@ export class AdminService {
       if (slug) {
         await this.cacheManager.del(`product:slug:${slug}`);
       }
-      
+
       // Clear products list caches - manually delete known cache key patterns
       // Since we can't iterate all keys easily, we'll clear common patterns
       const cachePatterns = [
@@ -441,7 +441,7 @@ export class AdminService {
         'products:{"where":{"deletedAt":null}',
         'products:{"where":{"isActive":true}',
       ];
-      
+
       // Try to clear cache keys with common patterns
       for (const pattern of cachePatterns) {
         // Delete keys that start with these patterns
@@ -452,7 +452,7 @@ export class AdminService {
           // Ignore errors for non-existent keys
         }
       }
-      
+
       console.log(`🗑️  Cleared cache for product: ${productId}`);
     } catch (error) {
       console.warn('⚠️  Cache clear error:', error.message);
@@ -583,7 +583,7 @@ export class AdminService {
 
   async createCategory(name: string, description?: string, image?: string, parentId?: string, tenantId?: string) {
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    
+
     const existing = await this.prisma.category.findFirst({
       where: { slug, ...(tenantId && { tenantId }) },
     });
@@ -614,7 +614,7 @@ export class AdminService {
     }
 
     const updateData: any = {};
-    
+
     if (dto.name !== undefined) {
       updateData.name = dto.name;
       updateData.slug = dto.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -713,7 +713,7 @@ export class AdminService {
   async updateVariant(productId: string, variantId: string, variantData: any) {
     // Handle type conversions and empty strings
     const updateData: any = {};
-    
+
     if (variantData.name !== undefined) updateData.name = variantData.name;
     if (variantData.sku !== undefined) updateData.sku = variantData.sku;
     if (variantData.price !== undefined) updateData.price = parseFloat(variantData.price);
@@ -722,7 +722,7 @@ export class AdminService {
     }
     if (variantData.stock !== undefined) updateData.stock = parseInt(variantData.stock);
     if (variantData.isActive !== undefined) updateData.isActive = variantData.isActive;
-    
+
     const variant = await this.prisma.productVariant.update({
       where: { id: variantId },
       data: updateData,
@@ -759,16 +759,16 @@ export class AdminService {
 
   private parseStockQuantity(stockValue: any): number {
     console.log('🔍 Parsing stock value:', JSON.stringify(stockValue), 'Type:', typeof stockValue);
-    
+
     if (stockValue === undefined || stockValue === null || stockValue === '') {
       console.log('❌ No stock value, returning 0');
       return 0;
     }
-    
+
     if (typeof stockValue === 'string') {
       const stockLower = stockValue.toLowerCase().trim();
       console.log('📝 Stock string (lowercase):', stockLower);
-      
+
       if (stockLower.includes('in stock') || stockLower === 'yes' || stockLower === 'in') {
         console.log('✅ Detected "In Stock", returning 100');
         return 100;
@@ -780,7 +780,7 @@ export class AdminService {
       console.log('🔢 Parsed numeric value:', parsed);
       return parsed;
     }
-    
+
     const parsed = parseInt(stockValue) || 0;
     console.log('🔢 Parsed non-string value:', parsed);
     return parsed;
@@ -789,11 +789,11 @@ export class AdminService {
   private parseImages(row: any): any[] {
     const imageUrlRaw = row.imageUrl || row.ImageUrl || row.Image || row.image;
     const imageUrl = imageUrlRaw !== undefined ? String(imageUrlRaw).trim() : '';
-    
+
     if (!imageUrl || imageUrl === '📷') {
       return [];
     }
-    
+
     return imageUrl.split('|').map((url: string, index: number) => ({
       url: url.trim(),
       altText: row.name || row.Name,
@@ -836,14 +836,14 @@ export class AdminService {
     // Use first row for base product data
     const firstRow = rows[0];
     const slug = baseName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    
+
     // Check if base product exists
     let product = await this.prisma.product.findFirst({ where: { slug } });
 
     if (!product) {
       // Create base product
       const images = this.parseImages(firstRow);
-      
+
       const productData: any = {
         name: baseName,
         description: firstRow.description || firstRow.Description || '',
@@ -929,16 +929,16 @@ export class AdminService {
     return new Promise((resolve, reject) => {
       const stream = Readable.from(file.buffer.toString());
       let headerValidated = false;
-      
+
       stream
         .pipe(csvParser())
         .on('headers', (headers) => {
           // Validate CSV format
           const requiredColumns = ['Name', 'Category', 'Price'];
-          const hasRequiredColumns = requiredColumns.every(col => 
+          const hasRequiredColumns = requiredColumns.every(col =>
             headers.some(h => h.toLowerCase() === col.toLowerCase())
           );
-          
+
           if (!hasRequiredColumns) {
             reject(new BadRequestException({
               message: 'Invalid CSV format - Missing required columns',
@@ -953,7 +953,7 @@ export class AdminService {
             }));
             return;
           }
-          
+
           // Check for malformed header (entire row in quotes)
           if (headers.length === 1 && headers[0].includes(',')) {
             reject(new BadRequestException({
@@ -969,7 +969,7 @@ export class AdminService {
             }));
             return;
           }
-          
+
           headerValidated = true;
         })
         .on('data', (row) => {
@@ -984,23 +984,23 @@ export class AdminService {
           try {
             // Group products by base name for variant detection
             const productGroups = new Map<string, any[]>();
-            
+
             for (const row of results) {
               const fullName = row.name || row.Name;
               if (!fullName) continue;
-              
+
               // Extract base name and size
               const sizePattern = /(\d+(?:\.\d+)?\s*(?:kg|g|l|ml|cl|oz|lb|pack)|x\d+\s*pack)/i;
               const match = fullName.match(sizePattern);
-              
+
               let baseName = fullName;
               let size = null;
-              
+
               if (match) {
                 size = match[1].trim();
                 baseName = fullName.replace(sizePattern, '').trim();
               }
-              
+
               if (!productGroups.has(baseName)) {
                 productGroups.set(baseName, []);
               }
@@ -1012,7 +1012,7 @@ export class AdminService {
               try {
                 // Check if all rows are duplicates (same exact name, no size variations)
                 const allSameName = rows.every(r => !r.detectedSize);
-                
+
                 if (rows.length === 1 && !rows[0].detectedSize) {
                   // Single product with no size variant
                   await this.importSingleProduct(rows[0]);
@@ -1184,12 +1184,12 @@ export class AdminService {
 
   private escapeCsvValue(value: string): string {
     if (!value) return '';
-    
+
     // If value contains comma, quote, or newline, wrap in quotes and escape quotes
     if (value.includes(',') || value.includes('"') || value.includes('\n')) {
       return `"${value.replace(/"/g, '""')}"`;
     }
-    
+
     return value;
   }
 
@@ -1429,7 +1429,7 @@ export class AdminService {
       totalCustomers,
       totalProducts,
       recentOrders,
-      lowStockProducts,
+      inventoryStats,
       ordersByStatus,
       newOrdersToday,
       pendingPayment,
@@ -1481,23 +1481,8 @@ export class AdminService {
         },
       }),
 
-      // Low stock products (< 10 units)
-      this.prisma.inventory.findMany({
-        where: {
-          quantity: {
-            lt: 10,
-          },
-          product: {
-            isActive: true,
-            ...(tenantId && { tenantId }),
-          },
-        },
-        include: {
-          product: true,
-        },
-        orderBy: { quantity: 'asc' },
-        take: 10,
-      }),
+      // Get accurate inventory stats (syncs with badge logic)
+      this.getInventoryStats(tenantId),
 
       // Orders by status
       this.prisma.order.groupBy({
@@ -1580,11 +1565,11 @@ export class AdminService {
       totalProducts,
       recentOrders,
       topProducts: [], // Can be implemented later
-      
+
       // NEW: Dashboard metrics
       newOrdersToday,
       pendingPayment,
-      lowStockItems: lowStockProducts.length,
+      lowStockItems: inventoryStats.lowStockCount + inventoryStats.outOfStockCount,
       todayRevenue: todayRevenue._sum.total?.toString() || '0',
       ordersByStatus: ordersByStatus.map((item) => ({
         status: item.status,
@@ -1664,12 +1649,12 @@ export class AdminService {
         // Copy inventory settings (but reset quantity to 0)
         inventory: sourceProduct.inventory
           ? {
-              create: {
-                quantity: 0,
-                lowStockThreshold: sourceProduct.inventory.lowStockThreshold,
-                isTracked: sourceProduct.inventory.isTracked,
-              },
-            }
+            create: {
+              quantity: 0,
+              lowStockThreshold: sourceProduct.inventory.lowStockThreshold,
+              isTracked: sourceProduct.inventory.isTracked,
+            },
+          }
           : undefined,
       },
       include: {
@@ -1883,7 +1868,7 @@ export class AdminService {
   // Delivery Slots
   async getAllDeliverySlots(date?: string, tenantId?: string) {
     const where: any = { ...(tenantId && { tenantId }) };
-    
+
     if (date) {
       where.date = new Date(date);
     }
@@ -2233,7 +2218,7 @@ export class AdminService {
     // Validate permissions
     const validPermissions = ['inventory', 'customers'];
     const invalidPerms = permissions.filter(p => !validPermissions.includes(p));
-    
+
     if (invalidPerms.length > 0) {
       throw new BadRequestException(`Invalid permissions: ${invalidPerms.join(', ')}`);
     }
@@ -2292,7 +2277,7 @@ export class AdminService {
 
     for (const product of products) {
       const threshold = product.inventory?.lowStockThreshold || 10;
-      
+
       if (product.variants && product.variants.length > 0) {
         // For products with variants, count each variant
         for (const variant of product.variants) {
