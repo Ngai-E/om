@@ -1,6 +1,8 @@
 import axios from 'axios';
 import { handleApiError } from './error-handler';
 import { getTenantSlug } from '../tenant';
+import AuthGuard from '../auth/auth-guard';
+import AuthRecovery from '../auth/auth-recovery';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
 
@@ -42,13 +44,19 @@ apiClient.interceptors.request.use(
 // Response interceptor to handle errors
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      // Unauthorized - clear token and redirect to login
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+      // Try automatic recovery first
+      const recovered = await AuthRecovery.handleAuthError(error);
+      
+      if (recovered) {
+        console.log('✅ Auth error automatically recovered, retrying request...');
+        // Retry the original request with fresh auth
+        return apiClient.request(error.config);
+      } else {
+        // Recovery failed, use fallback handling
+        const authError = AuthGuard.handleAuthError(error);
+        console.error('Authentication error:', AuthGuard.getErrorMessage(authError));
       }
     } else if (globalErrorHandler) {
       // Call global error handler for other errors

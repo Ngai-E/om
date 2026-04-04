@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/lib/store/auth-store';
+import AuthGuard from '@/lib/auth/auth-guard';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -18,9 +19,22 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionMessage, setSessionMessage] = useState<string | null>(null);
+
+  // Handle session expired message from URL params
+  useEffect(() => {
+    const reason = searchParams.get('reason');
+    if (reason === 'expired') {
+      setSessionMessage('Your session has expired. Please login again.');
+      // Clear any stale auth data
+      AuthGuard.clearAuthData();
+      AuthGuard.reset();
+    }
+  }, [searchParams]);
 
   const {
     register,
@@ -37,6 +51,9 @@ export default function LoginPage() {
 
       const response = await authApi.login(data);
       setAuth(response.user, response.accessToken);
+
+      // Reset AuthGuard after successful login
+      AuthGuard.reset();
 
       // Redirect based on role
       if (response.user.role === 'SUPER_ADMIN') {
@@ -58,6 +75,12 @@ export default function LoginPage() {
   return (
     <div className="bg-card border rounded-lg shadow-lg p-8">
       <h2 className="text-2xl font-bold mb-6">Sign In</h2>
+
+      {sessionMessage && (
+        <div className="bg-amber-50 border border-amber-500 text-amber-700 px-4 py-3 rounded mb-4">
+          {sessionMessage}
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 border border-red-500 text-red-700 px-4 py-3 rounded mb-4">

@@ -228,3 +228,28 @@ export interface ApiError {
   statusCode: number;
   error?: string;
 }
+
+// Testimonial types
+export interface Testimonial {
+  id: string;
+  title?: string;
+  description?: string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// Review types
+export interface Review {
+  id: string;
+  productId: string;
+  product: Product;
+  userId: string;
+  user: User;
+  rating: number;
+  title?: string;
+  comment: string;
+  isPublished: boolean;
+  createdAt: string;
+}

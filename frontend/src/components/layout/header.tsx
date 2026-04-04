@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { Search, ShoppingCart, User, Menu, X, LogOut, Heart, Home, Tag, Phone, ChevronDown, Grid } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, LogOut, Heart, Home, Tag, Phone, ChevronDown, Grid, Store } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useGuestCartStore } from '@/lib/store/guest-cart-store';
@@ -14,6 +14,7 @@ import { productsApi } from '@/lib/api/products';
 import { promotionsApi } from '@/lib/api/promotions';
 import { useCart } from '@/lib/hooks/use-cart';
 import { useTenant } from '@/components/providers/tenant-provider';
+import { getTenantSlug } from '@/lib/tenant';
 
 export function Header() {
   const router = useRouter();
@@ -27,6 +28,10 @@ export function Header() {
   
   // Fetch cart data when authenticated to ensure count is up to date
   useCart();
+  
+  // Check if we're on a platform domain (not a tenant store)
+  const currentTenantSlug = getTenantSlug();
+  const isPlatformDomain = !currentTenantSlug; // No tenant slug means we're on platform
   
   // Calculate total cart count (authenticated or guest)
   const totalCartCount = isAuthenticated ? itemCount : guestCartItems.length;
@@ -213,6 +218,17 @@ export function Header() {
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-black animate-bounce">
                   HOT
                 </span>
+              </Link>
+            )}
+            
+            {isPlatformDomain && (
+              <Link
+                href="/platform/marketplace"
+                className="flex items-center gap-1 px-3 py-2 text-gray-700 hover:text-primary transition"
+                title="Marketplace"
+              >
+                <Store className="w-5 h-5" />
+                <span className="hidden lg:inline">Marketplace</span>
               </Link>
             )}
             
@@ -430,6 +446,18 @@ export function Header() {
                     HOT
                   </span>
                 </div>
+              </Link>
+            )}
+            
+            {/* Only show Marketplace on platform domain, not on tenant stores */}
+            {isPlatformDomain && (
+              <Link
+                href="/platform/marketplace"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-3 hover:bg-gray-100 rounded-lg flex items-center gap-2 font-medium"
+              >
+                <Store className="w-4 h-4" />
+                Marketplace
               </Link>
             )}
             

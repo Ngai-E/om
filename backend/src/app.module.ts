@@ -23,6 +23,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { TenantModule } from './tenant/tenant.module';
 import { PlatformModule } from './platform/platform.module';
+import { MarketplaceModule } from './marketplace/marketplace.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -72,6 +73,7 @@ import { AppController } from './app.controller';
     ReviewsModule,
     TestimonialsModule,
     PlatformModule,
+    MarketplaceModule,
   ],
   controllers: [AppController],
 })

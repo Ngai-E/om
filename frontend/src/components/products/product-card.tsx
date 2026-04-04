@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import NextImage from 'next/image';
 import { ShoppingCart, Check, Heart, TrendingUp } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { settingsApi } from '@/lib/api/settings';
@@ -134,10 +135,12 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Social Proof Badge - positioned absolutely on image */}
           <SocialProofBadge product={product} />
           {product.images && product.images.length > 0 ? (
-            <img
+            <NextImage
               src={product.images[0].url}
               alt={product.images[0].altText || product.name}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground">
