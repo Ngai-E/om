@@ -134,22 +134,36 @@ export class TenantContextMiddleware implements NestMiddleware {
         });
       }
 
-      // 6. Check tenant status - reject SUSPENDED or DISABLED tenants
+      // 6. Check tenant status - ONLY ACTIVE tenants allowed in production
       if (tenant) {
-        if (tenant.status === 'SUSPENDED') {
-          this.logger.warn(`Tenant suspended: ${tenant.slug}`, { tenantId: tenant.id });
+        // In production, only ACTIVE tenants can serve requests
+        if (!this.isDevelopment && tenant.status !== 'ACTIVE') {
+          this.logger.warn(`Tenant not active: ${tenant.slug} (status: ${tenant.status})`, { 
+            tenantId: tenant.id,
+            status: tenant.status,
+          });
+          
+          const statusMessages = {
+            SUSPENDED: 'This store is currently suspended. Please contact support.',
+            DISABLED: 'This store is no longer active.',
+            PENDING_SETUP: 'This store is still being set up. Please complete onboarding.',
+          };
+          
           res.status(403).json({
-            error: 'Tenant Suspended',
-            message: 'This store is currently suspended. Please contact support.',
+            error: 'Tenant Not Available',
+            message: statusMessages[tenant.status] || 'This store is not available.',
           });
           return;
         }
         
-        if (tenant.status === 'DISABLED') {
-          this.logger.warn(`Tenant disabled: ${tenant.slug}`, { tenantId: tenant.id });
+        // In development, allow PENDING_SETUP for testing, but still block SUSPENDED/DISABLED
+        if (this.isDevelopment && (tenant.status === 'SUSPENDED' || tenant.status === 'DISABLED')) {
+          this.logger.warn(`Tenant ${tenant.status.toLowerCase()}: ${tenant.slug}`, { tenantId: tenant.id });
           res.status(403).json({
-            error: 'Tenant Disabled',
-            message: 'This store is no longer active.',
+            error: `Tenant ${tenant.status}`,
+            message: tenant.status === 'SUSPENDED' 
+              ? 'This store is currently suspended. Please contact support.'
+              : 'This store is no longer active.',
           });
           return;
         }
