@@ -53,8 +53,8 @@ export class TenantService {
           domain: `${dto.slug}.stores.xxx`,
           type: 'SUBDOMAIN',
           isPrimary: true,
-          sslStatus: 'active',
-          verificationStatus: 'verified',
+          sslStatus: 'ACTIVE',
+          verificationStatus: 'VERIFIED',
         },
       });
 
@@ -287,9 +287,8 @@ export class TenantService {
         tenantId,
         domain,
         type,
-        sslStatus: type === 'CUSTOM' ? 'pending' : 'active',
-        verificationStatus: type === 'CUSTOM' ? 'pending' : 'verified',
-        verificationToken: type === 'CUSTOM' ? this.generateVerificationToken() : null,
+        sslStatus: type === 'CUSTOM' ? 'PENDING' : 'ACTIVE',
+        verificationStatus: type === 'CUSTOM' ? 'PENDING' : 'VERIFIED',
       },
     });
   }

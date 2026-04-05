@@ -24,6 +24,22 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionMessage, setSessionMessage] = useState<string | null>(null);
+  const [isPlatform, setIsPlatform] = useState(false);
+
+  // Detect platform
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const port = window.location.port;
+      const hostname = window.location.hostname;
+      
+      const platformDomains = ['stores.xxx', 'app.stores.xxx', 'market.stores.xxx', 'console.stores.xxx'];
+      const isPlatformDomain = platformDomains.includes(hostname) || 
+                               hostname.split('.')[0] === 'app' ||
+                               port === '3000';
+      
+      setIsPlatform(isPlatformDomain);
+    }
+  }, []);
 
   // Handle session expired message from URL params
   useEffect(() => {
@@ -97,7 +113,9 @@ export default function LoginPage() {
             {...register('email')}
             type="email"
             id="email"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+              isPlatform ? 'focus:ring-blue-600' : 'focus:ring-primary'
+            }`}
             placeholder="you@example.com"
             disabled={isLoading}
           />
@@ -114,7 +132,9 @@ export default function LoginPage() {
             {...register('password')}
             type="password"
             id="password"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+              isPlatform ? 'focus:ring-blue-600' : 'focus:ring-primary'
+            }`}
             placeholder="••••••••"
             disabled={isLoading}
           />
@@ -126,7 +146,11 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:opacity-90 transition disabled:opacity-50"
+          className={`w-full py-3 rounded-lg font-medium hover:opacity-90 transition disabled:opacity-50 ${
+            isPlatform 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-primary text-primary-foreground'
+          }`}
         >
           {isLoading ? 'Signing in...' : 'Sign In'}
         </button>
@@ -135,7 +159,12 @@ export default function LoginPage() {
       <div className="mt-6 text-center">
         <p className="text-sm text-muted-foreground">
           Don't have an account?{' '}
-          <Link href="/register" className="text-primary hover:underline font-medium">
+          <Link 
+            href="/register" 
+            className={`hover:underline font-medium ${
+              isPlatform ? 'text-blue-600' : 'text-primary'
+            }`}
+          >
             Sign up
           </Link>
         </p>

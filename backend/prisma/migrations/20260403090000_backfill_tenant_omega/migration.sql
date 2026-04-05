@@ -71,8 +71,8 @@ INSERT INTO "tenant_domains" (
   'omegaafro.stores.xxx',
   'SUBDOMAIN',
   true,
-  'pending',
-  'verified',
+  'PENDING',
+  'VERIFIED',
   NOW(),
   NOW()
 ) ON CONFLICT ("domain") DO NOTHING;
@@ -130,16 +130,16 @@ INSERT INTO "tenant_balances" (
   "currentBalance",
   "totalEarned",
   "totalWithdrawn",
-  "lastUpdated",
-  "createdAt",
-  "updatedAt"
+  "totalPlatformFees",
+  "totalTaxes",
+  "lastUpdated"
 ) VALUES (
   'balance_omega',
   'tenant_omega',
   0,
   0,
   0,
-  NOW(),
-  NOW(),
+  0,
+  0,
   NOW()
 ) ON CONFLICT ("tenantId") DO NOTHING;

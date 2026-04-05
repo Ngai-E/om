@@ -31,7 +31,7 @@ export class MarketplaceService {
       include: {
         branding: true,
         domains: {
-          where: { verificationStatus: 'verified' },
+          where: { verificationStatus: 'VERIFIED' },
         },
         _count: {
           select: {
@@ -61,7 +61,7 @@ export class MarketplaceService {
       include: {
         branding: true,
         domains: {
-          where: { verificationStatus: 'verified' },
+          where: { verificationStatus: 'VERIFIED' },
         },
         _count: {
           select: {
@@ -149,7 +149,7 @@ export class MarketplaceService {
                 },
               },
               domains: {
-                where: { verificationStatus: 'verified' },
+                where: { verificationStatus: 'VERIFIED' },
                 select: { domain: true, type: true },
               },
             },
@@ -200,7 +200,7 @@ export class MarketplaceService {
               },
             },
             domains: {
-              where: { verificationStatus: 'verified' },
+              where: { verificationStatus: 'VERIFIED' },
               select: { domain: true, type: true },
             },
           },

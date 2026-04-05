@@ -31,8 +31,13 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Add tenant slug header for multi-tenancy
-    config.headers['X-Tenant-Slug'] = getTenantSlug();
+    // Check if we're on platform port (3000) - don't send tenant slug
+    const isPlatform = typeof window !== 'undefined' && window.location.port === '3000';
+    
+    // Add tenant slug header for multi-tenancy (only for tenant app)
+    if (!isPlatform) {
+      config.headers['X-Tenant-Slug'] = getTenantSlug();
+    }
     
     return config;
   },
@@ -46,18 +51,27 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Try automatic recovery first
-      const recovered = await AuthRecovery.handleAuthError(error);
+      const requestUrl = error.config?.url || '';
       
-      if (recovered) {
-        console.log('✅ Auth error automatically recovered, retrying request...');
-        // Retry the original request with fresh auth
-        return apiClient.request(error.config);
-      } else {
-        // Recovery failed, use fallback handling
-        const authError = AuthGuard.handleAuthError(error);
-        console.error('Authentication error:', AuthGuard.getErrorMessage(authError));
+      // Don't retry auth endpoints (login, register, etc.) - they're supposed to return 401 on failure
+      const isAuthEndpoint = requestUrl.includes('/auth/login') || 
+                            requestUrl.includes('/auth/register') || 
+                            requestUrl.includes('/auth/refresh');
+      
+      if (!isAuthEndpoint) {
+        // Try automatic recovery for non-auth endpoints
+        const recovered = await AuthRecovery.handleAuthError(error);
+        
+        if (recovered) {
+          console.log('✅ Auth error automatically recovered, retrying request...');
+          // Retry the original request with fresh auth
+          return apiClient.request(error.config);
+        }
       }
+      
+      // Auth endpoint failed or recovery failed - handle normally
+      const authError = AuthGuard.handleAuthError(error);
+      console.error('Authentication error:', AuthGuard.getErrorMessage(authError));
     } else if (globalErrorHandler) {
       // Call global error handler for other errors
       const apiError = handleApiError(error);

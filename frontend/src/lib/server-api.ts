@@ -6,13 +6,22 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
 async function serverFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const slug = await getServerTenantSlug();
   
+  // Check if we're on platform port (3000) - don't send tenant slug
+  const isPlatform = process.env.PORT === '3000' || typeof window !== 'undefined' && window.location.port === '3000';
+  
+  const headers: Record<string, string> = {
+    ...options.headers as Record<string, string>,
+    'Content-Type': 'application/json',
+  };
+  
+  // Only send tenant slug if NOT on platform
+  if (!isPlatform && slug) {
+    headers['X-Tenant-Slug'] = slug;
+  }
+  
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
-    headers: {
-      ...options.headers,
-      'X-Tenant-Slug': slug,
-      'Content-Type': 'application/json',
-    },
+    headers,
     // Enable Next.js caching by default on server
     next: {
       revalidate: 60, // Default 60 seconds revalidation

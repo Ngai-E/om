@@ -1,14 +1,16 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CartService } from './cart.service';
 import { AddToCartDto, UpdateCartItemDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Request } from 'express';
+import { TenantRequiredGuard } from '../common/guards/tenant-required.guard';
+import { CurrentTenant } from '../common/decorators/current-tenant.decorator';
+import { TenantContext } from '../common/interfaces/tenant-context.interface';
 
 @ApiTags('cart')
 @Controller('cart')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TenantRequiredGuard)
 @ApiBearerAuth()
 export class CartController {
   constructor(private cartService: CartService) {}
@@ -16,8 +18,8 @@ export class CartController {
   @Get()
   @ApiOperation({ summary: 'Get current user cart' })
   @ApiResponse({ status: 200, description: 'Cart retrieved successfully' })
-  async getCart(@Req() req: Request, @CurrentUser() user: any) {
-    return this.cartService.getOrCreateCart(user.id, (req as any).tenantId);
+  async getCart(@CurrentTenant() tenant: TenantContext, @CurrentUser() user: any) {
+    return this.cartService.getOrCreateCart(user.id, tenant.id);
   }
 
   @Post('items')
@@ -25,8 +27,8 @@ export class CartController {
   @ApiResponse({ status: 201, description: 'Item added to cart' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   @ApiResponse({ status: 400, description: 'Insufficient stock' })
-  async addItem(@Req() req: Request, @CurrentUser() user: any, @Body() dto: AddToCartDto) {
-    return this.cartService.addItem(user.id, dto, (req as any).tenantId);
+  async addItem(@CurrentTenant() tenant: TenantContext, @CurrentUser() user: any, @Body() dto: AddToCartDto) {
+    return this.cartService.addItem(user.id, dto, tenant.id);
   }
 
   @Patch('items/:id')
@@ -35,26 +37,26 @@ export class CartController {
   @ApiResponse({ status: 404, description: 'Cart item not found' })
   @ApiResponse({ status: 400, description: 'Insufficient stock' })
   async updateItem(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @CurrentUser() user: any,
     @Param('id') itemId: string,
     @Body() dto: UpdateCartItemDto,
   ) {
-    return this.cartService.updateItem(user.id, itemId, dto, (req as any).tenantId);
+    return this.cartService.updateItem(user.id, itemId, dto, tenant.id);
   }
 
   @Delete('items/:id')
   @ApiOperation({ summary: 'Remove item from cart' })
   @ApiResponse({ status: 200, description: 'Item removed from cart' })
   @ApiResponse({ status: 404, description: 'Cart item not found' })
-  async removeItem(@Req() req: Request, @CurrentUser() user: any, @Param('id') itemId: string) {
-    return this.cartService.removeItem(user.id, itemId, (req as any).tenantId);
+  async removeItem(@CurrentTenant() tenant: TenantContext, @CurrentUser() user: any, @Param('id') itemId: string) {
+    return this.cartService.removeItem(user.id, itemId, tenant.id);
   }
 
   @Delete()
   @ApiOperation({ summary: 'Clear cart' })
   @ApiResponse({ status: 200, description: 'Cart cleared' })
-  async clearCart(@Req() req: Request, @CurrentUser() user: any) {
-    return this.cartService.clearCart(user.id, (req as any).tenantId);
+  async clearCart(@CurrentTenant() tenant: TenantContext, @CurrentUser() user: any) {
+    return this.cartService.clearCart(user.id, tenant.id);
   }
 }

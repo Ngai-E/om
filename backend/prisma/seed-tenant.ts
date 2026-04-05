@@ -70,8 +70,8 @@ async function main() {
         domain: `${TENANT_OMEGA_SLUG}.stores.xxx`,
         type: 'SUBDOMAIN',
         isPrimary: true,
-        sslStatus: 'active',
-        verificationStatus: 'verified',
+        sslStatus: 'ACTIVE',
+        verificationStatus: 'VERIFIED',
       },
     });
     console.log('✅ Created default domain');

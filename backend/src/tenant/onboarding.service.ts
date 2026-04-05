@@ -16,6 +16,12 @@ export class OnboardingService {
   ) {}
 
   async signup(dto: TenantSignupDto) {
+    // Validate slug against reserved list
+    const reservedSlugs = ['admin', 'api', 'app', 'market', 'platform', 'support', 'mail', 'www', 'assets'];
+    if (reservedSlugs.includes(dto.slug.toLowerCase())) {
+      throw new BadRequestException('This slug is reserved and cannot be used');
+    }
+
     // Check slug uniqueness
     const existingTenant = await this.prisma.tenant.findUnique({
       where: { slug: dto.slug },
@@ -35,7 +41,20 @@ export class OnboardingService {
     const hashedPassword = await bcrypt.hash(dto.password, 12);
 
     return this.prisma.$transaction(async (tx) => {
-      // 1. Create tenant
+      // 1. Get default starter plan
+      const starterPlan = await tx.plan.findFirst({
+        where: { code: 'starter', isActive: true },
+      });
+
+      if (!starterPlan) {
+        throw new BadRequestException('Default starter plan not found. Please contact support.');
+      }
+
+      const trialDays = starterPlan.trialDays || 14;
+      const trialStartsAt = new Date();
+      const trialEndsAt = new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000);
+
+      // 2. Create tenant
       const tenant = await tx.tenant.create({
         data: {
           name: dto.storeName,
@@ -43,14 +62,43 @@ export class OnboardingService {
           email: dto.email,
           phone: dto.phone,
           description: dto.description,
-          status: 'ACTIVE',
+          status: 'PENDING_SETUP',
+          onboardingStatus: 'PENDING',
           billingStatus: 'TRIAL',
-          trialStartsAt: new Date(),
-          trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+          trialStartsAt,
+          trialEndsAt,
         },
       });
 
-      // 2. Create default branding with hero config from signup data
+      // 3. Create subscription to starter plan
+      await tx.subscription.create({
+        data: {
+          tenantId: tenant.id,
+          planId: starterPlan.id,
+          status: 'TRIALING',
+          trialStartsAt,
+          trialEndsAt,
+          currentPeriodStartsAt: trialStartsAt,
+          currentPeriodEndsAt: trialEndsAt,
+        },
+      });
+
+      // 4. Create onboarding tracking record
+      await tx.tenantOnboarding.create({
+        data: {
+          tenantId: tenant.id,
+          selectedPlanCode: starterPlan.code,
+          contactEmail: dto.email,
+          contactPhone: dto.phone,
+          currentStep: 'branding',
+          completedBranding: false,
+          completedDomain: false,
+          completedCatalog: false,
+          completedPayments: false,
+        },
+      });
+
+      // 5. Create default branding with hero config from signup data
       await tx.tenantBranding.create({
         data: {
           tenantId: tenant.id,
@@ -70,7 +118,7 @@ export class OnboardingService {
         },
       });
 
-      // 3. Create subdomain
+      // 6. Create subdomain
       const subdomainSuffix = await this.getSubdomainSuffix();
       await tx.tenantDomain.create({
         data: {
@@ -78,12 +126,12 @@ export class OnboardingService {
           domain: `${dto.slug}.${subdomainSuffix}`,
           type: 'SUBDOMAIN',
           isPrimary: true,
-          sslStatus: 'active',
-          verificationStatus: 'verified',
+          sslStatus: 'PENDING',
+          verificationStatus: 'VERIFIED',
         },
       });
 
-      // 4. Create admin user for this tenant
+      // 7. Create admin user for this tenant
       const user = await tx.user.create({
         data: {
           email: dto.email,
@@ -98,7 +146,7 @@ export class OnboardingService {
         },
       });
 
-      // 5. Generate JWT
+      // 8. Generate JWT
       const accessToken = this.jwtService.sign({
         sub: user.id,
         email: user.email,

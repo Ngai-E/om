@@ -36,6 +36,7 @@ async function bootstrap() {
   // CORS - support multiple origins
   const allowedOrigins = [
     'http://localhost:3000',
+    'http://localhost:3001',
     'http://localhost:3002',
      'http://172.20.10.6:3000',
     'https://www.omegaafro.com',
