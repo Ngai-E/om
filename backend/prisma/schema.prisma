@@ -21,6 +21,14 @@ enum TenantStatus {
   ACTIVE
   SUSPENDED
   CANCELLED
+  DISABLED
+}
+
+enum OnboardingStatus {
+  PENDING
+  BRANDING_INCOMPLETE
+  READY
+  LIVE
 }
 
 enum BillingStatus {
@@ -36,14 +44,27 @@ enum DomainType {
   CUSTOM
 }
 
+enum DomainVerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum SslStatus {
+  PENDING
+  ACTIVE
+  FAILED
+}
+
 model Tenant {
-  id               String        @id @default(uuid())
+  id               String            @id @default(uuid())
   name             String
-  slug             String        @unique
+  slug             String            @unique
   email            String
   phone            String?
   description      String?
-  status           TenantStatus  @default(PENDING_SETUP)
+  status           TenantStatus      @default(PENDING_SETUP)
+  onboardingStatus OnboardingStatus  @default(PENDING)
 
   // Trial & Billing
   billingStatus    BillingStatus @default(TRIAL)
@@ -59,6 +80,9 @@ model Tenant {
   domains              TenantDomain[]
   branding             TenantBranding?
   licenses             License[]
+  subscriptions        Subscription[]
+  onboarding           TenantOnboarding?
+  settings             TenantSetting[]
   users                User[]
   categories           Category[]
   products             Product[]
@@ -83,17 +107,18 @@ model Tenant {
 }
 
 model TenantDomain {
-  id                 String     @id @default(uuid())
+  id                 String                   @id @default(uuid())
   tenantId           String
-  tenant             Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  domain             String     @unique
-  type               DomainType @default(SUBDOMAIN)
-  isPrimary          Boolean    @default(false)
-  sslStatus          String?    @default("pending")
-  verificationStatus String?    @default("pending")
-  verificationToken  String?
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
+  tenant             Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  domain             String                   @unique
+  type               DomainType               @default(SUBDOMAIN)
+  isPrimary          Boolean                  @default(false)
+  verificationStatus DomainVerificationStatus @default(PENDING)
+  sslStatus          SslStatus                @default(PENDING)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  verification TenantDomainVerification?
 
   @@index([tenantId])
   @@index([domain])
@@ -118,6 +143,41 @@ model TenantBranding {
   updatedAt       DateTime @updatedAt
 
   @@map("tenant_branding")
+}
+
+model TenantDomainVerification {
+  id              String   @id @default(uuid())
+  tenantDomainId  String   @unique
+  token           String   @unique
+  method          String
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime?
+
+  tenantDomain TenantDomain @relation(fields: [tenantDomainId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_domain_verifications")
+}
+
+model TenantOnboarding {
+  id                 String   @id @default(uuid())
+  tenantId           String   @unique
+  businessCategory   String?
+  countryCode        String?
+  contactEmail       String?
+  contactPhone       String?
+  selectedPlanCode   String?
+  completedBranding  Boolean  @default(false)
+  completedDomain    Boolean  @default(false)
+  completedCatalog   Boolean  @default(false)
+  completedPayments  Boolean  @default(false)
+  currentStep        String?
+  completedAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_onboardings")
 }
 
 // ============================================
@@ -1018,4 +1078,126 @@ model FeatureFlag {
   updatedAt     DateTime @updatedAt
 
   @@map("feature_flags")
+}
+
+// ============================================
+// SPRINT A: SAAS PLANS & SUBSCRIPTIONS
+// ============================================
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+  SUSPENDED
+}
+
+enum EntitlementValueType {
+  BOOLEAN
+  INTEGER
+  STRING
+}
+
+model Plan {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  name          String
+  description   String?
+  monthlyPrice  Decimal? @db.Decimal(10,2)
+  yearlyPrice   Decimal? @db.Decimal(10,2)
+  trialDays     Int      @default(14)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  entitlements  PlanEntitlement[]
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id                    String             @id @default(uuid())
+  tenantId              String
+  planId                String
+  status                SubscriptionStatus @default(TRIALING)
+  trialStartsAt         DateTime?
+  trialEndsAt           DateTime?
+  currentPeriodStartsAt DateTime?
+  currentPeriodEndsAt   DateTime?
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  canceledAt            DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model PlanEntitlement {
+  id           String               @id @default(uuid())
+  planId       String
+  key          String
+  valueType    EntitlementValueType
+  booleanValue Boolean?
+  intValue     Int?
+  textValue    String?
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, key])
+  @@map("plan_entitlements")
+}
+
+// ============================================
+// SPRINT A: SETTINGS SEPARATION
+// ============================================
+
+model PlatformSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_settings")
+}
+
+model TenantSetting {
+  id        String   @id @default(uuid())
+  tenantId  String
+  key       String
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, key])
+  @@map("tenant_settings")
+}
+
+// ============================================
+// SPRINT A: PLATFORM AUDIT LOG
+// ============================================
+
+model PlatformAuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String?
+  action      String
+  targetType  String
+  targetId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@index([actorUserId])
+  @@map("platform_audit_logs")
 }

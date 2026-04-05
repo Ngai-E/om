@@ -1,23 +1,30 @@
-import { Injectable, NestMiddleware } from '@nestjs/common';
+import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
+import { TenantContext } from '../common/interfaces/tenant-context.interface';
 
 /**
  * Middleware that resolves the current tenant from the request.
  * 
  * Resolution order:
- * 1. X-Tenant-ID header (for API calls / dev)
+ * 1. X-Tenant-Slug header (trusted internal/dev use only)
  * 2. Subdomain from Host header ({slug}.stores.xxx)
  * 3. Custom domain lookup from tenant_domains table
- * 4. Falls back to default tenant (omega-afro-shop) if none found
+ * 4. In development: Falls back to omega-afro-shop
+ * 5. In production: NO FALLBACK - tenant must be resolved
  * 
- * Sets req['tenantId'] and req['tenant'] for downstream use.
+ * Sets req['tenantId'] and req['tenant'] (typed TenantContext) for downstream use.
+ * Rejects SUSPENDED or DISABLED tenants.
  */
 @Injectable()
 export class TenantContextMiddleware implements NestMiddleware {
+  private readonly logger = new Logger(TenantContextMiddleware.name);
+  
   // In-memory cache for domain → tenant mapping (TTL: 5 minutes)
+  // TODO: Move to Redis for production multi-instance deployments
   private domainCache = new Map<string, { tenantId: string; tenant: any; expiresAt: number }>();
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+  private readonly isDevelopment = process.env.NODE_ENV !== 'production';
 
   constructor(private prisma: PrismaService) {}
 
@@ -25,52 +32,31 @@ export class TenantContextMiddleware implements NestMiddleware {
     try {
       let tenantId: string | null = null;
       let tenant: any = null;
+      const host = req.headers.host || '';
+      const path = req.path;
 
-      // 1a. Check X-Tenant-ID header (UUID — useful for API integrations)
-      const headerTenantId = req.headers['x-tenant-id'] as string;
-      if (headerTenantId) {
-        const cached = this.getFromCache(`id:${headerTenantId}`);
+      // 1. Check X-Tenant-Slug header (trusted for internal/dev use)
+      const headerTenantSlug = req.headers['x-tenant-slug'] as string;
+      if (headerTenantSlug) {
+        const cached = this.getFromCache(`slug:${headerTenantSlug}`);
         if (cached) {
           tenantId = cached.tenantId;
           tenant = cached.tenant;
         } else {
           const found = await this.prisma.tenant.findUnique({
-            where: { id: headerTenantId },
+            where: { slug: headerTenantSlug },
             include: { branding: true },
           });
           if (found && !found.deletedAt) {
             tenantId = found.id;
             tenant = found;
-            this.setCache(`id:${headerTenantId}`, tenantId, tenant);
-          }
-        }
-      }
-
-      // 1b. Check X-Tenant-Slug header (slug — useful for frontend/dev)
-      if (!tenantId) {
-        const headerTenantSlug = req.headers['x-tenant-slug'] as string;
-        if (headerTenantSlug) {
-          const cached = this.getFromCache(`slug:${headerTenantSlug}`);
-          if (cached) {
-            tenantId = cached.tenantId;
-            tenant = cached.tenant;
-          } else {
-            const found = await this.prisma.tenant.findUnique({
-              where: { slug: headerTenantSlug },
-              include: { branding: true },
-            });
-            if (found && !found.deletedAt) {
-              tenantId = found.id;
-              tenant = found;
-              this.setCache(`slug:${headerTenantSlug}`, tenantId, tenant);
-            }
+            this.setCache(`slug:${headerTenantSlug}`, tenantId, tenant);
           }
         }
       }
 
       // 2. Try subdomain resolution from Host header
       if (!tenantId) {
-        const host = req.headers.host || '';
         const slug = this.extractSubdomain(host);
 
         if (slug) {
@@ -90,59 +76,125 @@ export class TenantContextMiddleware implements NestMiddleware {
             }
           }
         }
+      }
 
-        // 3. Try full domain lookup (custom domains)
-        if (!tenantId && host) {
-          const cleanHost = host.split(':')[0]; // Remove port
-          const cached = this.getFromCache(`domain:${cleanHost}`);
-          if (cached) {
-            tenantId = cached.tenantId;
-            tenant = cached.tenant;
-          } else {
-            const tenantDomain = await this.prisma.tenantDomain.findUnique({
-              where: { domain: cleanHost },
-              include: {
-                tenant: {
-                  include: { branding: true },
-                },
+      // 3. Try full domain lookup (custom domains)
+      if (!tenantId && host) {
+        const cleanHost = host.split(':')[0]; // Remove port
+        const cached = this.getFromCache(`domain:${cleanHost}`);
+        if (cached) {
+          tenantId = cached.tenantId;
+          tenant = cached.tenant;
+        } else {
+          const tenantDomain = await this.prisma.tenantDomain.findUnique({
+            where: { domain: cleanHost },
+            include: {
+              tenant: {
+                include: { branding: true },
               },
-            });
-            if (tenantDomain && !tenantDomain.tenant.deletedAt) {
-              tenantId = tenantDomain.tenant.id;
-              tenant = tenantDomain.tenant;
-              this.setCache(`domain:${cleanHost}`, tenantId, tenant);
-            }
+            },
+          });
+          if (tenantDomain && !tenantDomain.tenant.deletedAt) {
+            tenantId = tenantDomain.tenant.id;
+            tenant = tenantDomain.tenant;
+            this.setCache(`domain:${cleanHost}`, tenantId, tenant);
           }
         }
       }
 
-      // 4. Fallback: resolve default tenant (omega-afro-shop)
-      if (!tenantId) {
-        const cached = this.getFromCache('slug:omega-afro-shop');
+      // 4. Development-only fallback to omegaafro
+      if (!tenantId && this.isDevelopment) {
+        const cached = this.getFromCache('slug:omegaafro');
         if (cached) {
           tenantId = cached.tenantId;
           tenant = cached.tenant;
         } else {
           const defaultTenant = await this.prisma.tenant.findUnique({
-            where: { slug: 'omega-afro-shop' },
+            where: { slug: 'omegaafro' },
             include: { branding: true },
           });
           if (defaultTenant) {
             tenantId = defaultTenant.id;
             tenant = defaultTenant;
-            this.setCache('slug:omega-afro-shop', tenantId, tenant);
+            this.setCache('slug:omegaafro', tenantId, tenant);
+            this.logger.debug(`Development fallback to tenant: ${defaultTenant.slug}`);
           }
         }
       }
 
-      // Attach to request
-      (req as any).tenantId = tenantId;
-      (req as any).tenant = tenant;
+      // 5. Production: No fallback - log failure
+      if (!tenantId && !this.isDevelopment) {
+        this.logger.warn('Tenant resolution failed in production', {
+          host,
+          path,
+          headers: {
+            'x-tenant-slug': req.headers['x-tenant-slug'],
+            'user-agent': req.headers['user-agent'],
+          },
+        });
+      }
+
+      // 6. Check tenant status - reject SUSPENDED or DISABLED tenants
+      if (tenant) {
+        if (tenant.status === 'SUSPENDED') {
+          this.logger.warn(`Tenant suspended: ${tenant.slug}`, { tenantId: tenant.id });
+          res.status(403).json({
+            error: 'Tenant Suspended',
+            message: 'This store is currently suspended. Please contact support.',
+          });
+          return;
+        }
+        
+        if (tenant.status === 'DISABLED') {
+          this.logger.warn(`Tenant disabled: ${tenant.slug}`, { tenantId: tenant.id });
+          res.status(403).json({
+            error: 'Tenant Disabled',
+            message: 'This store is no longer active.',
+          });
+          return;
+        }
+      }
+
+      // 7. Attach typed TenantContext to request
+      if (tenant) {
+        const tenantContext: TenantContext = {
+          id: tenant.id,
+          slug: tenant.slug,
+          name: tenant.name,
+          status: tenant.status,
+          onboardingStatus: tenant.onboardingStatus,
+          branding: tenant.branding ? {
+            logoUrl: tenant.branding.logoUrl,
+            primaryColor: tenant.branding.primaryColor,
+            secondaryColor: tenant.branding.secondaryColor,
+          } : undefined,
+        };
+        (req as any).tenant = tenantContext;
+        (req as any).tenantId = tenant.id;
+      } else {
+        (req as any).tenant = null;
+        (req as any).tenantId = null;
+      }
 
       next();
     } catch (error) {
-      // Don't block requests on tenant resolution failure
-      console.error('Tenant resolution error:', error);
+      this.logger.error('Tenant resolution error', {
+        error: error.message,
+        stack: error.stack,
+        host: req.headers.host,
+        path: req.path,
+      });
+      
+      // In production, fail fast on errors
+      if (!this.isDevelopment) {
+        res.status(500).json({
+          error: 'Tenant Resolution Error',
+          message: 'Unable to resolve tenant context.',
+        });
+        return;
+      }
+      
+      // In development, allow request to continue for debugging
       next();
     }
   }

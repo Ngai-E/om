@@ -1,22 +1,25 @@
-import { Controller, Get, Put, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Put, Body, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { SettingsService, PaymentMethod, PaymentMethodsConfig, PaymentType, ImageUploadService } from './settings.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
-import { Request } from 'express';
+import { TenantRequiredGuard } from '../common/guards/tenant-required.guard';
+import { CurrentTenant } from '../common/decorators/current-tenant.decorator';
+import { TenantContext } from '../common/interfaces/tenant-context.interface';
 
 @ApiTags('settings')
 @Controller('settings')
+@UseGuards(TenantRequiredGuard)
 export class SettingsController {
   constructor(private settingsService: SettingsService) {}
 
   @Get()
   @ApiOperation({ summary: 'Get all system settings (public)' })
   @ApiResponse({ status: 200, description: 'Settings retrieved' })
-  async getSettings(@Req() req: Request) {
-    const tenantId = (req as any).tenantId;
+  async getSettings(@CurrentTenant() tenant: TenantContext) {
+    const tenantId = tenant.id;
     const settings = await this.settingsService.getAllSettings(tenantId);
     const paymentMethodsConfig = await this.settingsService.getPaymentMethodsConfig(tenantId);
     const enabledPaymentTypes = await this.settingsService.getEnabledPaymentTypes(tenantId);
@@ -56,16 +59,16 @@ export class SettingsController {
   @Get('guest-checkout')
   @ApiOperation({ summary: 'Get guest checkout enabled status (public)' })
   @ApiResponse({ status: 200, description: 'Guest checkout status retrieved' })
-  async getGuestCheckoutStatus(@Req() req: Request) {
-    const enabled = await this.settingsService.getGuestCheckoutEnabled((req as any).tenantId);
+  async getGuestCheckoutStatus(@CurrentTenant() tenant: TenantContext) {
+    const enabled = await this.settingsService.getGuestCheckoutEnabled(tenant.id);
     return { enabled };
   }
 
   @Get('payment-method')
   @ApiOperation({ summary: 'Get current payment method' })
   @ApiResponse({ status: 200, description: 'Payment method retrieved' })
-  async getPaymentMethod(@Req() req: Request) {
-    const method = await this.settingsService.getPaymentMethod((req as any).tenantId);
+  async getPaymentMethod(@CurrentTenant() tenant: TenantContext) {
+    const method = await this.settingsService.getPaymentMethod(tenant.id);
     return { payment_method: method };
   }
 
@@ -76,19 +79,19 @@ export class SettingsController {
   @ApiOperation({ summary: 'Update payment method (Admin only)' })
   @ApiResponse({ status: 200, description: 'Payment method updated' })
   async updatePaymentMethod(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { payment_method: PaymentMethod },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setPaymentMethod(body.payment_method, user.id, (req as any).tenantId);
+    await this.settingsService.setPaymentMethod(body.payment_method, user.id, tenant.id);
     return { message: 'Payment method updated successfully', payment_method: body.payment_method };
   }
 
   @Get('payment-methods')
   @ApiOperation({ summary: 'Get payment methods configuration' })
   @ApiResponse({ status: 200, description: 'Payment methods config retrieved' })
-  async getPaymentMethodsConfig(@Req() req: Request) {
-    const tenantId = (req as any).tenantId;
+  async getPaymentMethodsConfig(@CurrentTenant() tenant: TenantContext) {
+    const tenantId = tenant.id;
     const config = await this.settingsService.getPaymentMethodsConfig(tenantId);
     const enabledTypes = await this.settingsService.getEnabledPaymentTypes(tenantId);
     return {
@@ -104,11 +107,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Update payment methods configuration (Admin only)' })
   @ApiResponse({ status: 200, description: 'Payment methods config updated' })
   async updatePaymentMethodsConfig(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { config: PaymentMethodsConfig },
     @CurrentUser() user: any,
   ) {
-    const tenantId = (req as any).tenantId;
+    const tenantId = tenant.id;
     await this.settingsService.setPaymentMethodsConfig(body.config, user.id, tenantId);
     const enabledTypes = await this.settingsService.getEnabledPaymentTypes(tenantId);
     return {
@@ -125,11 +128,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Toggle guest checkout (Admin only)' })
   @ApiResponse({ status: 200, description: 'Guest checkout setting updated' })
   async updateGuestCheckout(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { enabled: boolean },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setGuestCheckoutEnabled(body.enabled, user.id, (req as any).tenantId);
+    await this.settingsService.setGuestCheckoutEnabled(body.enabled, user.id, tenant.id);
     return {
       message: `Guest checkout ${body.enabled ? 'enabled' : 'disabled'} successfully`,
       guest_checkout_enabled: body.enabled,
@@ -143,11 +146,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Toggle email notifications (Admin only)' })
   @ApiResponse({ status: 200, description: 'Email notifications setting updated' })
   async updateEmailNotifications(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { enabled: boolean },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setEmailNotificationsEnabled(body.enabled, user.id, (req as any).tenantId);
+    await this.settingsService.setEmailNotificationsEnabled(body.enabled, user.id, tenant.id);
     return {
       message: `Email notifications ${body.enabled ? 'enabled' : 'disabled'} successfully`,
       email_notifications_enabled: body.enabled,
@@ -161,11 +164,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Toggle image upload (Admin only)' })
   @ApiResponse({ status: 200, description: 'Image upload setting updated' })
   async updateImageUpload(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { enabled: boolean },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setAllowImageUpload(body.enabled, user.id, (req as any).tenantId);
+    await this.settingsService.setAllowImageUpload(body.enabled, user.id, tenant.id);
     return {
       message: `Image upload ${body.enabled ? 'enabled' : 'disabled'} successfully`,
       allow_image_upload: body.enabled,
@@ -179,11 +182,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Toggle image link insertion (Admin only)' })
   @ApiResponse({ status: 200, description: 'Image link setting updated' })
   async updateImageLink(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { enabled: boolean },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setAllowImageLink(body.enabled, user.id, (req as any).tenantId);
+    await this.settingsService.setAllowImageLink(body.enabled, user.id, tenant.id);
     return {
       message: `Image link ${body.enabled ? 'enabled' : 'disabled'} successfully`,
       allow_image_link: body.enabled,
@@ -197,11 +200,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Set image upload service (Admin only)' })
   @ApiResponse({ status: 200, description: 'Image upload service updated' })
   async updateImageUploadService(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { service: ImageUploadService },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setImageUploadService(body.service, user.id, (req as any).tenantId);
+    await this.settingsService.setImageUploadService(body.service, user.id, tenant.id);
     return {
       message: `Image upload service set to ${body.service}`,
       image_upload_service: body.service,
@@ -215,11 +218,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Set ImgBB API key (Admin only)' })
   @ApiResponse({ status: 200, description: 'ImgBB API key updated' })
   async updateImgbbApiKey(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { apiKey: string },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setImgbbApiKey(body.apiKey, user.id, (req as any).tenantId);
+    await this.settingsService.setImgbbApiKey(body.apiKey, user.id, tenant.id);
     return {
       message: 'ImgBB API key updated successfully',
     };
@@ -232,11 +235,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Set Cloudinary configuration (Admin only)' })
   @ApiResponse({ status: 200, description: 'Cloudinary config updated' })
   async updateCloudinaryConfig(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { cloudName: string; apiKey: string; apiSecret: string },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setCloudinaryConfig(body, user.id, (req as any).tenantId);
+    await this.settingsService.setCloudinaryConfig(body, user.id, tenant.id);
     return {
       message: 'Cloudinary configuration updated successfully',
     };
@@ -248,8 +251,8 @@ export class SettingsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get image upload configuration with actual keys (Admin only)' })
   @ApiResponse({ status: 200, description: 'Upload config retrieved' })
-  async getUploadConfig(@Req() req: Request) {
-    const tenantId = (req as any).tenantId;
+  async getUploadConfig(@CurrentTenant() tenant: TenantContext) {
+    const tenantId = tenant.id;
     const service = await this.settingsService.getImageUploadService(tenantId);
     const imgbbApiKey = await this.settingsService.getImgbbApiKey(tenantId);
     const cloudinaryConfig = await this.settingsService.getCloudinaryConfig(tenantId);
@@ -268,11 +271,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Update product orders inflation multiplier (Admin only)' })
   @ApiResponse({ status: 200, description: 'Product orders inflation updated' })
   async updateProductOrdersInflation(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { multiplier: number },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setProductOrdersInflation(body.multiplier, user.id, (req as any).tenantId);
+    await this.settingsService.setProductOrdersInflation(body.multiplier, user.id, tenant.id);
     return {
       message: 'Product orders inflation multiplier updated successfully',
       product_orders_inflation: body.multiplier,
@@ -286,11 +289,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Update promotion usage inflation multiplier (Admin only)' })
   @ApiResponse({ status: 200, description: 'Promotion usage inflation updated' })
   async updatePromotionUsageInflation(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { multiplier: number },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setPromotionUsageInflation(body.multiplier, user.id, (req as any).tenantId);
+    await this.settingsService.setPromotionUsageInflation(body.multiplier, user.id, tenant.id);
     return {
       message: 'Promotion usage inflation multiplier updated successfully',
       promotion_usage_inflation: body.multiplier,
@@ -304,11 +307,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Toggle product order badges globally (Admin only)' })
   @ApiResponse({ status: 200, description: 'Product order badges setting updated' })
   async updateShowProductOrderBadges(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { enabled: boolean },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setShowProductOrderBadges(body.enabled, user.id, (req as any).tenantId);
+    await this.settingsService.setShowProductOrderBadges(body.enabled, user.id, tenant.id);
     return {
       message: `Product order badges ${body.enabled ? 'enabled' : 'disabled'} globally`,
       show_product_order_badges: body.enabled,
@@ -322,11 +325,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Toggle promotion usage badges globally (Admin only)' })
   @ApiResponse({ status: 200, description: 'Promotion usage badges setting updated' })
   async updateShowPromotionUsageBadges(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: { enabled: boolean },
     @CurrentUser() user: any,
   ) {
-    await this.settingsService.setShowPromotionUsageBadges(body.enabled, user.id, (req as any).tenantId);
+    await this.settingsService.setShowPromotionUsageBadges(body.enabled, user.id, tenant.id);
     return {
       message: `Promotion usage badges ${body.enabled ? 'enabled' : 'disabled'} globally`,
       show_promotion_usage_badges: body.enabled,
@@ -336,8 +339,8 @@ export class SettingsController {
   @Get('public')
   @ApiOperation({ summary: 'Get public storefront settings (tenant-scoped with platform fallback)' })
   @ApiResponse({ status: 200, description: 'Public settings retrieved' })
-  async getPublicSettings(@Req() req: Request) {
-    const tenantId = (req as any).tenantId;
+  async getPublicSettings(@CurrentTenant() tenant: TenantContext) {
+    const tenantId = tenant.id;
     return {
       guest_checkout_enabled: await this.settingsService.getGuestCheckoutEnabled(tenantId),
       payment_methods_config: await this.settingsService.getPaymentMethodsConfig(tenantId),
@@ -354,11 +357,11 @@ export class SettingsController {
   @ApiOperation({ summary: 'Update system settings (Admin only)' })
   @ApiResponse({ status: 200, description: 'Settings updated' })
   async updateSettings(
-    @Req() req: Request,
+    @CurrentTenant() tenant: TenantContext,
     @Body() body: Record<string, any>,
     @CurrentUser() user: any,
   ) {
-    const tenantId = (req as any).tenantId;
+    const tenantId = tenant.id;
     for (const [key, value] of Object.entries(body)) {
       await this.settingsService.setSetting(key, JSON.stringify(value), undefined, user.id, tenantId);
     }

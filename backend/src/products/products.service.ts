@@ -10,8 +10,8 @@ export class ProductsService {
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async findAll(filters?: {
-    tenantId?: string;
+  async findAll(filters: {
+    tenantId: string; // REQUIRED for tenant isolation
     categoryId?: string;
     categorySlug?: string;
     search?: string;
@@ -25,11 +25,8 @@ export class ProductsService {
   }) {
     const where: any = {
       deletedAt: null,
+      tenantId: filters.tenantId, // Always enforce tenant scoping
     };
-
-    if (filters?.tenantId) {
-      where.tenantId = filters.tenantId;
-    }
 
     // Only filter by isActive if not explicitly including inactive products
     if (!filters?.includeInactive) {
@@ -43,7 +40,10 @@ export class ProductsService {
       // Find category by slug first
       console.log('[ProductsService] Looking up category by slug:', filters.categorySlug);
       const category = await this.prisma.category.findFirst({
-        where: { slug: filters.categorySlug, ...(filters?.tenantId && { tenantId: filters.tenantId }) },
+        where: { 
+          slug: filters.categorySlug, 
+          tenantId: filters.tenantId, // Always enforce tenant scoping
+        },
       });
       if (category) {
         console.log('[ProductsService] Found category:', category.name, 'ID:', category.id);
@@ -149,8 +149,8 @@ export class ProductsService {
     return result;
   }
 
-  async findOne(id: string, tenantId?: string) {
-    const cacheKey = `product:${tenantId || 'global'}:${id}`;
+  async findOne(id: string, tenantId: string) {
+    const cacheKey = `product:${tenantId}:${id}`;
     
     // Try to get from cache
     try {
@@ -165,8 +165,11 @@ export class ProductsService {
 
     console.log('💾 Cache MISS:', cacheKey);
 
-    const product = await this.prisma.product.findUnique({
-      where: { id },
+    const product = await this.prisma.product.findFirst({
+      where: { 
+        id,
+        tenantId, // Enforce tenant scoping
+      },
       include: {
         category: true,
         images: { orderBy: { sortOrder: 'asc' } },
@@ -192,8 +195,8 @@ export class ProductsService {
     return product;
   }
 
-  async findBySlug(slug: string, tenantId?: string) {
-    const cacheKey = `product:${tenantId || 'global'}:slug:${slug}`;
+  async findBySlug(slug: string, tenantId: string) {
+    const cacheKey = `product:${tenantId}:slug:${slug}`;
     
     // Try to get from cache
     try {
@@ -209,7 +212,10 @@ export class ProductsService {
     console.log('💾 Cache MISS:', cacheKey);
 
     const product = await this.prisma.product.findFirst({
-      where: { slug, ...(tenantId && { tenantId }) },
+      where: { 
+        slug, 
+        tenantId, // Enforce tenant scoping
+      },
       include: {
         category: true,
         images: { orderBy: { sortOrder: 'asc' } },
@@ -252,13 +258,13 @@ export class ProductsService {
     }
   }
 
-  async getFeatured(limit = 8, tenantId?: string) {
+  async getFeatured(limit = 8, tenantId: string) {
     return this.prisma.product.findMany({
       where: {
         isFeatured: true,
         isActive: true,
         deletedAt: null,
-        ...(tenantId && { tenantId }),
+        tenantId, // Enforce tenant scoping
       },
       include: {
         category: true,
@@ -274,13 +280,13 @@ export class ProductsService {
     });
   }
 
-  async getBestSellers(limit = 8, tenantId?: string) {
+  async getBestSellers(limit = 8, tenantId: string) {
     return this.prisma.product.findMany({
       where: {
         isBestSeller: true,
         isActive: true,
         deletedAt: null,
-        ...(tenantId && { tenantId }),
+        tenantId, // Enforce tenant scoping
       },
       include: {
         category: true,
@@ -296,9 +302,12 @@ export class ProductsService {
     });
   }
 
-  async getCategories(tenantId?: string) {
+  async getCategories(tenantId: string) {
     return this.prisma.category.findMany({
-      where: { isActive: true, ...(tenantId && { tenantId }) },
+      where: { 
+        isActive: true, 
+        tenantId, // Enforce tenant scoping
+      },
       include: {
         children: true,
         _count: {
@@ -309,13 +318,13 @@ export class ProductsService {
     });
   }
 
-  async getQuickCategories(tenantId?: string) {
+  async getQuickCategories(tenantId: string) {
     // First try to get categories marked as quick categories
     const quickCategories = await this.prisma.category.findMany({
       where: { 
         isActive: true,
         isQuickCategory: true,
-        ...(tenantId && { tenantId }),
+        tenantId, // Enforce tenant scoping
       },
       include: {
         _count: {
@@ -332,7 +341,10 @@ export class ProductsService {
 
     // Otherwise, return top 5 categories by product count
     const topCategories = await this.prisma.category.findMany({
-      where: { isActive: true, ...(tenantId && { tenantId }) },
+      where: { 
+        isActive: true, 
+        tenantId, // Enforce tenant scoping
+      },
       include: {
         _count: {
           select: { products: true },

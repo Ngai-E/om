@@ -164,7 +164,11 @@ ALTER TABLE "tenant_domain_verifications" ADD CONSTRAINT "tenant_domain_verifica
 -- ============================================
 -- UPDATE TENANT DOMAINS TABLE
 -- ============================================
- 
+
+-- Drop existing defaults first
+ALTER TABLE "tenant_domains" ALTER COLUMN "verificationStatus" DROP DEFAULT;
+ALTER TABLE "tenant_domains" ALTER COLUMN "sslStatus" DROP DEFAULT;
+
 -- Update verificationStatus and sslStatus to use enums if they're currently strings
 ALTER TABLE "tenant_domains" 
     ALTER COLUMN "verificationStatus" TYPE "DomainVerificationStatus" 
@@ -173,7 +177,7 @@ ALTER TABLE "tenant_domains"
         WHEN "verificationStatus" = 'failed' THEN 'FAILED'::"DomainVerificationStatus"
         ELSE 'PENDING'::"DomainVerificationStatus"
     END;
- 
+
 ALTER TABLE "tenant_domains" 
     ALTER COLUMN "sslStatus" TYPE "SslStatus" 
     USING CASE 
@@ -181,10 +185,10 @@ ALTER TABLE "tenant_domains"
         WHEN "sslStatus" = 'failed' THEN 'FAILED'::"SslStatus"
         ELSE 'PENDING'::"SslStatus"
     END;
- 
--- Set defaults
-ALTER TABLE "tenant_domains" ALTER COLUMN "verificationStatus" SET DEFAULT 'PENDING';
-ALTER TABLE "tenant_domains" ALTER COLUMN "sslStatus" SET DEFAULT 'PENDING';
+
+-- Set new enum defaults
+ALTER TABLE "tenant_domains" ALTER COLUMN "verificationStatus" SET DEFAULT 'PENDING'::"DomainVerificationStatus";
+ALTER TABLE "tenant_domains" ALTER COLUMN "sslStatus" SET DEFAULT 'PENDING'::"SslStatus";
  
 -- ============================================
 -- PLATFORM SETTINGS TABLE
