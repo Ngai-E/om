@@ -1,0 +1,784 @@
+Image,Name,Category,Price,Stock,Description
+,Tolly Boy Easy Cook Long Grain Rice 1kg,GRAINS & STAPLES,1.99,In Stock,Premium easy-cook long grain rice staple for jollof & daily meals
+,Tolly Boy Easy Cook Long Grain Rice 2kg,GRAINS & STAPLES,3.49,In Stock,Premium easy-cook long grain rice staple
+,Tolly Boy Easy Cook Long Grain Rice 5kg,GRAINS & STAPLES,6.99,In Stock,Premium easy-cook long grain rice staple
+,Tolly Boy Easy Cook Long Grain Rice 10kg,GRAINS & STAPLES,12.99,In Stock,Bulk family pack easy-cook rice
+,Tolly Boy Golden Sella Basmati Rice 1kg,GRAINS & STAPLES,3.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Tolly Boy Golden Sella Basmati Rice 2kg,GRAINS & STAPLES,6.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Tolly Boy Golden Sella Basmati Rice 5kg,GRAINS & STAPLES,13.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Tolly Boy Golden Sella Basmati Rice 10kg,GRAINS & STAPLES,24.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 1kg,GRAINS & STAPLES,3.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 2kg,GRAINS & STAPLES,6.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 5kg,GRAINS & STAPLES,13.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 10kg,GRAINS & STAPLES,24.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Tropical Sun Long Grain Rice 1kg,GRAINS & STAPLES,1.99,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 2kg,GRAINS & STAPLES,3.49,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 5kg,GRAINS & STAPLES,6.49,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 10kg,GRAINS & STAPLES,11.99,In Stock,Affordable everyday long grain rice
+,Tropical Sun Parboiled Rice 1kg,GRAINS & STAPLES,2.29,In Stock,Nutritious parboiled rice option
+,Tropical Sun Parboiled Rice 2kg,GRAINS & STAPLES,4.29,In Stock,Nutritious parboiled rice option
+,Tropical Sun Parboiled Rice 5kg,GRAINS & STAPLES,6.79,In Stock,Nutritious parboiled rice option
+,Tropical Sun Parboiled Rice 10kg,GRAINS & STAPLES,12.99,In Stock,Nutritious parboiled rice option
+,Ghana Taste White Gari 500g,GRAINS & STAPLES,2.49,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 1kg,GRAINS & STAPLES,3.99,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 1.5kg,GRAINS & STAPLES,4.99,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 5kg,GRAINS & STAPLES,14.99,In Stock,Authentic Ghanaian white gari for eba
+,Tropical Sun Yellow Gari 500g,GRAINS & STAPLES,2.29,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 1kg,GRAINS & STAPLES,3.49,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 1.5kg,GRAINS & STAPLES,4.99,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 5kg,GRAINS & STAPLES,13.99,In Stock,Finely ground yellow cassava granules
+,Africa's Finest Ijebu Gari 1kg,GRAINS & STAPLES,4.49,In Stock,Coarse sour fermented Ijebu gari
+,Africa's Finest Ijebu Gari 1.5kg,GRAINS & STAPLES,5.49,In Stock,Coarse sour fermented Ijebu gari
+,Nigerian Taste Ijebu Gari 1kg,GRAINS & STAPLES,4.49,In Stock,Authentic Nigerian Ijebu gari
+,Nigerian Taste Ijebu Gari 1.5kg,GRAINS & STAPLES,5.49,In Stock,Authentic Nigerian Ijebu gari
+,Tropical Sun Poundo Iyan 1kg,GRAINS & STAPLES,5.49,In Stock,Instant pounded yam flour smooth swallow
+,Tropical Sun Poundo Iyan 1.5kg,GRAINS & STAPLES,6.99,In Stock,Instant pounded yam flour smooth swallow
+,Tropical Sun Poundo Iyan 2kg,GRAINS & STAPLES,8.99,In Stock,Instant pounded yam flour smooth swallow
+,Olu Olu Poundo Iyan 1kg,GRAINS & STAPLES,5.99,In Stock,Easy-prep pounded yam flour
+,Olu Olu Poundo Iyan 1.5kg,GRAINS & STAPLES,7.49,In Stock,Easy-prep pounded yam flour
+,Olu Olu Poundo Iyan 2kg,GRAINS & STAPLES,9.99,In Stock,Easy-prep pounded yam flour
+,Soldua Pounded Yam Flour 1kg,GRAINS & STAPLES,7.99,In Stock,100% yam no additives
+,Soldua Pounded Yam Flour 2kg,GRAINS & STAPLES,13.99,In Stock,100% yam no additives
+,Mamas Choice Plantain Fufu Mix 500g,GRAINS & STAPLES,3.49,In Stock,Instant plantain fufu mix
+,Mamas Choice Plantain Fufu Mix 1kg,GRAINS & STAPLES,5.99,In Stock,Instant plantain fufu mix
+,Tropiway Instant Cocoyam Fufu 500g,GRAINS & STAPLES,3.99,In Stock,Instant cocoyam fufu swallow
+,Tropiway Instant Cocoyam Fufu 1kg,GRAINS & STAPLES,6.49,In Stock,Instant cocoyam fufu swallow
+,Honeywell Whole Wheat Meal 1kg,GRAINS & STAPLES,3.49,In Stock,Fine wheat meal for swallow
+,Honeywell Whole Wheat Meal 1.5kg,GRAINS & STAPLES,4.49,In Stock,Fine wheat meal for swallow
+,Honeywell Semolina 1kg,GRAINS & STAPLES,2.99,In Stock,Coarse semolina staple
+,Honeywell Semolina 1.5kg,GRAINS & STAPLES,3.99,In Stock,Coarse semolina staple
+,Tropical Sun Cassava Flour 500g,GRAINS & STAPLES,2.49,In Stock,Pure cassava flour
+,Tropical Sun Cassava Flour 1kg,GRAINS & STAPLES,4.29,In Stock,Pure cassava flour
+,Olu Olu Plantain Flour 500g,GRAINS & STAPLES,3.49,In Stock,Green plantain flour
+,Olu Olu Plantain Flour 1kg,GRAINS & STAPLES,5.49,In Stock,Green plantain flour
+,Tropical Sun Yam Flour Elubo 500g,GRAINS & STAPLES,3.99,In Stock,Traditional Nigerian elubo yam flour
+,Tropical Sun Yam Flour Elubo 1kg,GRAINS & STAPLES,6.49,In Stock,Traditional Nigerian elubo yam flour
+,Maggi Signature Jollof Seasoning 100g,SPICES & SEASONING,2.49,In Stock,Bay leaf thyme onion tomato blend for jollof
+,Maggi Signature Jollof Seasoning 250g,SPICES & SEASONING,4.99,In Stock,Bay leaf thyme onion tomato blend for jollof
+,Africa's Finest Jollof Seasoning 100g,SPICES & SEASONING,3.99,In Stock,Ready-mix jollof spice
+,Africa's Finest Jollof Seasoning 250g,SPICES & SEASONING,7.99,In Stock,Ready-mix jollof spice
+,Jumbo Jollof Rice Seasoning 100g,SPICES & SEASONING,5.99,In Stock,Classic Nigerian jollof sachet
+,Jumbo Jollof Rice Seasoning 250g,SPICES & SEASONING,11.99,In Stock,Classic Nigerian jollof sachet
+,Knorr Original Seasoning Cubes 400g,SPICES & SEASONING,3.99,In Stock,Multipack cubes kitchen essential
+,Knorr Original Seasoning Cubes 800g,SPICES & SEASONING,6.99,In Stock,Multipack cubes kitchen essential
+,Maggi Star Chicken Cubes 400g,SPICES & SEASONING,3.49,In Stock,Nigerian chicken seasoning cubes
+,Maggi Star Chicken Cubes 800g,SPICES & SEASONING,6.49,In Stock,Nigerian chicken seasoning cubes
+,Africa's Finest Suya Pepper Mix 100g,SPICES & SEASONING,4.49,In Stock,Spicy suya kebab seasoning
+,Africa's Finest Suya Pepper Mix 250g,SPICES & SEASONING,8.99,In Stock,Spicy suya kebab seasoning
+,Lion Thyme Dried 100g,SPICES & SEASONING,2.49,In Stock,Dried thyme staple
+,Lion Thyme Dried 250g,SPICES & SEASONING,4.99,In Stock,Dried thyme staple
+,Lion Curry Powder Mild 100g,SPICES & SEASONING,2.79,In Stock,Mild curry blend for stews
+,Lion Curry Powder Mild 250g,SPICES & SEASONING,5.49,In Stock,Mild curry blend for stews
+,Tropical Sun All Purpose Seasoning 350g,SPICES & SEASONING,3.49,In Stock,Versatile everyday blend
+,Tropical Sun All Purpose Seasoning 700g,SPICES & SEASONING,5.99,In Stock,Versatile everyday blend
+,Africa's Finest Ground Crayfish 100g,SPICES & SEASONING,4.99,In Stock,Dried ground crayfish for soups
+,Africa's Finest Ground Crayfish 250g,SPICES & SEASONING,9.99,In Stock,Dried ground crayfish for soups
+,Africa's Finest Red Palm Oil 150ml,OILS & SAUCES,2.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 1L,OILS & SAUCES,5.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 2L,OILS & SAUCES,10.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 5L,OILS & SAUCES,24.99,In Stock,Authentic West African palm oil
+,KTC Coconut Oil 150ml,OILS & SAUCES,2.49,In Stock,Pure coconut oil
+,KTC Coconut Oil 1L,OILS & SAUCES,4.49,In Stock,Pure coconut oil
+,KTC Coconut Oil 2L,OILS & SAUCES,8.99,In Stock,Pure coconut oil
+,De Rica Tomato Paste 70g,OILS & SAUCES,0.70,In Stock,Concentrated tomato paste
+,De Rica Tomato Paste 400g,OILS & SAUCES,1.29,In Stock,Concentrated tomato paste
+,De Rica Tomato Paste 800g,OILS & SAUCES,2.49,In Stock,Concentrated tomato paste
+,Baron Hot Pepper Sauce 150ml,OILS & SAUCES,2.99,In Stock,Fiery Caribbean hot sauce
+,Baron Hot Pepper Sauce 340ml,OILS & SAUCES,5.99,In Stock,Fiery Caribbean hot sauce
+,Grace Coconut Milk 400ml,OILS & SAUCES,1.99,In Stock,Creamy coconut milk
+,Grace Coconut Milk 800ml,OILS & SAUCES,3.49,In Stock,Creamy coconut milk
+,Africa's Finest Palm Nut Cream 400g,OILS & SAUCES,2.99,In Stock,Concentrated palm nut for banga
+,Africa's Finest Palm Nut Cream 800g,OILS & SAUCES,4.99,In Stock,Concentrated palm nut for banga
+,Maltina Classic 330ml,DRINKS,0.90,In Stock,Nigerian non-alcoholic malt drink
+,Maltina Classic 330ml x6 Pack,DRINKS,4.99,In Stock,Nigerian non-alcoholic malt drink
+,Maltina Classic 330ml x24 Pack,DRINKS,19.99,In Stock,Nigerian non-alcoholic malt drink
+,Lacasera Apple 60cl,DRINKS,1.49,In Stock,Apple soft drink with real juice
+,Lacasera Apple 60cl x6 Pack,DRINKS,7.99,In Stock,Apple soft drink with real juice
+,Malta Guinness 330ml,DRINKS,1.19,In Stock,Rich malt beverage
+,Malta Guinness 330ml x6 Pack,DRINKS,6.49,In Stock,Rich malt beverage
+,Super Malt 330ml,DRINKS,1.29,In Stock,Vitamin-enriched malt
+,Super Malt 330ml x6 Pack,DRINKS,6.99,In Stock,Vitamin-enriched malt
+,Chivita 100% Orange 1L,DRINKS,2.49,In Stock,Nigerian fruit juice
+,Chivita 100% Orange 1L x6 Pack,DRINKS,13.99,In Stock,Nigerian fruit juice
+,Milo Chocolate Malt 500g,DRINKS,4.99,In Stock,Chocolate malt powder
+,Milo Chocolate Malt 500g x6 Pack,DRINKS,27.99,In Stock,Chocolate malt powder
+,Olu Olu Sweet Yellow Plantain Chips 60g,SNACKS,0.99,In Stock,Crispy sweet plantain chips
+,Olu Olu Sweet Yellow Plantain Chips 150g,SNACKS,2.49,In Stock,Crispy sweet plantain chips
+,Olu Olu Spicy Plantain Chips 60g,SNACKS,0.99,In Stock,Spicy plantain crisps
+,Olu Olu Spicy Plantain Chips 150g,SNACKS,2.49,In Stock,Spicy plantain crisps
+,Chin Chin Crunchy Original 200g,SNACKS,2.49,In Stock,Nigerian fried pastry
+,Chin Chin Crunchy Original 400g,SNACKS,4.49,In Stock,Nigerian fried pastry
+,Kuli Kuli Spicy Peanut 100g,SNACKS,1.99,In Stock,Roasted peanut bars
+,Kuli Kuli Spicy Peanut 200g,SNACKS,3.49,In Stock,Roasted peanut bars
+,Indomie Chicken Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Chicken Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Chicken Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Geisha Mackerel Tomato Sauce 155g,NOODLES & PROVISIONS,1.49,In Stock,Canned mackerel
+,Geisha Mackerel Tomato Sauce 425g,NOODLES & PROVISIONS,3.49,In Stock,Canned mackerel
+,Titus Sardine Vegetable Oil 125g,NOODLES & PROVISIONS,1.19,In Stock,Canned sardines
+,Titus Sardine Vegetable Oil 425g,NOODLES & PROVISIONS,2.99,In Stock,Canned sardines
+,Grace Ackee Brine 540g,NOODLES & PROVISIONS,4.99,In Stock,Jamaican ackee canned
+,Grace Ackee Brine 280g,NOODLES & PROVISIONS,2.99,In Stock,Jamaican ackee canned
+,Princes Corned Beef 340g,NOODLES & PROVISIONS,3.49,In Stock,Classic corned beef
+,Princes Corned Beef 198g,NOODLES & PROVISIONS,2.49,In Stock,Classic corned beef
+,Fresh Ripe Plantain per kg,FRESH PRODUCE,1.99,In Stock,Ripe sweet plantain for frying
+,Fresh Green Plantain per kg,FRESH PRODUCE,1.79,In Stock,Unripe plantain for boiling
+,Fresh Puna Yam per kg,FRESH PRODUCE,5.99,In Stock,Large West African yam tuber
+,Fresh White Yam per kg,FRESH PRODUCE,5.99,In Stock,Seasonal white yam
+,Fresh Cassava per kg,FRESH PRODUCE,2.49,In Stock,Cassava root for processing
+,Fresh Okra 500g pack,FRESH PRODUCE,2.99,In Stock,Fresh okra for draw soups
+,Fresh Scotch Bonnet Peppers 100g pack,FRESH PRODUCE,1.49,In Stock,Fiery peppers for spice
+,Fresh Agbalumo Udara African Star Apple pack of 10,FRESH PRODUCE,4.99,Limited,Seasonal sweet-tart star apple
+,Fresh Agbalumo Udara African Star Apple pack of 20,FRESH PRODUCE,8.99,Limited,Seasonal sweet-tart star apple
+,Fresh Bitterleaf Bunch,FRESH PRODUCE,2.99,In Stock,Bitterleaf for egusi soup
+,Fresh Ugu Pumpkin Leaves Bunch,FRESH PRODUCE,2.49,In Stock,Ugu leaves for vegetable soups
+,Fresh Ewedu Leaves Bunch,FRESH PRODUCE,2.49,In Stock,Jute leaves for ewedu soup
+,Fresh Cocoyam per kg,FRESH PRODUCE,3.49,In Stock,Taro tubers for fufu
+,Fresh Sweet Potato per kg,FRESH PRODUCE,1.99,In Stock,Orange flesh sweet potatoes
+,Fresh Garden Egg African Eggplant 500g,FRESH PRODUCE,2.99,In Stock,Small eggplants for stews
+,Fresh Breadfruit per whole,FRESH PRODUCE,6.99,Limited,Caribbean breadfruit starchy staple
+,Fresh Soursop per whole,FRESH PRODUCE,4.99,Limited,Spiky soursop for juice
+,Fresh Guava per kg,FRESH PRODUCE,3.49,In Stock,Fragrant guava fruit
+,Fresh Mango per kg,FRESH PRODUCE,2.99,In Stock,Tropical mangoes
+,Frozen Ripe Plantain Slices 500g,FROZEN FOODS,2.99,In Stock,Ready-to-fry frozen plantain
+,Frozen Ripe Plantain Slices 1kg,FROZEN FOODS,4.99,In Stock,Ready-to-fry frozen plantain
+,Frozen Chopped Okra 500g,FROZEN FOODS,2.99,In Stock,Frozen okra for convenience
+,Frozen Chopped Okra 1kg,FROZEN FOODS,4.99,In Stock,Frozen okra for convenience
+,Frozen Spinach Ugwu Leaves 500g,FROZEN FOODS,2.49,In Stock,Frozen pumpkin leaves
+,Frozen Spinach Ugwu Leaves 1kg,FROZEN FOODS,3.99,In Stock,Frozen pumpkin leaves
+,Frozen Goat Meat Cuts 500g,MEAT & POULTRY,5.49,In Stock,Goat meat for stews
+,Frozen Goat Meat Cuts 1kg,MEAT & POULTRY,9.99,In Stock,Goat meat for stews
+,Frozen Chicken Legs 1kg,MEAT & POULTRY,3.99,In Stock,Chicken portions staple
+,Frozen Chicken Legs 2kg,MEAT & POULTRY,6.99,In Stock,Chicken portions staple
+,Frozen Oxtail 500g,MEAT & POULTRY,4.99,In Stock,Oxtail for rich soups
+,Frozen Oxtail 1kg,MEAT & POULTRY,8.99,In Stock,Oxtail for rich soups
+,Dried Stockfish Cod 250g,SEAFOOD,6.99,In Stock,Dried stockfish for soups
+,Dried Stockfish Cod 500g,SEAFOOD,12.99,In Stock,Dried stockfish for soups
+,Smoked Mackerel Pack 200g,SEAFOOD,3.49,In Stock,Smoked fish for flavour
+,Smoked Mackerel Pack 500g,SEAFOOD,7.99,In Stock,Smoked fish for flavour
+,Tolly Boy Easy Cook Long Grain Rice 1kg,GRAINS & STAPLES,1.99,In Stock,Premium easy-cook long grain rice staple for jollof & daily meals
+,Tolly Boy Easy Cook Long Grain Rice 2kg,GRAINS & STAPLES,3.49,In Stock,Premium easy-cook long grain rice staple
+,Tolly Boy Easy Cook Long Grain Rice 5kg,GRAINS & STAPLES,6.99,In Stock,Premium easy-cook long grain rice staple
+,Tolly Boy Easy Cook Long Grain Rice 10kg,GRAINS & STAPLES,12.99,In Stock,Bulk family pack easy-cook rice
+,Asli Golden Sella Basmati Rice 1kg,GRAINS & STAPLES,3.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 2kg,GRAINS & STAPLES,6.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 5kg,GRAINS & STAPLES,13.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 10kg,GRAINS & STAPLES,24.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Tropical Sun Long Grain Rice 1kg,GRAINS & STAPLES,1.99,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 2kg,GRAINS & STAPLES,3.49,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 5kg,GRAINS & STAPLES,6.49,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 10kg,GRAINS & STAPLES,11.99,In Stock,Affordable everyday long grain rice
+,Ghana Taste White Gari 500g,GRAINS & STAPLES,2.49,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 1kg,GRAINS & STAPLES,3.99,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 1.5kg,GRAINS & STAPLES,4.99,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 5kg,GRAINS & STAPLES,14.99,In Stock,Authentic Ghanaian white gari for eba
+,Tropical Sun Yellow Gari 500g,GRAINS & STAPLES,2.29,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 1kg,GRAINS & STAPLES,3.49,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 1.5kg,GRAINS & STAPLES,4.99,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 5kg,GRAINS & STAPLES,13.99,In Stock,Finely ground yellow cassava granules
+,Africa's Finest Ijebu Gari 1kg,GRAINS & STAPLES,4.49,In Stock,Coarse sour fermented Ijebu gari
+,Africa's Finest Ijebu Gari 1.5kg,GRAINS & STAPLES,5.49,In Stock,Coarse sour fermented Ijebu gari
+,Nigerian Taste Ijebu Gari 1kg,GRAINS & STAPLES,4.49,In Stock,Authentic Nigerian Ijebu gari
+,Nigerian Taste Ijebu Gari 1.5kg,GRAINS & STAPLES,5.49,In Stock,Authentic Nigerian Ijebu gari
+,Tropical Sun Poundo Iyan 1kg,GRAINS & STAPLES,5.49,In Stock,Instant pounded yam flour smooth swallow
+,Tropical Sun Poundo Iyan 1.5kg,GRAINS & STAPLES,6.99,In Stock,Instant pounded yam flour smooth swallow
+,Tropical Sun Poundo Iyan 2kg,GRAINS & STAPLES,8.99,In Stock,Instant pounded yam flour smooth swallow
+,Olu Olu Poundo Iyan 1kg,GRAINS & STAPLES,5.99,In Stock,Easy-prep pounded yam flour
+,Olu Olu Poundo Iyan 1.5kg,GRAINS & STAPLES,7.49,In Stock,Easy-prep pounded yam flour
+,Olu Olu Poundo Iyan 2kg,GRAINS & STAPLES,9.99,In Stock,Easy-prep pounded yam flour
+,Soldua Pounded Yam Flour 1kg,GRAINS & STAPLES,7.99,In Stock,100% yam no additives
+,Soldua Pounded Yam Flour 2kg,GRAINS & STAPLES,13.99,In Stock,100% yam no additives
+,Mamas Choice Plantain Fufu Mix 500g,GRAINS & STAPLES,3.49,In Stock,Instant plantain fufu mix
+,Mamas Choice Plantain Fufu Mix 1kg,GRAINS & STAPLES,5.99,In Stock,Instant plantain fufu mix
+,Tropiway Instant Cocoyam Fufu 500g,GRAINS & STAPLES,3.99,In Stock,Instant cocoyam fufu swallow
+,Tropiway Instant Cocoyam Fufu 1kg,GRAINS & STAPLES,6.49,In Stock,Instant cocoyam fufu swallow
+,Honeywell Whole Wheat Meal 1kg,GRAINS & STAPLES,3.49,In Stock,Fine wheat meal for swallow
+,Honeywell Whole Wheat Meal 1.5kg,GRAINS & STAPLES,4.49,In Stock,Fine wheat meal for swallow
+,Honeywell Semolina 1kg,GRAINS & STAPLES,2.99,In Stock,Coarse semolina staple
+,Honeywell Semolina 1.5kg,GRAINS & STAPLES,3.99,In Stock,Coarse semolina staple
+,Tropical Sun Cassava Flour 500g,GRAINS & STAPLES,2.49,In Stock,Pure cassava flour
+,Tropical Sun Cassava Flour 1kg,GRAINS & STAPLES,4.29,In Stock,Pure cassava flour
+,Olu Olu Plantain Flour 500g,GRAINS & STAPLES,3.49,In Stock,Green plantain flour
+,Olu Olu Plantain Flour 1kg,GRAINS & STAPLES,5.49,In Stock,Green plantain flour
+,Tropical Sun Yam Flour Elubo 500g,GRAINS & STAPLES,3.99,In Stock,Traditional Nigerian elubo yam flour
+,Tropical Sun Yam Flour Elubo 1kg,GRAINS & STAPLES,6.49,In Stock,Traditional Nigerian elubo yam flour
+,Maggi Signature Jollof Seasoning 100g,SPICES & SEASONING,2.49,In Stock,Bay leaf thyme onion tomato blend for jollof
+,Maggi Signature Jollof Seasoning 250g,SPICES & SEASONING,4.99,In Stock,Bay leaf thyme onion tomato blend for jollof
+,Africa's Finest Jollof Seasoning 100g,SPICES & SEASONING,3.99,In Stock,Ready-mix jollof spice
+,Africa's Finest Jollof Seasoning 250g,SPICES & SEASONING,7.99,In Stock,Ready-mix jollof spice
+,Jumbo Jollof Rice Seasoning 100g,SPICES & SEASONING,5.99,In Stock,Classic Nigerian jollof sachet
+,Jumbo Jollof Rice Seasoning 250g,SPICES & SEASONING,11.99,In Stock,Classic Nigerian jollof sachet
+,Knorr Original Seasoning Cubes 400g,SPICES & SEASONING,3.99,In Stock,Multipack cubes kitchen essential
+,Knorr Original Seasoning Cubes 800g,SPICES & SEASONING,6.99,In Stock,Multipack cubes kitchen essential
+,Maggi Star Chicken Cubes 400g,SPICES & SEASONING,3.49,In Stock,Nigerian chicken seasoning cubes
+,Maggi Star Chicken Cubes 800g,SPICES & SEASONING,6.49,In Stock,Nigerian chicken seasoning cubes
+,Africa's Finest Suya Pepper Mix 100g,SPICES & SEASONING,4.49,In Stock,Spicy suya kebab seasoning
+,Africa's Finest Suya Pepper Mix 250g,SPICES & SEASONING,8.99,In Stock,Spicy suya kebab seasoning
+,Lion Thyme Dried 100g,SPICES & SEASONING,2.49,In Stock,Dried thyme staple
+,Lion Thyme Dried 250g,SPICES & SEASONING,4.99,In Stock,Dried thyme staple
+,Lion Curry Powder Mild 100g,SPICES & SEASONING,2.79,In Stock,Mild curry blend for stews
+,Lion Curry Powder Mild 250g,SPICES & SEASONING,5.49,In Stock,Mild curry blend for stews
+,Tropical Sun All Purpose Seasoning 350g,SPICES & SEASONING,3.49,In Stock,Versatile everyday blend
+,Tropical Sun All Purpose Seasoning 700g,SPICES & SEASONING,5.99,In Stock,Versatile everyday blend
+,Africa's Finest Ground Crayfish 100g,SPICES & SEASONING,4.99,In Stock,Dried ground crayfish for soups
+,Africa's Finest Ground Crayfish 250g,SPICES & SEASONING,9.99,In Stock,Dried ground crayfish for soups
+,Africa's Finest Red Palm Oil 150ml,OILS & SAUCES,2.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 1L,OILS & SAUCES,5.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 2L,OILS & SAUCES,10.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 5L,OILS & SAUCES,24.99,In Stock,Authentic West African palm oil
+,KTC Coconut Oil 150ml,OILS & SAUCES,2.49,In Stock,Pure coconut oil
+,KTC Coconut Oil 1L,OILS & SAUCES,4.49,In Stock,Pure coconut oil
+,KTC Coconut Oil 2L,OILS & SAUCES,8.99,In Stock,Pure coconut oil
+,De Rica Tomato Paste 70g,OILS & SAUCES,0.70,In Stock,Concentrated tomato paste
+,De Rica Tomato Paste 400g,OILS & SAUCES,1.29,In Stock,Concentrated tomato paste
+,De Rica Tomato Paste 800g,OILS & SAUCES,2.49,In Stock,Concentrated tomato paste
+,Baron Hot Pepper Sauce 150ml,OILS & SAUCES,2.99,In Stock,Fiery Caribbean hot sauce
+,Baron Hot Pepper Sauce 340ml,OILS & SAUCES,5.99,In Stock,Fiery Caribbean hot sauce
+,Grace Coconut Milk 400ml,OILS & SAUCES,1.99,In Stock,Creamy coconut milk
+,Grace Coconut Milk 800ml,OILS & SAUCES,3.49,In Stock,Creamy coconut milk
+,Africa's Finest Palm Nut Cream 400g,OILS & SAUCES,2.99,In Stock,Concentrated palm nut for banga
+,Africa's Finest Palm Nut Cream 800g,OILS & SAUCES,4.99,In Stock,Concentrated palm nut for banga
+,Maltina Classic 330ml,DRINKS,0.90,In Stock,Nigerian non-alcoholic malt drink
+,Maltina Classic 330ml x6 Pack,DRINKS,4.99,In Stock,Nigerian non-alcoholic malt drink
+,Maltina Classic 330ml x24 Pack,DRINKS,19.99,In Stock,Nigerian non-alcoholic malt drink
+,Lacasera Apple 60cl,DRINKS,1.49,In Stock,Apple soft drink with real juice
+,Lacasera Apple 60cl x6 Pack,DRINKS,7.99,In Stock,Apple soft drink with real juice
+,Malta Guinness 330ml,DRINKS,1.19,In Stock,Rich malt beverage
+,Malta Guinness 330ml x6 Pack,DRINKS,6.49,In Stock,Rich malt beverage
+,Super Malt 330ml,DRINKS,1.29,In Stock,Vitamin-enriched malt
+,Super Malt 330ml x6 Pack,DRINKS,6.99,In Stock,Vitamin-enriched malt
+,Chivita 100% Orange 1L,DRINKS,2.49,In Stock,Nigerian fruit juice
+,Chivita 100% Orange 1L x6 Pack,DRINKS,13.99,In Stock,Nigerian fruit juice
+,Milo Chocolate Malt 500g,DRINKS,4.99,In Stock,Chocolate malt powder
+,Milo Chocolate Malt 500g x6 Pack,DRINKS,27.99,In Stock,Chocolate malt powder
+,Olu Olu Sweet Yellow Plantain Chips 60g,SNACKS,0.99,In Stock,Crispy sweet plantain chips
+,Olu Olu Sweet Yellow Plantain Chips 150g,SNACKS,2.49,In Stock,Crispy sweet plantain chips
+,Olu Olu Spicy Plantain Chips 60g,SNACKS,0.99,In Stock,Spicy plantain crisps
+,Olu Olu Spicy Plantain Chips 150g,SNACKS,2.49,In Stock,Spicy plantain crisps
+,Chin Chin Crunchy Original 200g,SNACKS,2.49,In Stock,Nigerian fried pastry
+,Chin Chin Crunchy Original 400g,SNACKS,4.49,In Stock,Nigerian fried pastry
+,Kuli Kuli Spicy Peanut 100g,SNACKS,1.99,In Stock,Roasted peanut bars
+,Kuli Kuli Spicy Peanut 200g,SNACKS,3.49,In Stock,Roasted peanut bars
+,Indomie Chicken Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Chicken Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Chicken Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Geisha Mackerel Tomato Sauce 155g,NOODLES & PROVISIONS,1.49,In Stock,Canned mackerel
+,Geisha Mackerel Tomato Sauce 425g,NOODLES & PROVISIONS,3.49,In Stock,Canned mackerel
+,Titus Sardine Vegetable Oil 125g,NOODLES & PROVISIONS,1.19,In Stock,Canned sardines
+,Titus Sardine Vegetable Oil 425g,NOODLES & PROVISIONS,2.99,In Stock,Canned sardines
+,Grace Ackee Brine 540g,NOODLES & PROVISIONS,4.99,In Stock,Jamaican ackee canned
+,Grace Ackee Brine 280g,NOODLES & PROVISIONS,2.99,In Stock,Jamaican ackee canned
+,Princes Corned Beef 340g,NOODLES & PROVISIONS,3.49,In Stock,Classic corned beef
+,Princes Corned Beef 198g,NOODLES & PROVISIONS,2.49,In Stock,Classic corned beef
+,Fresh Ripe Plantain per kg,FRESH PRODUCE,1.99,In Stock,Ripe sweet plantain for frying
+,Fresh Green Plantain per kg,FRESH PRODUCE,1.79,In Stock,Unripe plantain for boiling
+,Fresh Puna Yam per kg,FRESH PRODUCE,5.99,In Stock,Large West African yam tuber
+,Fresh White Yam per kg,FRESH PRODUCE,5.99,In Stock,Seasonal white yam
+,Fresh Cassava per kg,FRESH PRODUCE,2.49,In Stock,Cassava root for processing
+,Fresh Okra 500g pack,FRESH PRODUCE,2.99,In Stock,Fresh okra for draw soups
+,Fresh Scotch Bonnet Peppers 100g pack,FRESH PRODUCE,1.49,In Stock,Fiery peppers for spice
+,Fresh Agbalumo Udara African Star Apple pack of 10,FRESH PRODUCE,4.99,Limited,Seasonal sweet-tart star apple
+,Fresh Agbalumo Udara African Star Apple pack of 20,FRESH PRODUCE,8.99,Limited,Seasonal sweet-tart star apple
+,Fresh Bitterleaf Bunch,FRESH PRODUCE,2.99,In Stock,Bitterleaf for egusi soup
+,Fresh Ugu Pumpkin Leaves Bunch,FRESH PRODUCE,2.49,In Stock,Ugu leaves for vegetable soups
+,Fresh Ewedu Leaves Bunch,FRESH PRODUCE,2.49,In Stock,Jute leaves for ewedu soup
+,Fresh Cocoyam per kg,FRESH PRODUCE,3.49,In Stock,Taro tubers for fufu
+,Fresh Sweet Potato per kg,FRESH PRODUCE,1.99,In Stock,Orange flesh sweet potatoes
+,Fresh Garden Egg African Eggplant 500g,FRESH PRODUCE,2.99,In Stock,Small eggplants for stews
+,Fresh Breadfruit per whole,FRESH PRODUCE,6.99,Limited,Caribbean breadfruit starchy staple
+,Fresh Soursop per whole,FRESH PRODUCE,4.99,Limited,Spiky soursop for juice
+,Fresh Guava per kg,FRESH PRODUCE,3.49,In Stock,Fragrant guava fruit
+,Fresh Mango per kg,FRESH PRODUCE,2.99,In Stock,Tropical mangoes
+,Frozen Ripe Plantain Slices 500g,FROZEN FOODS,2.99,In Stock,Ready-to-fry frozen plantain
+,Frozen Ripe Plantain Slices 1kg,FROZEN FOODS,4.99,In Stock,Ready-to-fry frozen plantain
+,Frozen Chopped Okra 500g,FROZEN FOODS,2.99,In Stock,Frozen okra for convenience
+,Frozen Chopped Okra 1kg,FROZEN FOODS,4.99,In Stock,Frozen okra for convenience
+,Frozen Spinach Ugwu Leaves 500g,FROZEN FOODS,2.49,In Stock,Frozen pumpkin leaves
+,Frozen Spinach Ugwu Leaves 1kg,FROZEN FOODS,3.99,In Stock,Frozen pumpkin leaves
+,Frozen Goat Meat Cuts 500g,MEAT & POULTRY,5.49,In Stock,Goat meat for stews
+,Frozen Goat Meat Cuts 1kg,MEAT & POULTRY,9.99,In Stock,Goat meat for stews
+,Frozen Chicken Legs 1kg,MEAT & POULTRY,3.99,In Stock,Chicken portions staple
+,Frozen Chicken Legs 2kg,MEAT & POULTRY,6.99,In Stock,Chicken portions staple
+,Frozen Oxtail 500g,MEAT & POULTRY,4.99,In Stock,Oxtail for rich soups
+,Frozen Oxtail 1kg,MEAT & POULTRY,8.99,In Stock,Oxtail for rich soups
+,Dried Stockfish Cod 250g,SEAFOOD,6.99,In Stock,Dried stockfish for soups
+,Dried Stockfish Cod 500g,SEAFOOD,12.99,In Stock,Dried stockfish for soups
+,Smoked Mackerel Pack 200g,SEAFOOD,3.49,In Stock,Smoked fish for flavour
+,Smoked Mackerel Pack 500g,SEAFOOD,7.99,In Stock,Smoked fish for flavour
+,Tolly Boy Easy Cook Long Grain Rice 1kg,GRAINS & STAPLES,1.99,In Stock,Premium easy-cook long grain rice staple for jollof & daily meals
+,Tolly Boy Easy Cook Long Grain Rice 2kg,GRAINS & STAPLES,3.49,In Stock,Premium easy-cook long grain rice staple
+,Tolly Boy Easy Cook Long Grain Rice 5kg,GRAINS & STAPLES,6.99,In Stock,Premium easy-cook long grain rice staple
+,Tolly Boy Easy Cook Long Grain Rice 10kg,GRAINS & STAPLES,12.99,In Stock,Bulk family pack easy-cook rice
+,Asli Golden Sella Basmati Rice 1kg,GRAINS & STAPLES,3.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 2kg,GRAINS & STAPLES,6.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 5kg,GRAINS & STAPLES,13.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 10kg,GRAINS & STAPLES,24.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Tropical Sun Long Grain Rice 1kg,GRAINS & STAPLES,1.99,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 2kg,GRAINS & STAPLES,3.49,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 5kg,GRAINS & STAPLES,6.49,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 10kg,GRAINS & STAPLES,11.99,In Stock,Affordable everyday long grain rice
+,Ghana Taste White Gari 500g,GRAINS & STAPLES,2.49,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 1kg,GRAINS & STAPLES,3.99,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 1.5kg,GRAINS & STAPLES,4.99,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 5kg,GRAINS & STAPLES,14.99,In Stock,Authentic Ghanaian white gari for eba
+,Tropical Sun Yellow Gari 500g,GRAINS & STAPLES,2.29,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 1kg,GRAINS & STAPLES,3.49,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 1.5kg,GRAINS & STAPLES,4.99,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 5kg,GRAINS & STAPLES,13.99,In Stock,Finely ground yellow cassava granules
+,Africa's Finest Ijebu Gari 1kg,GRAINS & STAPLES,4.49,In Stock,Coarse sour fermented Ijebu gari
+,Africa's Finest Ijebu Gari 1.5kg,GRAINS & STAPLES,5.49,In Stock,Coarse sour fermented Ijebu gari
+,Nigerian Taste Ijebu Gari 1kg,GRAINS & STAPLES,4.49,In Stock,Authentic Nigerian Ijebu gari
+,Nigerian Taste Ijebu Gari 1.5kg,GRAINS & STAPLES,5.49,In Stock,Authentic Nigerian Ijebu gari
+,Tropical Sun Poundo Iyan 1kg,GRAINS & STAPLES,5.49,In Stock,Instant pounded yam flour smooth swallow
+,Tropical Sun Poundo Iyan 1.5kg,GRAINS & STAPLES,6.99,In Stock,Instant pounded yam flour smooth swallow
+,Tropical Sun Poundo Iyan 2kg,GRAINS & STAPLES,8.99,In Stock,Instant pounded yam flour smooth swallow
+,Olu Olu Poundo Iyan 1kg,GRAINS & STAPLES,5.99,In Stock,Easy-prep pounded yam flour
+,Olu Olu Poundo Iyan 1.5kg,GRAINS & STAPLES,7.49,In Stock,Easy-prep pounded yam flour
+,Olu Olu Poundo Iyan 2kg,GRAINS & STAPLES,9.99,In Stock,Easy-prep pounded yam flour
+,Soldua Pounded Yam Flour 1kg,GRAINS & STAPLES,7.99,In Stock,100% yam no additives
+,Soldua Pounded Yam Flour 2kg,GRAINS & STAPLES,13.99,In Stock,100% yam no additives
+,Mamas Choice Plantain Fufu Mix 500g,GRAINS & STAPLES,3.49,In Stock,Instant plantain fufu mix
+,Mamas Choice Plantain Fufu Mix 1kg,GRAINS & STAPLES,5.99,In Stock,Instant plantain fufu mix
+,Tropiway Instant Cocoyam Fufu 500g,GRAINS & STAPLES,3.99,In Stock,Instant cocoyam fufu swallow
+,Tropiway Instant Cocoyam Fufu 1kg,GRAINS & STAPLES,6.49,In Stock,Instant cocoyam fufu swallow
+,Honeywell Whole Wheat Meal 1kg,GRAINS & STAPLES,3.49,In Stock,Fine wheat meal for swallow
+,Honeywell Whole Wheat Meal 1.5kg,GRAINS & STAPLES,4.49,In Stock,Fine wheat meal for swallow
+,Honeywell Semolina 1kg,GRAINS & STAPLES,2.99,In Stock,Coarse semolina staple
+,Honeywell Semolina 1.5kg,GRAINS & STAPLES,3.99,In Stock,Coarse semolina staple
+,Tropical Sun Cassava Flour 500g,GRAINS & STAPLES,2.49,In Stock,Pure cassava flour
+,Tropical Sun Cassava Flour 1kg,GRAINS & STAPLES,4.29,In Stock,Pure cassava flour
+,Olu Olu Plantain Flour 500g,GRAINS & STAPLES,3.49,In Stock,Green plantain flour
+,Olu Olu Plantain Flour 1kg,GRAINS & STAPLES,5.49,In Stock,Green plantain flour
+,Tropical Sun Yam Flour Elubo 500g,GRAINS & STAPLES,3.99,In Stock,Traditional Nigerian elubo yam flour
+,Tropical Sun Yam Flour Elubo 1kg,GRAINS & STAPLES,6.49,In Stock,Traditional Nigerian elubo yam flour
+,Maggi Signature Jollof Seasoning 100g,SPICES & SEASONING,2.49,In Stock,Bay leaf thyme onion tomato blend for jollof
+,Maggi Signature Jollof Seasoning 250g,SPICES & SEASONING,4.99,In Stock,Bay leaf thyme onion tomato blend for jollof
+,Africa's Finest Jollof Seasoning 100g,SPICES & SEASONING,3.99,In Stock,Ready-mix jollof spice
+,Africa's Finest Jollof Seasoning 250g,SPICES & SEASONING,7.99,In Stock,Ready-mix jollof spice
+,Jumbo Jollof Rice Seasoning 100g,SPICES & SEASONING,5.99,In Stock,Classic Nigerian jollof sachet
+,Jumbo Jollof Rice Seasoning 250g,SPICES & SEASONING,11.99,In Stock,Classic Nigerian jollof sachet
+,Knorr Original Seasoning Cubes 400g,SPICES & SEASONING,3.99,In Stock,Multipack cubes kitchen essential
+,Knorr Original Seasoning Cubes 800g,SPICES & SEASONING,6.99,In Stock,Multipack cubes kitchen essential
+,Maggi Star Chicken Cubes 400g,SPICES & SEASONING,3.49,In Stock,Nigerian chicken seasoning cubes
+,Maggi Star Chicken Cubes 800g,SPICES & SEASONING,6.49,In Stock,Nigerian chicken seasoning cubes
+,Africa's Finest Suya Pepper Mix 100g,SPICES & SEASONING,4.49,In Stock,Spicy suya kebab seasoning
+,Africa's Finest Suya Pepper Mix 250g,SPICES & SEASONING,8.99,In Stock,Spicy suya kebab seasoning
+,Lion Thyme Dried 100g,SPICES & SEASONING,2.49,In Stock,Dried thyme staple
+,Lion Thyme Dried 250g,SPICES & SEASONING,4.99,In Stock,Dried thyme staple
+,Lion Curry Powder Mild 100g,SPICES & SEASONING,2.79,In Stock,Mild curry blend for stews
+,Lion Curry Powder Mild 250g,SPICES & SEASONING,5.49,In Stock,Mild curry blend for stews
+,Tropical Sun All Purpose Seasoning 350g,SPICES & SEASONING,3.49,In Stock,Versatile everyday blend
+,Tropical Sun All Purpose Seasoning 700g,SPICES & SEASONING,5.99,In Stock,Versatile everyday blend
+,Africa's Finest Ground Crayfish 100g,SPICES & SEASONING,4.99,In Stock,Dried ground crayfish for soups
+,Africa's Finest Ground Crayfish 250g,SPICES & SEASONING,9.99,In Stock,Dried ground crayfish for soups
+,Africa's Finest Red Palm Oil 150ml,OILS & SAUCES,2.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 1L,OILS & SAUCES,5.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 2L,OILS & SAUCES,10.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 5L,OILS & SAUCES,24.99,In Stock,Authentic West African palm oil
+,KTC Coconut Oil 150ml,OILS & SAUCES,2.49,In Stock,Pure coconut oil
+,KTC Coconut Oil 1L,OILS & SAUCES,4.49,In Stock,Pure coconut oil
+,KTC Coconut Oil 2L,OILS & SAUCES,8.99,In Stock,Pure coconut oil
+,De Rica Tomato Paste 70g,OILS & SAUCES,0.70,In Stock,Concentrated tomato paste
+,De Rica Tomato Paste 400g,OILS & SAUCES,1.29,In Stock,Concentrated tomato paste
+,De Rica Tomato Paste 800g,OILS & SAUCES,2.49,In Stock,Concentrated tomato paste
+,Baron Hot Pepper Sauce 150ml,OILS & SAUCES,2.99,In Stock,Fiery Caribbean hot sauce
+,Baron Hot Pepper Sauce 340ml,OILS & SAUCES,5.99,In Stock,Fiery Caribbean hot sauce
+,Grace Coconut Milk 400ml,OILS & SAUCES,1.99,In Stock,Creamy coconut milk
+,Grace Coconut Milk 800ml,OILS & SAUCES,3.49,In Stock,Creamy coconut milk
+,Africa's Finest Palm Nut Cream 400g,OILS & SAUCES,2.99,In Stock,Concentrated palm nut for banga
+,Africa's Finest Palm Nut Cream 800g,OILS & SAUCES,4.99,In Stock,Concentrated palm nut for banga
+,Maltina Classic 330ml,DRINKS,0.90,In Stock,Nigerian non-alcoholic malt drink
+,Maltina Classic 330ml x6 Pack,DRINKS,4.99,In Stock,Nigerian non-alcoholic malt drink
+,Maltina Classic 330ml x24 Pack,DRINKS,19.99,In Stock,Nigerian non-alcoholic malt drink
+,Lacasera Apple 60cl,DRINKS,1.49,In Stock,Apple soft drink with real juice
+,Lacasera Apple 60cl x6 Pack,DRINKS,7.99,In Stock,Apple soft drink with real juice
+,Malta Guinness 330ml,DRINKS,1.19,In Stock,Rich malt beverage
+,Malta Guinness 330ml x6 Pack,DRINKS,6.49,In Stock,Rich malt beverage
+,Super Malt 330ml,DRINKS,1.29,In Stock,Vitamin-enriched malt
+,Super Malt 330ml x6 Pack,DRINKS,6.99,In Stock,Vitamin-enriched malt
+,Chivita 100% Orange 1L,DRINKS,2.49,In Stock,Nigerian fruit juice
+,Chivita 100% Orange 1L x6 Pack,DRINKS,13.99,In Stock,Nigerian fruit juice
+,Milo Chocolate Malt 500g,DRINKS,4.99,In Stock,Chocolate malt powder
+,Milo Chocolate Malt 500g x6 Pack,DRINKS,27.99,In Stock,Chocolate malt powder
+,Olu Olu Sweet Yellow Plantain Chips 60g,SNACKS,0.99,In Stock,Crispy sweet plantain chips
+,Olu Olu Sweet Yellow Plantain Chips 150g,SNACKS,2.49,In Stock,Crispy sweet plantain chips
+,Olu Olu Spicy Plantain Chips 60g,SNACKS,0.99,In Stock,Spicy plantain crisps
+,Olu Olu Spicy Plantain Chips 150g,SNACKS,2.49,In Stock,Spicy plantain crisps
+,Chin Chin Crunchy Original 200g,SNACKS,2.49,In Stock,Nigerian fried pastry
+,Chin Chin Crunchy Original 400g,SNACKS,4.49,In Stock,Nigerian fried pastry
+,Kuli Kuli Spicy Peanut 100g,SNACKS,1.99,In Stock,Roasted peanut bars
+,Kuli Kuli Spicy Peanut 200g,SNACKS,3.49,In Stock,Roasted peanut bars
+,Indomie Chicken Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Chicken Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Chicken Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Geisha Mackerel Tomato Sauce 155g,NOODLES & PROVISIONS,1.49,In Stock,Canned mackerel
+,Geisha Mackerel Tomato Sauce 425g,NOODLES & PROVISIONS,3.49,In Stock,Canned mackerel
+,Titus Sardine Vegetable Oil 125g,NOODLES & PROVISIONS,1.19,In Stock,Canned sardines
+,Titus Sardine Vegetable Oil 425g,NOODLES & PROVISIONS,2.99,In Stock,Canned sardines
+,Grace Ackee Brine 540g,NOODLES & PROVISIONS,4.99,In Stock,Jamaican ackee canned
+,Grace Ackee Brine 280g,NOODLES & PROVISIONS,2.99,In Stock,Jamaican ackee canned
+,Princes Corned Beef 340g,NOODLES & PROVISIONS,3.49,In Stock,Classic corned beef
+,Princes Corned Beef 198g,NOODLES & PROVISIONS,2.49,In Stock,Classic corned beef
+,Fresh Ripe Plantain per kg,FRESH PRODUCE,1.99,In Stock,Ripe sweet plantain for frying
+,Fresh Green Plantain per kg,FRESH PRODUCE,1.79,In Stock,Unripe plantain for boiling
+,Fresh Puna Yam per kg,FRESH PRODUCE,5.99,In Stock,Large West African yam tuber
+,Fresh White Yam per kg,FRESH PRODUCE,5.99,In Stock,Seasonal white yam
+,Fresh Cassava per kg,FRESH PRODUCE,2.49,In Stock,Cassava root for processing
+,Fresh Okra 500g pack,FRESH PRODUCE,2.99,In Stock,Fresh okra for draw soups
+,Fresh Scotch Bonnet Peppers 100g pack,FRESH PRODUCE,1.49,In Stock,Fiery peppers for spice
+,Fresh Agbalumo Udara African Star Apple pack of 10,FRESH PRODUCE,4.99,Limited,Seasonal sweet-tart star apple
+,Fresh Agbalumo Udara African Star Apple pack of 20,FRESH PRODUCE,8.99,Limited,Seasonal sweet-tart star apple
+,Fresh Bitterleaf Bunch,FRESH PRODUCE,2.99,In Stock,Bitterleaf for egusi soup
+,Fresh Ugu Pumpkin Leaves Bunch,FRESH PRODUCE,2.49,In Stock,Ugu leaves for vegetable soups
+,Fresh Ewedu Leaves Bunch,FRESH PRODUCE,2.49,In Stock,Jute leaves for ewedu soup
+,Fresh Cocoyam per kg,FRESH PRODUCE,3.49,In Stock,Taro tubers for fufu
+,Fresh Sweet Potato per kg,FRESH PRODUCE,1.99,In Stock,Orange flesh sweet potatoes
+,Fresh Garden Egg African Eggplant 500g,FRESH PRODUCE,2.99,In Stock,Small eggplants for stews
+,Fresh Breadfruit per whole,FRESH PRODUCE,6.99,Limited,Caribbean breadfruit starchy staple
+,Fresh Soursop per whole,FRESH PRODUCE,4.99,Limited,Spiky soursop for juice
+,Fresh Guava per kg,FRESH PRODUCE,3.49,In Stock,Fragrant guava fruit
+,Fresh Mango per kg,FRESH PRODUCE,2.99,In Stock,Tropical mangoes
+,Frozen Ripe Plantain Slices 500g,FROZEN FOODS,2.99,In Stock,Ready-to-fry frozen plantain
+,Frozen Ripe Plantain Slices 1kg,FROZEN FOODS,4.99,In Stock,Ready-to-fry frozen plantain
+,Frozen Chopped Okra 500g,FROZEN FOODS,2.99,In Stock,Frozen okra for convenience
+,Frozen Chopped Okra 1kg,FROZEN FOODS,4.99,In Stock,Frozen okra for convenience
+,Frozen Spinach Ugwu Leaves 500g,FROZEN FOODS,2.49,In Stock,Frozen pumpkin leaves
+,Frozen Spinach Ugwu Leaves 1kg,FROZEN FOODS,3.99,In Stock,Frozen pumpkin leaves
+,Frozen Goat Meat Cuts 500g,MEAT & POULTRY,5.49,In Stock,Goat meat for stews
+,Frozen Goat Meat Cuts 1kg,MEAT & POULTRY,9.99,In Stock,Goat meat for stews
+,Frozen Chicken Legs 1kg,MEAT & POULTRY,3.99,In Stock,Chicken portions staple
+,Frozen Chicken Legs 2kg,MEAT & POULTRY,6.99,In Stock,Chicken portions staple
+,Frozen Oxtail 500g,MEAT & POULTRY,4.99,In Stock,Oxtail for rich soups
+,Frozen Oxtail 1kg,MEAT & POULTRY,8.99,In Stock,Oxtail for rich soups
+,Dried Stockfish Cod 250g,SEAFOOD,6.99,In Stock,Dried stockfish for soups
+,Dried Stockfish Cod 500g,SEAFOOD,12.99,In Stock,Dried stockfish for soups
+,Smoked Mackerel Pack 200g,SEAFOOD,3.49,In Stock,Smoked fish for flavour
+,Smoked Mackerel Pack 500g,SEAFOOD,7.99,In Stock,Smoked fish for flavour
+,Tolly Boy Easy Cook Long Grain Rice 1kg,GRAINS & STAPLES,1.99,In Stock,Premium easy-cook long grain rice staple for jollof & daily meals
+,Tolly Boy Easy Cook Long Grain Rice 2kg,GRAINS & STAPLES,3.49,In Stock,Premium easy-cook long grain rice staple
+,Tolly Boy Easy Cook Long Grain Rice 5kg,GRAINS & STAPLES,6.99,In Stock,Premium easy-cook long grain rice staple
+,Tolly Boy Easy Cook Long Grain Rice 10kg,GRAINS & STAPLES,12.99,In Stock,Bulk family pack easy-cook rice
+,Asli Golden Sella Basmati Rice 1kg,GRAINS & STAPLES,3.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 2kg,GRAINS & STAPLES,6.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 5kg,GRAINS & STAPLES,13.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 10kg,GRAINS & STAPLES,24.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Tropical Sun Long Grain Rice 1kg,GRAINS & STAPLES,1.99,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 2kg,GRAINS & STAPLES,3.49,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 5kg,GRAINS & STAPLES,6.49,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 10kg,GRAINS & STAPLES,11.99,In Stock,Affordable everyday long grain rice
+,Ghana Taste White Gari 500g,GRAINS & STAPLES,2.49,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 1kg,GRAINS & STAPLES,3.99,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 1.5kg,GRAINS & STAPLES,4.99,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 5kg,GRAINS & STAPLES,14.99,In Stock,Authentic Ghanaian white gari for eba
+,Tropical Sun Yellow Gari 500g,GRAINS & STAPLES,2.29,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 1kg,GRAINS & STAPLES,3.49,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 1.5kg,GRAINS & STAPLES,4.99,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 5kg,GRAINS & STAPLES,13.99,In Stock,Finely ground yellow cassava granules
+,Africa's Finest Ijebu Gari 1kg,GRAINS & STAPLES,4.49,In Stock,Coarse sour fermented Ijebu gari
+,Africa's Finest Ijebu Gari 1.5kg,GRAINS & STAPLES,5.49,In Stock,Coarse sour fermented Ijebu gari
+,Nigerian Taste Ijebu Gari 1kg,GRAINS & STAPLES,4.49,In Stock,Authentic Nigerian Ijebu gari
+,Nigerian Taste Ijebu Gari 1.5kg,GRAINS & STAPLES,5.49,In Stock,Authentic Nigerian Ijebu gari
+,Tropical Sun Poundo Iyan 1kg,GRAINS & STAPLES,5.49,In Stock,Instant pounded yam flour smooth swallow
+,Tropical Sun Poundo Iyan 1.5kg,GRAINS & STAPLES,6.99,In Stock,Instant pounded yam flour smooth swallow
+,Tropical Sun Poundo Iyan 2kg,GRAINS & STAPLES,8.99,In Stock,Instant pounded yam flour smooth swallow
+,Olu Olu Poundo Iyan 1kg,GRAINS & STAPLES,5.99,In Stock,Easy-prep pounded yam flour
+,Olu Olu Poundo Iyan 1.5kg,GRAINS & STAPLES,7.49,In Stock,Easy-prep pounded yam flour
+,Olu Olu Poundo Iyan 2kg,GRAINS & STAPLES,9.99,In Stock,Easy-prep pounded yam flour
+,Soldua Pounded Yam Flour 1kg,GRAINS & STAPLES,7.99,In Stock,100% yam no additives
+,Soldua Pounded Yam Flour 2kg,GRAINS & STAPLES,13.99,In Stock,100% yam no additives
+,Mamas Choice Plantain Fufu Mix 500g,GRAINS & STAPLES,3.49,In Stock,Instant plantain fufu mix
+,Mamas Choice Plantain Fufu Mix 1kg,GRAINS & STAPLES,5.99,In Stock,Instant plantain fufu mix
+,Tropiway Instant Cocoyam Fufu 500g,GRAINS & STAPLES,3.99,In Stock,Instant cocoyam fufu swallow
+,Tropiway Instant Cocoyam Fufu 1kg,GRAINS & STAPLES,6.49,In Stock,Instant cocoyam fufu swallow
+,Honeywell Whole Wheat Meal 1kg,GRAINS & STAPLES,3.49,In Stock,Fine wheat meal for swallow
+,Honeywell Whole Wheat Meal 1.5kg,GRAINS & STAPLES,4.49,In Stock,Fine wheat meal for swallow
+,Honeywell Semolina 1kg,GRAINS & STAPLES,2.99,In Stock,Coarse semolina staple
+,Honeywell Semolina 1.5kg,GRAINS & STAPLES,3.99,In Stock,Coarse semolina staple
+,Tropical Sun Cassava Flour 500g,GRAINS & STAPLES,2.49,In Stock,Pure cassava flour
+,Tropical Sun Cassava Flour 1kg,GRAINS & STAPLES,4.29,In Stock,Pure cassava flour
+,Olu Olu Plantain Flour 500g,GRAINS & STAPLES,3.49,In Stock,Green plantain flour
+,Olu Olu Plantain Flour 1kg,GRAINS & STAPLES,5.49,In Stock,Green plantain flour
+,Tropical Sun Yam Flour Elubo 500g,GRAINS & STAPLES,3.99,In Stock,Traditional Nigerian elubo yam flour
+,Tropical Sun Yam Flour Elubo 1kg,GRAINS & STAPLES,6.49,In Stock,Traditional Nigerian elubo yam flour
+,Maggi Signature Jollof Seasoning 100g,SPICES & SEASONING,2.49,In Stock,Bay leaf thyme onion tomato blend for jollof
+,Maggi Signature Jollof Seasoning 250g,SPICES & SEASONING,4.99,In Stock,Bay leaf thyme onion tomato blend for jollof
+,Africa's Finest Jollof Seasoning 100g,SPICES & SEASONING,3.99,In Stock,Ready-mix jollof spice
+,Africa's Finest Jollof Seasoning 250g,SPICES & SEASONING,7.99,In Stock,Ready-mix jollof spice
+,Jumbo Jollof Rice Seasoning 100g,SPICES & SEASONING,5.99,In Stock,Classic Nigerian jollof sachet
+,Jumbo Jollof Rice Seasoning 250g,SPICES & SEASONING,11.99,In Stock,Classic Nigerian jollof sachet
+,Knorr Original Seasoning Cubes 400g,SPICES & SEASONING,3.99,In Stock,Multipack cubes kitchen essential
+,Knorr Original Seasoning Cubes 800g,SPICES & SEASONING,6.99,In Stock,Multipack cubes kitchen essential
+,Maggi Star Chicken Cubes 400g,SPICES & SEASONING,3.49,In Stock,Nigerian chicken seasoning cubes
+,Maggi Star Chicken Cubes 800g,SPICES & SEASONING,6.49,In Stock,Nigerian chicken seasoning cubes
+,Africa's Finest Suya Pepper Mix 100g,SPICES & SEASONING,4.49,In Stock,Spicy suya kebab seasoning
+,Africa's Finest Suya Pepper Mix 250g,SPICES & SEASONING,8.99,In Stock,Spicy suya kebab seasoning
+,Lion Thyme Dried 100g,SPICES & SEASONING,2.49,In Stock,Dried thyme staple
+,Lion Thyme Dried 250g,SPICES & SEASONING,4.99,In Stock,Dried thyme staple
+,Lion Curry Powder Mild 100g,SPICES & SEASONING,2.79,In Stock,Mild curry blend for stews
+,Lion Curry Powder Mild 250g,SPICES & SEASONING,5.49,In Stock,Mild curry blend for stews
+,Tropical Sun All Purpose Seasoning 350g,SPICES & SEASONING,3.49,In Stock,Versatile everyday blend
+,Tropical Sun All Purpose Seasoning 700g,SPICES & SEASONING,5.99,In Stock,Versatile everyday blend
+,Africa's Finest Ground Crayfish 100g,SPICES & SEASONING,4.99,In Stock,Dried ground crayfish for soups
+,Africa's Finest Ground Crayfish 250g,SPICES & SEASONING,9.99,In Stock,Dried ground crayfish for soups
+,Africa's Finest Red Palm Oil 150ml,OILS & SAUCES,2.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 1L,OILS & SAUCES,5.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 2L,OILS & SAUCES,10.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 5L,OILS & SAUCES,24.99,In Stock,Authentic West African palm oil
+,KTC Coconut Oil 150ml,OILS & SAUCES,2.49,In Stock,Pure coconut oil
+,KTC Coconut Oil 1L,OILS & SAUCES,4.49,In Stock,Pure coconut oil
+,KTC Coconut Oil 2L,OILS & SAUCES,8.99,In Stock,Pure coconut oil
+,De Rica Tomato Paste 70g,OILS & SAUCES,0.70,In Stock,Concentrated tomato paste
+,De Rica Tomato Paste 400g,OILS & SAUCES,1.29,In Stock,Concentrated tomato paste
+,De Rica Tomato Paste 800g,OILS & SAUCES,2.49,In Stock,Concentrated tomato paste
+,Baron Hot Pepper Sauce 150ml,OILS & SAUCES,2.99,In Stock,Fiery Caribbean hot sauce
+,Baron Hot Pepper Sauce 340ml,OILS & SAUCES,5.99,In Stock,Fiery Caribbean hot sauce
+,Grace Coconut Milk 400ml,OILS & SAUCES,1.99,In Stock,Creamy coconut milk
+,Grace Coconut Milk 800ml,OILS & SAUCES,3.49,In Stock,Creamy coconut milk
+,Africa's Finest Palm Nut Cream 400g,OILS & SAUCES,2.99,In Stock,Concentrated palm nut for banga
+,Africa's Finest Palm Nut Cream 800g,OILS & SAUCES,4.99,In Stock,Concentrated palm nut for banga
+,Maltina Classic 330ml,DRINKS,0.90,In Stock,Nigerian non-alcoholic malt drink
+,Maltina Classic 330ml x6 Pack,DRINKS,4.99,In Stock,Nigerian non-alcoholic malt drink
+,Maltina Classic 330ml x24 Pack,DRINKS,19.99,In Stock,Nigerian non-alcoholic malt drink
+,Lacasera Apple 60cl,DRINKS,1.49,In Stock,Apple soft drink with real juice
+,Lacasera Apple 60cl x6 Pack,DRINKS,7.99,In Stock,Apple soft drink with real juice
+,Malta Guinness 330ml,DRINKS,1.19,In Stock,Rich malt beverage
+,Malta Guinness 330ml x6 Pack,DRINKS,6.49,In Stock,Rich malt beverage
+,Super Malt 330ml,DRINKS,1.29,In Stock,Vitamin-enriched malt
+,Super Malt 330ml x6 Pack,DRINKS,6.99,In Stock,Vitamin-enriched malt
+,Chivita 100% Orange 1L,DRINKS,2.49,In Stock,Nigerian fruit juice
+,Chivita 100% Orange 1L x6 Pack,DRINKS,13.99,In Stock,Nigerian fruit juice
+,Milo Chocolate Malt 500g,DRINKS,4.99,In Stock,Chocolate malt powder
+,Milo Chocolate Malt 500g x6 Pack,DRINKS,27.99,In Stock,Chocolate malt powder
+,Olu Olu Sweet Yellow Plantain Chips 60g,SNACKS,0.99,In Stock,Crispy sweet plantain chips
+,Olu Olu Sweet Yellow Plantain Chips 150g,SNACKS,2.49,In Stock,Crispy sweet plantain chips
+,Olu Olu Spicy Plantain Chips 60g,SNACKS,0.99,In Stock,Spicy plantain crisps
+,Olu Olu Spicy Plantain Chips 150g,SNACKS,2.49,In Stock,Spicy plantain crisps
+,Chin Chin Crunchy Original 200g,SNACKS,2.49,In Stock,Nigerian fried pastry
+,Chin Chin Crunchy Original 400g,SNACKS,4.49,In Stock,Nigerian fried pastry
+,Kuli Kuli Spicy Peanut 100g,SNACKS,1.99,In Stock,Roasted peanut bars
+,Kuli Kuli Spicy Peanut 200g,SNACKS,3.49,In Stock,Roasted peanut bars
+,Indomie Chicken Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Chicken Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Chicken Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Geisha Mackerel Tomato Sauce 155g,NOODLES & PROVISIONS,1.49,In Stock,Canned mackerel
+,Geisha Mackerel Tomato Sauce 425g,NOODLES & PROVISIONS,3.49,In Stock,Canned mackerel
+,Titus Sardine Vegetable Oil 125g,NOODLES & PROVISIONS,1.19,In Stock,Canned sardines
+,Titus Sardine Vegetable Oil 425g,NOODLES & PROVISIONS,2.99,In Stock,Canned sardines
+,Grace Ackee Brine 540g,NOODLES & PROVISIONS,4.99,In Stock,Jamaican ackee canned
+,Grace Ackee Brine 280g,NOODLES & PROVISIONS,2.99,In Stock,Jamaican ackee canned
+,Princes Corned Beef 340g,NOODLES & PROVISIONS,3.49,In Stock,Classic corned beef
+,Princes Corned Beef 198g,NOODLES & PROVISIONS,2.49,In Stock,Classic corned beef
+,Fresh Ripe Plantain per kg,FRESH PRODUCE,1.99,In Stock,Ripe sweet plantain for frying
+,Fresh Green Plantain per kg,FRESH PRODUCE,1.79,In Stock,Unripe plantain for boiling
+,Fresh Puna Yam per kg,FRESH PRODUCE,5.99,In Stock,Large West African yam tuber
+,Fresh White Yam per kg,FRESH PRODUCE,5.99,In Stock,Seasonal white yam
+,Fresh Cassava per kg,FRESH PRODUCE,2.49,In Stock,Cassava root for processing
+,Fresh Okra 500g pack,FRESH PRODUCE,2.99,In Stock,Fresh okra for draw soups
+,Fresh Scotch Bonnet Peppers 100g pack,FRESH PRODUCE,1.49,In Stock,Fiery peppers for spice
+,Fresh Agbalumo Udara African Star Apple pack of 10,FRESH PRODUCE,4.99,Limited,Seasonal sweet-tart star apple
+,Fresh Agbalumo Udara African Star Apple pack of 20,FRESH PRODUCE,8.99,Limited,Seasonal sweet-tart star apple
+,Fresh Bitterleaf Bunch,FRESH PRODUCE,2.99,In Stock,Bitterleaf for egusi soup
+,Fresh Ugu Pumpkin Leaves Bunch,FRESH PRODUCE,2.49,In Stock,Ugu leaves for vegetable soups
+,Fresh Ewedu Leaves Bunch,FRESH PRODUCE,2.49,In Stock,Jute leaves for ewedu soup
+,Fresh Cocoyam per kg,FRESH PRODUCE,3.49,In Stock,Taro tubers for fufu
+,Fresh Sweet Potato per kg,FRESH PRODUCE,1.99,In Stock,Orange flesh sweet potatoes
+,Fresh Garden Egg African Eggplant 500g,FRESH PRODUCE,2.99,In Stock,Small eggplants for stews
+,Fresh Breadfruit per whole,FRESH PRODUCE,6.99,Limited,Caribbean breadfruit starchy staple
+,Fresh Soursop per whole,FRESH PRODUCE,4.99,Limited,Spiky soursop for juice
+,Fresh Guava per kg,FRESH PRODUCE,3.49,In Stock,Fragrant guava fruit
+,Fresh Mango per kg,FRESH PRODUCE,2.99,In Stock,Tropical mangoes
+,Frozen Ripe Plantain Slices 500g,FROZEN FOODS,2.99,In Stock,Ready-to-fry frozen plantain
+,Frozen Ripe Plantain Slices 1kg,FROZEN FOODS,4.99,In Stock,Ready-to-fry frozen plantain
+,Frozen Chopped Okra 500g,FROZEN FOODS,2.99,In Stock,Frozen okra for convenience
+,Frozen Chopped Okra 1kg,FROZEN FOODS,4.99,In Stock,Frozen okra for convenience
+,Frozen Spinach Ugwu Leaves 500g,FROZEN FOODS,2.49,In Stock,Frozen pumpkin leaves
+,Frozen Spinach Ugwu Leaves 1kg,FROZEN FOODS,3.99,In Stock,Frozen pumpkin leaves
+,Frozen Goat Meat Cuts 500g,MEAT & POULTRY,5.49,In Stock,Goat meat for stews
+,Frozen Goat Meat Cuts 1kg,MEAT & POULTRY,9.99,In Stock,Goat meat for stews
+,Frozen Chicken Legs 1kg,MEAT & POULTRY,3.99,In Stock,Chicken portions staple
+,Frozen Chicken Legs 2kg,MEAT & POULTRY,6.99,In Stock,Chicken portions staple
+,Frozen Oxtail 500g,MEAT & POULTRY,4.99,In Stock,Oxtail for rich soups
+,Frozen Oxtail 1kg,MEAT & POULTRY,8.99,In Stock,Oxtail for rich soups
+,Dried Stockfish Cod 250g,SEAFOOD,6.99,In Stock,Dried stockfish for soups
+,Dried Stockfish Cod 500g,SEAFOOD,12.99,In Stock,Dried stockfish for soups
+,Smoked Mackerel Pack 200g,SEAFOOD,3.49,In Stock,Smoked fish for flavour
+,Smoked Mackerel Pack 500g,SEAFOOD,7.99,In Stock,Smoked fish for flavour
+,Tolly Boy Easy Cook Long Grain Rice 1kg,GRAINS & STAPLES,1.99,In Stock,Premium easy-cook long grain rice staple for jollof & daily meals
+,Tolly Boy Easy Cook Long Grain Rice 2kg,GRAINS & STAPLES,3.49,In Stock,Premium easy-cook long grain rice staple
+,Tolly Boy Easy Cook Long Grain Rice 5kg,GRAINS & STAPLES,6.99,In Stock,Premium easy-cook long grain rice staple
+,Tolly Boy Easy Cook Long Grain Rice 10kg,GRAINS & STAPLES,12.99,In Stock,Bulk family pack easy-cook rice
+,Asli Golden Sella Basmati Rice 1kg,GRAINS & STAPLES,3.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 2kg,GRAINS & STAPLES,6.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 5kg,GRAINS & STAPLES,13.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Asli Golden Sella Basmati Rice 10kg,GRAINS & STAPLES,24.99,In Stock,Parboiled golden sella basmati popular in Nigerian/Ghanaian households
+,Tropical Sun Long Grain Rice 1kg,GRAINS & STAPLES,1.99,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 2kg,GRAINS & STAPLES,3.49,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 5kg,GRAINS & STAPLES,6.49,In Stock,Affordable everyday long grain rice
+,Tropical Sun Long Grain Rice 10kg,GRAINS & STAPLES,11.99,In Stock,Affordable everyday long grain rice
+,Ghana Taste White Gari 500g,GRAINS & STAPLES,2.49,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 1kg,GRAINS & STAPLES,3.99,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 1.5kg,GRAINS & STAPLES,4.99,In Stock,Authentic Ghanaian white gari for eba
+,Ghana Taste White Gari 5kg,GRAINS & STAPLES,14.99,In Stock,Authentic Ghanaian white gari for eba
+,Tropical Sun Yellow Gari 500g,GRAINS & STAPLES,2.29,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 1kg,GRAINS & STAPLES,3.49,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 1.5kg,GRAINS & STAPLES,4.99,In Stock,Finely ground yellow cassava granules
+,Tropical Sun Yellow Gari 5kg,GRAINS & STAPLES,13.99,In Stock,Finely ground yellow cassava granules
+,Africa's Finest Ijebu Gari 1kg,GRAINS & STAPLES,4.49,In Stock,Coarse sour fermented Ijebu gari
+,Africa's Finest Ijebu Gari 1.5kg,GRAINS & STAPLES,5.49,In Stock,Coarse sour fermented Ijebu gari
+,Nigerian Taste Ijebu Gari 1kg,GRAINS & STAPLES,4.49,In Stock,Authentic Nigerian Ijebu gari
+,Nigerian Taste Ijebu Gari 1.5kg,GRAINS & STAPLES,5.49,In Stock,Authentic Nigerian Ijebu gari
+,Tropical Sun Poundo Iyan 1kg,GRAINS & STAPLES,5.49,In Stock,Instant pounded yam flour smooth swallow
+,Tropical Sun Poundo Iyan 1.5kg,GRAINS & STAPLES,6.99,In Stock,Instant pounded yam flour smooth swallow
+,Tropical Sun Poundo Iyan 2kg,GRAINS & STAPLES,8.99,In Stock,Instant pounded yam flour smooth swallow
+,Olu Olu Poundo Iyan 1kg,GRAINS & STAPLES,5.99,In Stock,Easy-prep pounded yam flour
+,Olu Olu Poundo Iyan 1.5kg,GRAINS & STAPLES,7.49,In Stock,Easy-prep pounded yam flour
+,Olu Olu Poundo Iyan 2kg,GRAINS & STAPLES,9.99,In Stock,Easy-prep pounded yam flour
+,Soldua Pounded Yam Flour 1kg,GRAINS & STAPLES,7.99,In Stock,100% yam no additives
+,Soldua Pounded Yam Flour 2kg,GRAINS & STAPLES,13.99,In Stock,100% yam no additives
+,Mamas Choice Plantain Fufu Mix 500g,GRAINS & STAPLES,3.49,In Stock,Instant plantain fufu mix
+,Mamas Choice Plantain Fufu Mix 1kg,GRAINS & STAPLES,5.99,In Stock,Instant plantain fufu mix
+,Tropiway Instant Cocoyam Fufu 500g,GRAINS & STAPLES,3.99,In Stock,Instant cocoyam fufu swallow
+,Tropiway Instant Cocoyam Fufu 1kg,GRAINS & STAPLES,6.49,In Stock,Instant cocoyam fufu swallow
+,Honeywell Whole Wheat Meal 1kg,GRAINS & STAPLES,3.49,In Stock,Fine wheat meal for swallow
+,Honeywell Whole Wheat Meal 1.5kg,GRAINS & STAPLES,4.49,In Stock,Fine wheat meal for swallow
+,Honeywell Semolina 1kg,GRAINS & STAPLES,2.99,In Stock,Coarse semolina staple
+,Honeywell Semolina 1.5kg,GRAINS & STAPLES,3.99,In Stock,Coarse semolina staple
+,Tropical Sun Cassava Flour 500g,GRAINS & STAPLES,2.49,In Stock,Pure cassava flour
+,Tropical Sun Cassava Flour 1kg,GRAINS & STAPLES,4.29,In Stock,Pure cassava flour
+,Olu Olu Plantain Flour 500g,GRAINS & STAPLES,3.49,In Stock,Green plantain flour
+,Olu Olu Plantain Flour 1kg,GRAINS & STAPLES,5.49,In Stock,Green plantain flour
+,Tropical Sun Yam Flour Elubo 500g,GRAINS & STAPLES,3.99,In Stock,Traditional Nigerian elubo yam flour
+,Tropical Sun Yam Flour Elubo 1kg,GRAINS & STAPLES,6.49,In Stock,Traditional Nigerian elubo yam flour
+,Maggi Signature Jollof Seasoning 100g,SPICES & SEASONING,2.49,In Stock,Bay leaf thyme onion tomato blend for jollof
+,Maggi Signature Jollof Seasoning 250g,SPICES & SEASONING,4.99,In Stock,Bay leaf thyme onion tomato blend for jollof
+,Africa's Finest Jollof Seasoning 100g,SPICES & SEASONING,3.99,In Stock,Ready-mix jollof spice
+,Africa's Finest Jollof Seasoning 250g,SPICES & SEASONING,7.99,In Stock,Ready-mix jollof spice
+,Jumbo Jollof Rice Seasoning 100g,SPICES & SEASONING,5.99,In Stock,Classic Nigerian jollof sachet
+,Jumbo Jollof Rice Seasoning 250g,SPICES & SEASONING,11.99,In Stock,Classic Nigerian jollof sachet
+,Knorr Original Seasoning Cubes 400g,SPICES & SEASONING,3.99,In Stock,Multipack cubes kitchen essential
+,Knorr Original Seasoning Cubes 800g,SPICES & SEASONING,6.99,In Stock,Multipack cubes kitchen essential
+,Maggi Star Chicken Cubes 400g,SPICES & SEASONING,3.49,In Stock,Nigerian chicken seasoning cubes
+,Maggi Star Chicken Cubes 800g,SPICES & SEASONING,6.49,In Stock,Nigerian chicken seasoning cubes
+,Africa's Finest Suya Pepper Mix 100g,SPICES & SEASONING,4.49,In Stock,Spicy suya kebab seasoning
+,Africa's Finest Suya Pepper Mix 250g,SPICES & SEASONING,8.99,In Stock,Spicy suya kebab seasoning
+,Lion Thyme Dried 100g,SPICES & SEASONING,2.49,In Stock,Dried thyme staple
+,Lion Thyme Dried 250g,SPICES & SEASONING,4.99,In Stock,Dried thyme staple
+,Lion Curry Powder Mild 100g,SPICES & SEASONING,2.79,In Stock,Mild curry blend for stews
+,Lion Curry Powder Mild 250g,SPICES & SEASONING,5.49,In Stock,Mild curry blend for stews
+,Tropical Sun All Purpose Seasoning 350g,SPICES & SEASONING,3.49,In Stock,Versatile everyday blend
+,Tropical Sun All Purpose Seasoning 700g,SPICES & SEASONING,5.99,In Stock,Versatile everyday blend
+,Africa's Finest Ground Crayfish 100g,SPICES & SEASONING,4.99,In Stock,Dried ground crayfish for soups
+,Africa's Finest Ground Crayfish 250g,SPICES & SEASONING,9.99,In Stock,Dried ground crayfish for soups
+,Africa's Finest Red Palm Oil 150ml,OILS & SAUCES,2.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 1L,OILS & SAUCES,5.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 2L,OILS & SAUCES,10.99,In Stock,Authentic West African palm oil
+,Africa's Finest Red Palm Oil 5L,OILS & SAUCES,24.99,In Stock,Authentic West African palm oil
+,KTC Coconut Oil 150ml,OILS & SAUCES,2.49,In Stock,Pure coconut oil
+,KTC Coconut Oil 1L,OILS & SAUCES,4.49,In Stock,Pure coconut oil
+,KTC Coconut Oil 2L,OILS & SAUCES,8.99,In Stock,Pure coconut oil
+,De Rica Tomato Paste 70g,OILS & SAUCES,0.70,In Stock,Concentrated tomato paste
+,De Rica Tomato Paste 400g,OILS & SAUCES,1.29,In Stock,Concentrated tomato paste
+,De Rica Tomato Paste 800g,OILS & SAUCES,2.49,In Stock,Concentrated tomato paste
+,Baron Hot Pepper Sauce 150ml,OILS & SAUCES,2.99,In Stock,Fiery Caribbean hot sauce
+,Baron Hot Pepper Sauce 340ml,OILS & SAUCES,5.99,In Stock,Fiery Caribbean hot sauce
+,Grace Coconut Milk 400ml,OILS & SAUCES,1.99,In Stock,Creamy coconut milk
+,Grace Coconut Milk 800ml,OILS & SAUCES,3.49,In Stock,Creamy coconut milk
+,Africa's Finest Palm Nut Cream 400g,OILS & SAUCES,2.99,In Stock,Concentrated palm nut for banga
+,Africa's Finest Palm Nut Cream 800g,OILS & SAUCES,4.99,In Stock,Concentrated palm nut for banga
+,Maltina Classic 330ml,DRINKS,0.90,In Stock,Nigerian non-alcoholic malt drink
+,Maltina Classic 330ml x6 Pack,DRINKS,4.99,In Stock,Nigerian non-alcoholic malt drink
+,Maltina Classic 330ml x24 Pack,DRINKS,19.99,In Stock,Nigerian non-alcoholic malt drink
+,Lacasera Apple 60cl,DRINKS,1.49,In Stock,Apple soft drink with real juice
+,Lacasera Apple 60cl x6 Pack,DRINKS,7.99,In Stock,Apple soft drink with real juice
+,Malta Guinness 330ml,DRINKS,1.19,In Stock,Rich malt beverage
+,Malta Guinness 330ml x6 Pack,DRINKS,6.49,In Stock,Rich malt beverage
+,Super Malt 330ml,DRINKS,1.29,In Stock,Vitamin-enriched malt
+,Super Malt 330ml x6 Pack,DRINKS,6.99,In Stock,Vitamin-enriched malt
+,Chivita 100% Orange 1L,DRINKS,2.49,In Stock,Nigerian fruit juice
+,Chivita 100% Orange 1L x6 Pack,DRINKS,13.99,In Stock,Nigerian fruit juice
+,Milo Chocolate Malt 500g,DRINKS,4.99,In Stock,Chocolate malt powder
+,Milo Chocolate Malt 500g x6 Pack,DRINKS,27.99,In Stock,Chocolate malt powder
+,Olu Olu Sweet Yellow Plantain Chips 60g,SNACKS,0.99,In Stock,Crispy sweet plantain chips
+,Olu Olu Sweet Yellow Plantain Chips 150g,SNACKS,2.49,In Stock,Crispy sweet plantain chips
+,Olu Olu Spicy Plantain Chips 60g,SNACKS,0.99,In Stock,Spicy plantain crisps
+,Olu Olu Spicy Plantain Chips 150g,SNACKS,2.49,In Stock,Spicy plantain crisps
+,Chin Chin Crunchy Original 200g,SNACKS,2.49,In Stock,Nigerian fried pastry
+,Chin Chin Crunchy Original 400g,SNACKS,4.49,In Stock,Nigerian fried pastry
+,Kuli Kuli Spicy Peanut 100g,SNACKS,1.99,In Stock,Roasted peanut bars
+,Kuli Kuli Spicy Peanut 200g,SNACKS,3.49,In Stock,Roasted peanut bars
+,Indomie Chicken Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Chicken Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Chicken Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Beef Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g,NOODLES & PROVISIONS,0.59,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g x5 Pack,NOODLES & PROVISIONS,2.49,In Stock,Nigeria's top instant noodles
+,Indomie Curry Flavour 70g x40 Pack,NOODLES & PROVISIONS,19.99,In Stock,Nigeria's top instant noodles
+,Geisha Mackerel Tomato Sauce 155g,NOODLES & PROVISIONS,1.49,In Stock,Canned mackerel
+,Geisha Mackerel Tomato Sauce 425g,NOODLES & PROVISIONS,3.49,In Stock,Canned mackerel
+,Titus Sardine Vegetable Oil 125g,NOODLES & PROVISIONS,1.19,In Stock,Canned sardines
+,Titus Sardine Vegetable Oil 425g,NOODLES & PROVISIONS,2.99,In Stock,Canned sardines
+,Grace Ackee Brine 540g,NOODLES & PROVISIONS,4.99,In Stock,Jamaican ackee canned
+,Grace Ackee Brine 280g,NOODLES & PROVISIONS,2.99,In Stock,Jamaican ackee canned
+,Princes Corned Beef 340g,NOODLES & PROVISIONS,3.49,In Stock,Classic corned beef
+,Princes Corned Beef 198g,NOODLES & PROVISIONS,2.49,In Stock,Classic corned beef
+,Fresh Ripe Plantain per kg,FRESH PRODUCE,1.99,In Stock,Ripe sweet plantain for frying
+,Fresh Green Plantain per kg,FRESH PRODUCE,1.79,In Stock,Unripe plantain for boiling
+,Fresh Puna Yam per kg,FRESH PRODUCE,5.99,In Stock,Large West African yam tuber
+,Fresh White Yam per kg,FRESH PRODUCE,5.99,In Stock,Seasonal white yam
+,Fresh Cassava per kg,FRESH PRODUCE,2.49,In Stock,Cassava root for processing
+,Fresh Okra 500g pack,FRESH PRODUCE,2.99,In Stock,Fresh okra for draw soups
+,Fresh Scotch Bonnet Peppers 100g pack,FRESH PRODUCE,1.49,In Stock,Fiery peppers for spice
+,Fresh Agbalumo Udara African Star Apple pack of 10,FRESH PRODUCE,4.99,Limited,Seasonal sweet-tart star apple
+,Fresh Agbalumo Udara African Star Apple pack of 20,FRESH PRODUCE,8.99,Limited,Seasonal sweet-tart star apple
+,Fresh Bitterleaf Bunch,FRESH PRODUCE,2.99,In Stock,Bitterleaf for egusi soup
+,Fresh Ugu Pumpkin Leaves Bunch,FRESH PRODUCE,2.49,In Stock,Ugu leaves for vegetable soups
+,Fresh Ewedu Leaves Bunch,FRESH PRODUCE,2.49,In Stock,Jute leaves for ewedu soup
+,Fresh Cocoyam per kg,FRESH PRODUCE,3.49,In Stock,Taro tubers for fufu
+,Fresh Sweet Potato per kg,FRESH PRODUCE,1.99,In Stock,Orange flesh sweet potatoes
+,Fresh Garden Egg African Eggplant 500g,FRESH PRODUCE,2.99,In Stock,Small eggplants for stews
+,Fresh Breadfruit per whole,FRESH PRODUCE,6.99,Limited,Caribbean breadfruit starchy staple
+,Fresh Soursop per whole,FRESH PRODUCE,4.99,Limited,Spiky soursop for juice
+,Fresh Guava per kg,FRESH PRODUCE,3.49,In Stock,Fragrant guava fruit
+,Fresh Mango per kg,FRESH PRODUCE,2.99,In Stock,Tropical mangoes
+,Frozen Ripe Plantain Slices 500g,FROZEN FOODS,2.99,In Stock,Ready-to-fry frozen plantain
+,Frozen Ripe Plantain Slices 1kg,FROZEN FOODS,4.99,In Stock,Ready-to-fry frozen plantain
+,Frozen Chopped Okra 500g,FROZEN FOODS,2.99,In Stock,Frozen okra for convenience
+,Frozen Chopped Okra 1kg,FROZEN FOODS,4.99,In Stock,Frozen okra for convenience
+,Frozen Spinach Ugwu Leaves 500g,FROZEN FOODS,2.49,In Stock,Frozen pumpkin leaves
+,Frozen Spinach Ugwu Leaves 1kg,FROZEN FOODS,3.99,In Stock,Frozen pumpkin leaves
+,Frozen Goat Meat Cuts 500g,MEAT & POULTRY,5.49,In Stock,Goat meat for stews
+,Frozen Goat Meat Cuts 1kg,MEAT & POULTRY,9.99,In Stock,Goat meat for stews
+,Frozen Chicken Legs 1kg,MEAT & POULTRY,3.99,In Stock,Chicken portions staple
+,Frozen Chicken Legs 2kg,MEAT & POULTRY,6.99,In Stock,Chicken portions staple
+,Frozen Oxtail 500g,MEAT & POULTRY,4.99,In Stock,Oxtail for rich soups
+,Frozen Oxtail 1kg,MEAT & POULTRY,8.99,In Stock,Oxtail for rich soups
+,Dried Stockfish Cod 250g,SEAFOOD,6.99,In Stock,Dried stockfish for soups
+,Dried Stockfish Cod 500g,SEAFOOD,12.99,In Stock,Dried stockfish for soups
+,Smoked Mackerel Pack 200g,SEAFOOD,3.49,In Stock,Smoked fish for flavour
+,Smoked Mackerel Pack 500g,SEAFOOD,7.99,In Stock,Smoked fish for flavour

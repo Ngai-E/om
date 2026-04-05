@@ -1,7 +1,6 @@
 // Prisma Schema for OMEGA AFRO SHOP
 // Database: PostgreSQL 15+
 
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -57,14 +56,14 @@ enum SslStatus {
 }
 
 model Tenant {
-  id               String            @id @default(uuid())
+  id               String           @id @default(uuid())
   name             String
-  slug             String            @unique
+  slug             String           @unique
   email            String
   phone            String?
   description      String?
-  status           TenantStatus      @default(PENDING_SETUP)
-  onboardingStatus OnboardingStatus  @default(PENDING)
+  status           TenantStatus     @default(PENDING_SETUP)
+  onboardingStatus OnboardingStatus @default(PENDING)
 
   // Trial & Billing
   billingStatus    BillingStatus @default(TRIAL)
@@ -72,33 +71,34 @@ model Tenant {
   trialEndsAt      DateTime?
   stripeCustomerId String?       @unique
 
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
-  deletedAt        DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
   // Relations
-  domains              TenantDomain[]
-  branding             TenantBranding?
-  licenses             License[]
-  subscriptions        Subscription[]
-  onboarding           TenantOnboarding?
-  settings             TenantSetting[]
-  users                User[]
-  categories           Category[]
-  products             Product[]
-  reviews              Review[]
-  testimonials         Testimonial[]
-  carts                Cart[]
-  orders               Order[]
-  deliveryZones        DeliveryZone[]
-  deliverySlots        DeliverySlot[]
-  slotTemplates        DeliverySlotTemplate[]
-  slotOverrides        DeliverySlotOverride[]
-  systemSettings       SystemSettings[]
-  promotions           Promotion[]
-  auditLogs            AuditLog[]
-  tenantBalance        TenantBalance?
-  tenantPayouts        TenantPayout[]
+  domains        TenantDomain[]
+  branding       TenantBranding?
+  licenses       License[]
+  subscriptions  Subscription[]
+  onboarding     TenantOnboarding?
+  settings       TenantSetting[]
+  users          User[]
+  categories     Category[]
+  products       Product[]
+  reviews        Review[]
+  testimonials   Testimonial[]
+  carts          Cart[]
+  orders         Order[]
+  deliveryZones  DeliveryZone[]
+  deliverySlots  DeliverySlot[]
+  slotTemplates  DeliverySlotTemplate[]
+  slotOverrides  DeliverySlotOverride[]
+  systemSettings SystemSettings[]
+  promotions     Promotion[]
+  auditLogs      AuditLog[]
+  tenantBalance  TenantBalance?
+  tenantPayouts  TenantPayout[]
+  providers      Provider[]
 
   @@index([slug])
   @@index([status])
@@ -126,32 +126,32 @@ model TenantDomain {
 }
 
 model TenantBranding {
-  id              String   @id @default(uuid())
-  tenantId        String   @unique
-  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  logoUrl         String?
-  faviconUrl      String?
-  primaryColor    String   @default("#036637")
-  secondaryColor  String   @default("#FF7730")
-  accentColor     String?
-  fontHeading     String?  @default("Inter")
-  fontBody        String?  @default("Inter")
-  heroConfig      Json?
-  themeKey        String?  @default("default")
-  customCss       String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default(uuid())
+  tenantId       String   @unique
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  logoUrl        String?
+  faviconUrl     String?
+  primaryColor   String   @default("#036637")
+  secondaryColor String   @default("#FF7730")
+  accentColor    String?
+  fontHeading    String?  @default("Inter")
+  fontBody       String?  @default("Inter")
+  heroConfig     Json?
+  themeKey       String?  @default("default")
+  customCss      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@map("tenant_branding")
 }
 
 model TenantDomainVerification {
-  id              String   @id @default(uuid())
-  tenantDomainId  String   @unique
-  token           String   @unique
-  method          String
-  createdAt       DateTime @default(now())
-  expiresAt       DateTime?
+  id             String    @id @default(uuid())
+  tenantDomainId String    @unique
+  token          String    @unique
+  method         String
+  createdAt      DateTime  @default(now())
+  expiresAt      DateTime?
 
   tenantDomain TenantDomain @relation(fields: [tenantDomainId], references: [id], onDelete: Cascade)
 
@@ -159,21 +159,21 @@ model TenantDomainVerification {
 }
 
 model TenantOnboarding {
-  id                 String   @id @default(uuid())
-  tenantId           String   @unique
-  businessCategory   String?
-  countryCode        String?
-  contactEmail       String?
-  contactPhone       String?
-  selectedPlanCode   String?
-  completedBranding  Boolean  @default(false)
-  completedDomain    Boolean  @default(false)
-  completedCatalog   Boolean  @default(false)
-  completedPayments  Boolean  @default(false)
-  currentStep        String?
-  completedAt        DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  id                String    @id @default(uuid())
+  tenantId          String    @unique
+  businessCategory  String?
+  countryCode       String?
+  contactEmail      String?
+  contactPhone      String?
+  selectedPlanCode  String?
+  completedBranding Boolean   @default(false)
+  completedDomain   Boolean   @default(false)
+  completedCatalog  Boolean   @default(false)
+  completedPayments Boolean   @default(false)
+  currentStep       String?
+  completedAt       DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -189,7 +189,7 @@ model User {
   tenantId      String?
   tenant        Tenant?   @relation(fields: [tenantId], references: [id])
   email         String    @unique
-  password      String?   // Optional for guest users
+  password      String? // Optional for guest users
   firstName     String
   lastName      String
   phone         String?
@@ -227,33 +227,33 @@ enum Role {
 }
 
 model CustomerProfile {
-  id                String        @id @default(uuid())
-  userId            String        @unique
-  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String    @id @default(uuid())
+  userId            String    @unique
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   dateOfBirth       DateTime?
-  marketingOptIn    Boolean       @default(false)
-  smsOptIn          Boolean       @default(false)
-  preferredLanguage String        @default("en")
-  loyaltyPoints     Int           @default(0) // Phase 2
-  
+  marketingOptIn    Boolean   @default(false)
+  smsOptIn          Boolean   @default(false)
+  preferredLanguage String    @default("en")
+  loyaltyPoints     Int       @default(0) // Phase 2
+
   // Risk Management
-  riskLevel         RiskLevel     @default(LOW)
-  isBlocked         Boolean       @default(false)
-  blockedReason     String?
-  blockedAt         DateTime?
-  blockedBy         String?       // Admin user ID who blocked
-  adminNotes        String?       // Internal notes about customer
-  tags              String[]      @default([]) // Custom tags for categorization
-  
+  riskLevel     RiskLevel @default(LOW)
+  isBlocked     Boolean   @default(false)
+  blockedReason String?
+  blockedAt     DateTime?
+  blockedBy     String? // Admin user ID who blocked
+  adminNotes    String? // Internal notes about customer
+  tags          String[]  @default([]) // Custom tags for categorization
+
   // Metrics
-  totalOrders       Int           @default(0)
-  totalSpent        Float         @default(0)
-  cancelledOrders   Int           @default(0)
-  returnedOrders    Int           @default(0)
-  lastOrderDate     DateTime?
-  
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  totalOrders     Int       @default(0)
+  totalSpent      Float     @default(0)
+  cancelledOrders Int       @default(0)
+  returnedOrders  Int       @default(0)
+  lastOrderDate   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([riskLevel])
   @@index([isBlocked])
@@ -325,14 +325,14 @@ model Category {
 }
 
 model Product {
-  id              String         @id @default(uuid())
+  id              String   @id @default(uuid())
   tenantId        String?
-  tenant          Tenant?        @relation(fields: [tenantId], references: [id])
+  tenant          Tenant?  @relation(fields: [tenantId], references: [id])
   name            String
   slug            String
   description     String?
-  price           Decimal        @db.Decimal(10, 2)
-  compareAtPrice  Decimal?       @db.Decimal(10, 2) // Original price (for sales)
+  price           Decimal  @db.Decimal(10, 2)
+  compareAtPrice  Decimal? @db.Decimal(10, 2) // Original price (for sales)
   sku             String?
   barcode         String?
   unitSize        String? // e.g., "1kg", "500g"
@@ -341,18 +341,18 @@ model Product {
   allergens       String?
   nutritionalInfo Json? // Flexible JSON field
   categoryId      String
-  category        Category       @relation(fields: [categoryId], references: [id])
-  isActive        Boolean        @default(true)
-  isFeatured      Boolean        @default(false)
-  isBestSeller    Boolean        @default(false)
+  category        Category @relation(fields: [categoryId], references: [id])
+  isActive        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  isBestSeller    Boolean  @default(false)
   tags            String[] // e.g., ["vegan", "gluten-free", "halal"]
-  
+
   // Social Proof - Trust Building
-  orderCount      Int     @default(0) // Can be manually updated or auto-calculated
-  
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  deletedAt       DateTime? // Soft delete
+  orderCount Int @default(0) // Can be manually updated or auto-calculated
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime? // Soft delete
 
   // Relations
   inventory  Inventory?
@@ -385,19 +385,19 @@ model ProductImage {
 }
 
 model ProductVariant {
-  id          String     @id @default(uuid())
-  productId   String
-  product     Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
-  name        String // e.g., "1kg", "Red", "Large"
-  sku         String     @unique
-  price       Decimal    @db.Decimal(10, 2)
+  id             String   @id @default(uuid())
+  productId      String
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name           String // e.g., "1kg", "Red", "Large"
+  sku            String   @unique
+  price          Decimal  @db.Decimal(10, 2)
   compareAtPrice Decimal? @db.Decimal(10, 2)
-  stock       Int        @default(0)
-  imageUrl    String?    // Optional variant-specific image
-  isActive    Boolean    @default(true)
-  sortOrder   Int        @default(0)
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  stock          Int      @default(0)
+  imageUrl       String? // Optional variant-specific image
+  isActive       Boolean  @default(true)
+  sortOrder      Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   // Relations
   cartItems  CartItem[]
@@ -425,27 +425,27 @@ model Inventory {
 // ============================================
 
 model Review {
-  id          String       @id @default(uuid())
-  tenantId    String?
-  tenant      Tenant?      @relation(fields: [tenantId], references: [id])
-  productId   String
-  product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orderId     String?      // Optional: Link to order to verify purchase
-  rating      Int          // 1-5 stars
-  title       String?
-  comment     String?
-  status      ReviewStatus @default(PENDING)
-  approvedBy  String?      // Admin/Staff user ID who approved
-  approvedAt  DateTime?
-  rejectedBy  String?      // Admin/Staff user ID who rejected
-  rejectedAt  DateTime?
-  rejectionReason String?
-  isVerifiedPurchase Boolean @default(false) // True if linked to an order
-  showOnHomepage Boolean @default(false) // True if review should be featured on homepage
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id                 String       @id @default(uuid())
+  tenantId           String?
+  tenant             Tenant?      @relation(fields: [tenantId], references: [id])
+  productId          String
+  product            Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId             String
+  user               User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderId            String? // Optional: Link to order to verify purchase
+  rating             Int // 1-5 stars
+  title              String?
+  comment            String?
+  status             ReviewStatus @default(PENDING)
+  approvedBy         String? // Admin/Staff user ID who approved
+  approvedAt         DateTime?
+  rejectedBy         String? // Admin/Staff user ID who rejected
+  rejectedAt         DateTime?
+  rejectionReason    String?
+  isVerifiedPurchase Boolean      @default(false) // True if linked to an order
+  showOnHomepage     Boolean      @default(false) // True if review should be featured on homepage
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
 
   @@index([tenantId])
   @@index([productId])
@@ -467,17 +467,17 @@ enum ReviewStatus {
 // ============================================
 
 model Testimonial {
-  id          String   @id @default(uuid())
-  tenantId    String?
-  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
-  videoUrl    String   // URL to video (ImgBB/Cloudinary or external)
+  id           String   @id @default(uuid())
+  tenantId     String?
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id])
+  videoUrl     String // URL to video (ImgBB/Cloudinary or external)
   thumbnailUrl String? // Optional thumbnail image
-  title       String?  // Optional title for the testimonial
-  description String?  // Optional description
-  sortOrder   Int      @default(0) // For ordering testimonials
-  isActive    Boolean  @default(true) // Show/hide testimonial
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  title        String? // Optional title for the testimonial
+  description  String? // Optional description
+  sortOrder    Int      @default(0) // For ordering testimonials
+  isActive     Boolean  @default(true) // Show/hide testimonial
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([tenantId])
   @@index([isActive, sortOrder])
@@ -489,14 +489,14 @@ model Testimonial {
 // ============================================
 
 model Cart {
-  id        String     @id @default(uuid())
+  id        String   @id @default(uuid())
   tenantId  String?
-  tenant    Tenant?    @relation(fields: [tenantId], references: [id])
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
   userId    String? // Null for guest carts
-  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   sessionId String? // For guest carts
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   expiresAt DateTime // Auto-expire after 24 hours
 
   // Relations
@@ -530,38 +530,38 @@ model CartItem {
 // ============================================
 
 model Order {
-  id                String              @id @default(uuid())
+  id                String          @id @default(uuid())
   tenantId          String?
-  tenant            Tenant?             @relation(fields: [tenantId], references: [id])
-  orderNumber       String              @unique // Human-readable (e.g., "ORD-2024-00001")
+  tenant            Tenant?         @relation(fields: [tenantId], references: [id])
+  orderNumber       String          @unique // Human-readable (e.g., "ORD-2024-00001")
   userId            String? // Null for guest orders
-  user              User?               @relation(fields: [userId], references: [id])
+  user              User?           @relation(fields: [userId], references: [id])
   guestEmail        String? // For guest orders
   guestPhone        String?
-  status            OrderStatus         @default(RECEIVED)
+  status            OrderStatus     @default(RECEIVED)
   fulfillmentType   FulfillmentType
-  subtotal          Decimal             @db.Decimal(10, 2)
-  deliveryFee       Decimal             @db.Decimal(10, 2) @default(0)
-  total             Decimal             @db.Decimal(10, 2)
+  subtotal          Decimal         @db.Decimal(10, 2)
+  deliveryFee       Decimal         @default(0) @db.Decimal(10, 2)
+  total             Decimal         @db.Decimal(10, 2)
   notes             String? // Customer notes
   staffNotes        String? // Internal notes
-  isPhoneOrder      Boolean             @default(false) // Created via phone order system
+  isPhoneOrder      Boolean         @default(false) // Created via phone order system
   addressId         String?
-  address           Address?            @relation(fields: [addressId], references: [id])
+  address           Address?        @relation(fields: [addressId], references: [id])
   deliverySlotId    String?
-  deliverySlot      DeliverySlot?       @relation(fields: [deliverySlotId], references: [id])
+  deliverySlot      DeliverySlot?   @relation(fields: [deliverySlotId], references: [id])
   estimatedDelivery DateTime?
   deliveredAt       DateTime?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 
   // Promotions & Discounts
-  discountTotal     Decimal             @db.Decimal(10, 2) @default(0)
-  
+  discountTotal Decimal @default(0) @db.Decimal(10, 2)
+
   // Relations
-  items         OrderItem[]
-  payment       Payment?
-  statusHistory OrderStatusHistory[]
+  items                OrderItem[]
+  payment              Payment?
+  statusHistory        OrderStatusHistory[]
   promotionRedemptions PromotionRedemption[]
 
   @@index([tenantId])
@@ -669,17 +669,17 @@ enum PaymentMethod {
 // ============================================
 
 model DeliveryZone {
-  id                    String    @id @default(uuid())
+  id                    String   @id @default(uuid())
   tenantId              String?
-  tenant                Tenant?   @relation(fields: [tenantId], references: [id])
+  tenant                Tenant?  @relation(fields: [tenantId], references: [id])
   name                  String // e.g., "Bolton Central"
   postcodePrefix        String[] // e.g., ["BL1", "BL2"]
-  deliveryFee           Decimal   @db.Decimal(10, 2)
-  minOrderValue         Decimal   @db.Decimal(10, 2) @default(0)
-  freeDeliveryThreshold Decimal?  @db.Decimal(10, 2)
-  isActive              Boolean   @default(true)
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  deliveryFee           Decimal  @db.Decimal(10, 2)
+  minOrderValue         Decimal  @default(0) @db.Decimal(10, 2)
+  freeDeliveryThreshold Decimal? @db.Decimal(10, 2)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   // Relations
   addresses Address[]
@@ -746,14 +746,14 @@ model DeliverySlotOverride {
 // ============================================
 
 model SystemSettings {
-  id                    String   @id @default(uuid())
-  tenantId              String?
-  tenant                Tenant?  @relation(fields: [tenantId], references: [id])
-  key                   String   // e.g., "payment_method", "store_name"
-  value                 String // JSON string for complex values
-  description           String?
-  updatedAt             DateTime @updatedAt
-  updatedBy             String? // User ID who last updated
+  id          String   @id @default(uuid())
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
+  key         String // e.g., "payment_method", "store_name"
+  value       String // JSON string for complex values
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String? // User ID who last updated
 
   @@unique([tenantId, key])
   @@index([tenantId])
@@ -765,69 +765,69 @@ model SystemSettings {
 // ============================================
 
 model PlatformConfig {
-  id                    String   @id @default(uuid())
-  key                   String   @unique // e.g., "stripe_secret_key", "imgbb_api_key"
-  value                 String   // Encrypted or plain text
-  description           String?
-  isEncrypted           Boolean  @default(false) // Mark sensitive fields
-  updatedAt             DateTime @updatedAt
-  updatedBy             String? // Super Admin user ID
+  id          String   @id @default(uuid())
+  key         String   @unique // e.g., "stripe_secret_key", "imgbb_api_key"
+  value       String // Encrypted or plain text
+  description String?
+  isEncrypted Boolean  @default(false) // Mark sensitive fields
+  updatedAt   DateTime @updatedAt
+  updatedBy   String? // Super Admin user ID
 
   @@index([key])
   @@map("platform_config")
 }
 
 model TenantBalance {
-  id                    String   @id @default(uuid())
-  tenantId              String   @unique
-  tenant                Tenant   @relation(fields: [tenantId], references: [id])
-  
+  id       String @id @default(uuid())
+  tenantId String @unique
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
   // Balance tracking
-  currentBalance        Decimal  @db.Decimal(12, 2) @default(0) // Available balance
-  totalEarned           Decimal  @db.Decimal(12, 2) @default(0) // Lifetime earnings
-  totalWithdrawn        Decimal  @db.Decimal(12, 2) @default(0) // Lifetime withdrawals
-  
+  currentBalance Decimal @default(0) @db.Decimal(12, 2) // Available balance
+  totalEarned    Decimal @default(0) @db.Decimal(12, 2) // Lifetime earnings
+  totalWithdrawn Decimal @default(0) @db.Decimal(12, 2) // Lifetime withdrawals
+
   // Fee tracking
-  totalPlatformFees     Decimal  @db.Decimal(12, 2) @default(0) // Total platform fees paid
-  totalTaxes            Decimal  @db.Decimal(12, 2) @default(0) // Total taxes withheld
-  
-  lastUpdated           DateTime @updatedAt
-  lastPayoutAt          DateTime?
+  totalPlatformFees Decimal @default(0) @db.Decimal(12, 2) // Total platform fees paid
+  totalTaxes        Decimal @default(0) @db.Decimal(12, 2) // Total taxes withheld
+
+  lastUpdated  DateTime  @updatedAt
+  lastPayoutAt DateTime?
 
   @@index([tenantId])
   @@map("tenant_balances")
 }
 
 model TenantPayout {
-  id                    String   @id @default(uuid())
-  tenantId              String
-  tenant                Tenant   @relation(fields: [tenantId], references: [id])
-  
+  id       String @id @default(uuid())
+  tenantId String
+  tenant   Tenant @relation(fields: [tenantId], references: [id])
+
   // Payout details
-  amount                Decimal  @db.Decimal(12, 2)
-  currency              String   @default("GBP")
-  status                PayoutStatus @default(PENDING)
-  
+  amount   Decimal      @db.Decimal(12, 2)
+  currency String       @default("GBP")
+  status   PayoutStatus @default(PENDING)
+
   // Fee breakdown
-  grossAmount           Decimal  @db.Decimal(12, 2) // Before fees
-  platformFee           Decimal  @db.Decimal(12, 2) // Platform fee amount
-  taxAmount             Decimal  @db.Decimal(12, 2) // Tax withheld
-  netAmount             Decimal  @db.Decimal(12, 2) // Amount to tenant
-  
+  grossAmount Decimal @db.Decimal(12, 2) // Before fees
+  platformFee Decimal @db.Decimal(12, 2) // Platform fee amount
+  taxAmount   Decimal @db.Decimal(12, 2) // Tax withheld
+  netAmount   Decimal @db.Decimal(12, 2) // Amount to tenant
+
   // Processing
-  paymentMethod         String   // "bank_transfer", "stripe_connect", etc.
-  bankAccountName       String?  // For bank transfers
-  bankAccountNumber     String?  // Encrypted
-  bankSortCode          String?  // Encrypted
-  stripePayoutId        String?  // If using Stripe Connect
-  
+  paymentMethod     String // "bank_transfer", "stripe_connect", etc.
+  bankAccountName   String? // For bank transfers
+  bankAccountNumber String? // Encrypted
+  bankSortCode      String? // Encrypted
+  stripePayoutId    String? // If using Stripe Connect
+
   // Metadata
-  reference             String?  // Reference number
-  notes                 String?
-  processedAt           DateTime? // When payout was sent
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  processedBy           String?  // Super Admin who processed
+  reference   String? // Reference number
+  notes       String?
+  processedAt DateTime? // When payout was sent
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  processedBy String? // Super Admin who processed
 
   @@index([tenantId])
   @@index([status])
@@ -848,56 +848,56 @@ enum PayoutStatus {
 // ============================================
 
 model Promotion {
-  id          String           @id @default(uuid())
+  id          String  @id @default(uuid())
   tenantId    String?
-  tenant      Tenant?          @relation(fields: [tenantId], references: [id])
+  tenant      Tenant? @relation(fields: [tenantId], references: [id])
   name        String
   description String?
   imageUrl    String? // Promotion banner image
-  code        String?          // Optional promo code (null = automatic)
-  
+  code        String? // Optional promo code (null = automatic)
+
   // Status & Scheduling
-  status      PromotionStatus  @default(DRAFT)
-  startAt     DateTime?
-  endAt       DateTime?
-  
+  status  PromotionStatus @default(DRAFT)
+  startAt DateTime?
+  endAt   DateTime?
+
   // Budget Controls
-  budgetType              BudgetType @default(NONE)
-  maxTotalDiscountAmount  Decimal?   @db.Decimal(10, 2) // Max £ to give away
-  maxTotalRedemptions     Int? // Max number of uses
-  maxRedemptionsPerUser   Int? // Max uses per customer
-  
+  budgetType             BudgetType @default(NONE)
+  maxTotalDiscountAmount Decimal?   @db.Decimal(10, 2) // Max £ to give away
+  maxTotalRedemptions    Int? // Max number of uses
+  maxRedemptionsPerUser  Int? // Max uses per customer
+
   // Eligibility Rules
-  minSubtotal             Decimal?        @db.Decimal(10, 2)
-  firstOrderOnly          Boolean         @default(false)
-  allowedFulfillment      FulfillmentType? // null = any
-  allowGuests             Boolean         @default(true)
-  
+  minSubtotal        Decimal?         @db.Decimal(10, 2)
+  firstOrderOnly     Boolean          @default(false)
+  allowedFulfillment FulfillmentType? // null = any
+  allowGuests        Boolean          @default(true)
+
   // Discount Definition
-  discountType       DiscountType
-  discountValue      Decimal      @db.Decimal(10, 2) // 10 = 10% or £10
-  maxDiscountPerOrder Decimal?    @db.Decimal(10, 2) // Cap per order
-  
+  discountType        DiscountType
+  discountValue       Decimal      @db.Decimal(10, 2) // 10 = 10% or £10
+  maxDiscountPerOrder Decimal?     @db.Decimal(10, 2) // Cap per order
+
   // Discount Application Target
   applyToSubtotal    Boolean @default(true)
   applyToDeliveryFee Boolean @default(false)
-  
+
   // Stacking
-  allowStacking      Boolean @default(false)
-  priority           Int     @default(0) // Higher = evaluated first
-  
+  allowStacking Boolean @default(false)
+  priority      Int     @default(0) // Higher = evaluated first
+
   // Social Proof - Trust Building
-  usageCount      Int     @default(0) // Can be manually updated or auto-calculated
-  isFeatured      Boolean @default(false) // Mark as featured deal for promotions page
-  
+  usageCount Int     @default(0) // Can be manually updated or auto-calculated
+  isFeatured Boolean @default(false) // Mark as featured deal for promotions page
+
   // Metadata
-  createdBy   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
   redemptions PromotionRedemption[]
-  
+
   @@unique([tenantId, code])
   @@index([tenantId])
   @@index([status])
@@ -907,19 +907,19 @@ model Promotion {
 }
 
 model PromotionRedemption {
-  id              String   @id @default(uuid())
-  promotionId     String
-  promotion       Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
-  orderId         String
-  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  userId          String?  // Null for guest orders
-  
-  discountAmount  Decimal  @db.Decimal(10, 2)
-  appliedToSubtotal Decimal @db.Decimal(10, 2) @default(0)
-  appliedToDelivery Decimal @db.Decimal(10, 2) @default(0)
-  
-  createdAt       DateTime @default(now())
-  
+  id          String    @id @default(uuid())
+  promotionId String
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  orderId     String
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  userId      String? // Null for guest orders
+
+  discountAmount    Decimal @db.Decimal(10, 2)
+  appliedToSubtotal Decimal @default(0) @db.Decimal(10, 2)
+  appliedToDelivery Decimal @default(0) @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+
   @@index([promotionId])
   @@index([orderId])
   @@index([userId])
@@ -990,60 +990,60 @@ enum LicenseStatus {
 }
 
 model Package {
-  id                String      @id @default(uuid())
-  name              String      @unique
-  tier              PackageTier
-  displayName       String
-  description       String?
-  price             Decimal     @db.Decimal(10, 2)
-  billingCycle      String      @default("monthly") // monthly, yearly, lifetime
-  maxOrders         Int?        // null = unlimited
-  maxUsers          Int?        // null = unlimited
-  maxProducts       Int?        // null = unlimited
-  features          Json        // { "promotions": true, "analytics": true, etc. }
-  isActive          Boolean     @default(true)
-  sortOrder         Int         @default(0)
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-  
-  licenses          License[]
+  id           String      @id @default(uuid())
+  name         String      @unique
+  tier         PackageTier
+  displayName  String
+  description  String?
+  price        Decimal     @db.Decimal(10, 2)
+  billingCycle String      @default("monthly") // monthly, yearly, lifetime
+  maxOrders    Int? // null = unlimited
+  maxUsers     Int? // null = unlimited
+  maxProducts  Int? // null = unlimited
+  features     Json // { "promotions": true, "analytics": true, etc. }
+  isActive     Boolean     @default(true)
+  sortOrder    Int         @default(0)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  licenses License[]
 
   @@map("packages")
 }
 
 model License {
-  id                String        @id @default(uuid())
-  licenseKey        String        @unique
-  packageId         String
-  package           Package       @relation(fields: [packageId], references: [id])
-  tenantId          String?
-  tenant            Tenant?       @relation(fields: [tenantId], references: [id])
-  
+  id         String  @id @default(uuid())
+  licenseKey String  @unique
+  packageId  String
+  package    Package @relation(fields: [packageId], references: [id])
+  tenantId   String?
+  tenant     Tenant? @relation(fields: [tenantId], references: [id])
+
   // Licensee Information
-  companyName       String
-  contactEmail      String
-  contactName       String?
-  domain            String?       // Restrict to specific domain
-  
+  companyName  String
+  contactEmail String
+  contactName  String?
+  domain       String? // Restrict to specific domain
+
   // Status & Validity
-  status            LicenseStatus @default(ACTIVE)
-  issuedAt          DateTime      @default(now())
-  expiresAt         DateTime?     // null = lifetime
-  activatedAt       DateTime?
-  lastValidatedAt   DateTime?
-  
+  status          LicenseStatus @default(ACTIVE)
+  issuedAt        DateTime      @default(now())
+  expiresAt       DateTime? // null = lifetime
+  activatedAt     DateTime?
+  lastValidatedAt DateTime?
+
   // Usage Tracking
-  currentOrders     Int           @default(0)
-  currentUsers      Int           @default(0)
-  currentProducts   Int           @default(0)
-  
+  currentOrders   Int @default(0)
+  currentUsers    Int @default(0)
+  currentProducts Int @default(0)
+
   // Metadata
-  notes             String?
-  issuedBy          String?       // Admin who issued
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-  
-  usageLogs         LicenseUsageLog[]
+  notes     String?
+  issuedBy  String? // Admin who issued
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usageLogs LicenseUsageLog[]
 
   @@index([tenantId])
   @@index([licenseKey])
@@ -1053,29 +1053,29 @@ model License {
 }
 
 model LicenseUsageLog {
-  id          String   @id @default(uuid())
-  licenseId   String
-  license     License  @relation(fields: [licenseId], references: [id], onDelete: Cascade)
-  
-  metric      String   // "orders", "users", "products", "api_calls"
-  value       Int
-  timestamp   DateTime @default(now())
-  metadata    Json?    // Additional context
+  id        String  @id @default(uuid())
+  licenseId String
+  license   License @relation(fields: [licenseId], references: [id], onDelete: Cascade)
+
+  metric    String // "orders", "users", "products", "api_calls"
+  value     Int
+  timestamp DateTime @default(now())
+  metadata  Json? // Additional context
 
   @@index([licenseId, timestamp])
   @@map("license_usage_logs")
 }
 
 model FeatureFlag {
-  id            String   @id @default(uuid())
-  key           String   @unique // e.g., "promotions", "analytics", "multi_location"
-  name          String
-  description   String?
-  category      String?  // "core", "advanced", "enterprise"
-  isEnabled     Boolean  @default(true)
-  requiredTier  String?  // Minimum tier required: "STARTER", "PROFESSIONAL", "ENTERPRISE"
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(uuid())
+  key          String   @unique // e.g., "promotions", "analytics", "multi_location"
+  name         String
+  description  String?
+  category     String? // "core", "advanced", "enterprise"
+  isEnabled    Boolean  @default(true)
+  requiredTier String? // Minimum tier required: "STARTER", "PROFESSIONAL", "ENTERPRISE"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@map("feature_flags")
 }
@@ -1100,16 +1100,16 @@ enum EntitlementValueType {
 }
 
 model Plan {
-  id            String   @id @default(uuid())
-  code          String   @unique
-  name          String
-  description   String?
-  monthlyPrice  Decimal? @db.Decimal(10,2)
-  yearlyPrice   Decimal? @db.Decimal(10,2)
-  trialDays     Int      @default(14)
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String   @id @default(uuid())
+  code         String   @unique
+  name         String
+  description  String?
+  monthlyPrice Decimal? @db.Decimal(10, 2)
+  yearlyPrice  Decimal? @db.Decimal(10, 2)
+  trialDays    Int      @default(14)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   entitlements  PlanEntitlement[]
   subscriptions Subscription[]
@@ -1200,4 +1200,214 @@ model PlatformAuditLog {
   @@index([createdAt])
   @@index([actorUserId])
   @@map("platform_audit_logs")
+}
+
+// ============================================
+// SPRINT B: MARKETPLACE ENGINE
+// ============================================
+
+enum ProviderType {
+  TENANT_STORE
+  INDEPENDENT_SERVICE
+  HYBRID
+}
+
+enum ProviderStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_REVIEW
+}
+
+model Provider {
+  id            String         @id @default(cuid())
+  providerType  ProviderType
+  status        ProviderStatus @default(PENDING_REVIEW)
+  tenantId      String?
+  displayName   String
+  slug          String?        @unique
+  description   String?
+  phone         String?
+  email         String?
+  isVerified    Boolean        @default(false)
+  averageRating Decimal?       @db.Decimal(3, 2)
+  totalReviews  Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  tenant       Tenant?               @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  serviceAreas ProviderServiceArea[]
+  categories   ProviderCategory[]
+  offers       MarketplaceOffer[]
+  matches      MarketplaceMatch[]
+
+  @@index([status])
+  @@index([tenantId])
+  @@map("providers")
+}
+
+model ProviderCategory {
+  id          String   @id @default(cuid())
+  providerId  String
+  categoryKey String
+  createdAt   DateTime @default(now())
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+  @@index([categoryKey])
+  @@map("provider_categories")
+}
+
+model ProviderServiceArea {
+  id          String   @id @default(cuid())
+  providerId  String
+  countryCode String?
+  city        String?
+  region      String?
+  radiusKm    Int?
+  createdAt   DateTime @default(now())
+
+  provider Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([providerId])
+  @@index([countryCode, city])
+  @@map("provider_service_areas")
+}
+
+enum MarketplaceRequestType {
+  PRODUCT
+  SERVICE
+}
+
+enum MarketplaceRequestStatus {
+  OPEN
+  MATCHING
+  RECEIVING_OFFERS
+  SHORTLISTED
+  ACCEPTED
+  CLOSED
+  CANCELED
+  FLAGGED
+}
+
+model MarketplaceRequest {
+  id              String                   @id @default(cuid())
+  requestType     MarketplaceRequestType
+  status          MarketplaceRequestStatus @default(OPEN)
+  buyerUserId     String?
+  title           String
+  description     String
+  categoryKey     String
+  budgetMin       Decimal?                 @db.Decimal(10, 2)
+  budgetMax       Decimal?                 @db.Decimal(10, 2)
+  currencyCode    String?
+  urgency         String?
+  countryCode     String?
+  city            String?
+  region          String?
+  latitude        Decimal?                 @db.Decimal(10, 6)
+  longitude       Decimal?                 @db.Decimal(10, 6)
+  radiusKm        Int?
+  matchedCount    Int                      @default(0)
+  offerCount      Int                      @default(0)
+  acceptedOfferId String?
+  createdAt       DateTime                 @default(now())
+  updatedAt       DateTime                 @updatedAt
+
+  images  MarketplaceRequestImage[]
+  offers  MarketplaceOffer[]
+  matches MarketplaceMatch[]
+
+  @@index([status])
+  @@index([categoryKey])
+  @@index([countryCode, city])
+  @@index([buyerUserId])
+  @@map("marketplace_requests")
+}
+
+model MarketplaceRequestImage {
+  id        String   @id @default(cuid())
+  requestId String
+  imageUrl  String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  request MarketplaceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@map("marketplace_request_images")
+}
+
+enum MarketplaceMatchStatus {
+  MATCHED
+  NOTIFIED
+  VIEWED
+  SKIPPED
+  EXPIRED
+}
+
+model MarketplaceMatch {
+  id            String                 @id @default(cuid())
+  requestId     String
+  providerId    String
+  score         Decimal?               @db.Decimal(5, 2)
+  status        MarketplaceMatchStatus @default(MATCHED)
+  reasonSummary String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  request  MarketplaceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  provider Provider           @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, providerId])
+  @@index([providerId])
+  @@map("marketplace_matches")
+}
+
+enum MarketplaceOfferStatus {
+  SUBMITTED
+  WITHDRAWN
+  REJECTED
+  ACCEPTED
+  EXPIRED
+}
+
+model MarketplaceOffer {
+  id            String                 @id @default(cuid())
+  requestId     String
+  providerId    String
+  status        MarketplaceOfferStatus @default(SUBMITTED)
+  price         Decimal?               @db.Decimal(10, 2)
+  currencyCode  String?
+  estimatedEta  String?
+  message       String
+  attachmentUrl String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  request  MarketplaceRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  provider Provider           @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+  @@index([providerId])
+  @@map("marketplace_offers")
+}
+
+enum ModerationTargetType {
+  REQUEST
+  OFFER
+  PROVIDER
+}
+
+model MarketplaceModerationFlag {
+  id         String               @id @default(cuid())
+  targetType ModerationTargetType
+  targetId   String
+  reason     String
+  status     String               @default("OPEN")
+  createdAt  DateTime             @default(now())
+
+  @@index([targetType, targetId])
+  @@index([status])
+  @@map("marketplace_moderation_flags")
 }
