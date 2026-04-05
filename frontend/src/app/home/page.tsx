@@ -39,9 +39,9 @@ export default async function Home() {
   const branding = tenant.branding || {};
   const heroConfig = branding.heroConfig || null;
 
-  const storeName = settings.storeName || tenant?.name || 'Our Store';
+  const storeName = settings.store_name || settings.storeName || tenant?.name || 'Our Store';
   const heroHeading = heroConfig?.heading || storeName;
-  const heroSubheading = heroConfig?.subheading || settings.deliveryMessage || 'Quality products. Great prices. Fast delivery.';
+  const heroSubheading = heroConfig?.subheading || settings.delivery_banner_message || settings.deliveryMessage || 'Quality products. Great prices. Fast delivery.';
   const heroImageUrl = heroConfig?.imageUrl || '/hero-bg.png';
   const trustBadges = heroConfig?.trustBadges || [
     'Same-day home delivery',
@@ -49,10 +49,10 @@ export default async function Home() {
     '1000+ happy customers',
   ];
 
-  const whatsappNumber = (settings.whatsappNumber || '').replace(/\s/g, '');
-  const phoneNumber = settings.phoneNumber || '';
-  const googleMapsUrl = settings.googleMapsEmbedUrl || '';
-  const openingHours = settings.openingHours || '';
+  const whatsappNumber = (settings.whatsapp_number || settings.whatsappNumber || '').replace(/\s/g, '');
+  const phoneNumber = settings.phone_number || settings.phoneNumber || '';
+  const googleMapsUrl = settings.google_maps_embed_url || settings.googleMapsEmbedUrl || '';
+  const openingHours = settings.opening_hours || settings.openingHours || '';
 
   return (
     <div className="min-h-screen bg-white">
@@ -247,7 +247,7 @@ export default async function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="text-white">
               <h2 className="text-3xl md:text-5xl font-black mb-6">
-                {settings.deliveryMessage || `Shop now at ${storeName}`} 🛒
+                {settings.delivery_banner_message || settings.deliveryMessage || `Shop now at ${storeName}`} 🛒
               </h2>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="/products">
@@ -266,12 +266,12 @@ export default async function Home() {
               </div>
             </div>
             
-            {(googleMapsUrl || settings.address) && (
+            {(googleMapsUrl || settings.store_address || settings.address) && (
               <div className="bg-white rounded-2xl p-6 shadow-2xl">
                 <div className="flex items-start gap-3 mb-6">
                   <MapPin className="w-6 h-6 text-primary mt-1" />
                   <div>
-                    <h3 className="font-bold text-xl text-gray-900">{settings.address || storeName}</h3>
+                    <h3 className="font-bold text-xl text-gray-900">{settings.store_address || settings.address || storeName}</h3>
                     {phoneNumber && <p className="text-gray-600">{phoneNumber}</p>}
                   </div>
                 </div>
@@ -300,20 +300,20 @@ export default async function Home() {
             <div>
               <h3 className="font-black text-xl mb-6 text-primary">About Us</h3>
               <p className="text-gray-600 leading-relaxed">
-                {settings.aboutUs}
+                {settings.about_us || settings.aboutUs || tenant?.description || 'Your trusted source for quality products.'}
               </p>
             </div>
             <div>
               <h3 className="font-black text-xl mb-6 text-primary">Contact</h3>
               <div className="space-y-4 text-gray-600">
-                <p>Email: {settings.contactEmail}</p>
-                <p>Phone: {settings.whatsappNumber || settings.phoneNumber}</p>
+                <p>Email: {settings.contact_email || settings.contactEmail || settings.store_email || settings.storeEmail || tenant?.email}</p>
+                <p>Phone: {whatsappNumber || phoneNumber}</p>
               </div>
             </div>
             <div>
               <h3 className="font-black text-xl mb-6 text-primary">Opening Hours</h3>
               <p className="text-gray-600 whitespace-pre-line leading-relaxed">
-                {openingHours}
+                {openingHours || 'Mon-Sat: 9:00 AM - 8:00 PM\nSunday: 10:00 AM - 6:00 PM'}
               </p>
             </div>
           </div>

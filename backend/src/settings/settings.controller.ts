@@ -40,7 +40,17 @@ export class SettingsController {
       payment_method: settings.payment_method || PaymentMethod.STRIPE_CHECKOUT,
       payment_methods_config: paymentMethodsConfig,
       enabled_payment_types: enabledPaymentTypes,
-      store_name: settings.store_name || 'OMEGA AFRO SHOP',
+      store_name: settings.store_name || settings.storeName || 'OMEGA AFRO SHOP',
+      store_email: settings.store_email || settings.storeEmail,
+      phone_number: settings.phone_number || settings.phoneNumber,
+      whatsapp_number: settings.whatsapp_number || settings.whatsappNumber,
+      store_address: settings.store_address || settings.address,
+      delivery_banner_message: settings.delivery_banner_message || settings.deliveryMessage,
+      promotional_banner: settings.promotional_banner || settings.promoBanner,
+      about_us: settings.about_us || settings.aboutUs,
+      contact_email: settings.contact_email || settings.contactEmail,
+      opening_hours: settings.opening_hours || settings.openingHours,
+      google_maps_embed_url: settings.google_maps_embed_url || settings.googleMapsEmbedUrl,
       currency: settings.currency || 'GBP',
       guest_checkout_enabled: guestCheckoutEnabled,
       email_notifications_enabled: emailNotificationsEnabled,
@@ -341,12 +351,24 @@ export class SettingsController {
   @ApiResponse({ status: 200, description: 'Public settings retrieved' })
   async getPublicSettings(@CurrentTenant() tenant: TenantContext) {
     const tenantId = tenant.id;
+    const settings = await this.settingsService.getAllSettings(tenantId);
     return {
       guest_checkout_enabled: await this.settingsService.getGuestCheckoutEnabled(tenantId),
       payment_methods_config: await this.settingsService.getPaymentMethodsConfig(tenantId),
       enabled_payment_types: await this.settingsService.getEnabledPaymentTypes(tenantId),
       allow_image_upload: await this.settingsService.getAllowImageUpload(tenantId),
       allow_image_link: await this.settingsService.getAllowImageLink(tenantId),
+      store_name: settings.store_name || settings.storeName,
+      store_email: settings.store_email || settings.storeEmail,
+      phone_number: settings.phone_number || settings.phoneNumber,
+      whatsapp_number: settings.whatsapp_number || settings.whatsappNumber,
+      store_address: settings.store_address || settings.address,
+      delivery_banner_message: settings.delivery_banner_message || settings.deliveryMessage,
+      promotional_banner: settings.promotional_banner || settings.promoBanner,
+      about_us: settings.about_us || settings.aboutUs,
+      contact_email: settings.contact_email || settings.contactEmail,
+      opening_hours: settings.opening_hours || settings.openingHours,
+      google_maps_embed_url: settings.google_maps_embed_url || settings.googleMapsEmbedUrl,
     };
   }
 
