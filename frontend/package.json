@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "NODE_OPTIONS='--max-old-space-size=4096' next dev",
+    "dev:platform": "NODE_OPTIONS='--max-old-space-size=4096' PORT=3000 next dev",
+    "dev:tenant": "NODE_OPTIONS='--max-old-space-size=4096' PORT=3001 next dev",
+    "dev:both": "concurrently \"npm run dev:platform\" \"npm run dev:tenant\"",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
     "lint": "eslint"
@@ -35,6 +38,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.24",
+    "concurrently": "^8.2.2",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "postcss": "^8.5.6",

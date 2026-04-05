@@ -35,6 +35,16 @@ export class TenantContextMiddleware implements NestMiddleware {
       const host = req.headers.host || '';
       const path = req.path;
 
+      // 0. PLATFORM DOMAINS - Skip tenant resolution entirely
+      // These domains serve the platform app (landing, marketplace, onboarding, super admin)
+      if (this.isPlatformDomain(host)) {
+        this.logger.debug(`Platform domain detected: ${host} - skipping tenant resolution`);
+        (req as any).tenant = null;
+        (req as any).tenantId = null;
+        next();
+        return;
+      }
+
       // 1. Check X-Tenant-Slug header (trusted for internal/dev use)
       const headerTenantSlug = req.headers['x-tenant-slug'] as string;
       if (headerTenantSlug) {
@@ -211,6 +221,54 @@ export class TenantContextMiddleware implements NestMiddleware {
       // In development, allow request to continue for debugging
       next();
     }
+  }
+
+  /**
+   * Check if the host is a platform domain (not a tenant domain).
+   * Platform domains serve: landing page, marketplace, onboarding, super admin.
+   * 
+   * Platform domains:
+   *   - stores.xxx (root domain)
+   *   - app.stores.xxx (platform admin)
+   *   - market.stores.xxx (marketplace)
+   *   - console.stores.xxx (super admin)
+   *   - localhost:3000 (platform dev)
+   * 
+   * Tenant domains:
+   *   - {slug}.stores.xxx (tenant storefront)
+   *   - localhost:3001 (tenant dev)
+   */
+  private isPlatformDomain(host: string): boolean {
+    const cleanHost = host.split(':')[0].toLowerCase(); // Remove port
+    
+    // Development: localhost on port 3000 is platform
+    if (host.includes('localhost:3000') || host.includes('127.0.0.1:3000')) {
+      return true;
+    }
+    
+    // Production platform domains
+    const platformDomains = [
+      'stores.xxx',           // Root domain (landing page)
+      'app.stores.xxx',       // Platform admin
+      'market.stores.xxx',    // Marketplace
+      'console.stores.xxx',   // Super admin console
+    ];
+    
+    if (platformDomains.includes(cleanHost)) {
+      return true;
+    }
+    
+    // Check for platform subdomains
+    const parts = cleanHost.split('.');
+    if (parts.length >= 3) {
+      const subdomain = parts[0];
+      const platformSubdomains = ['app', 'market', 'console', 'admin', 'platform'];
+      if (platformSubdomains.includes(subdomain)) {
+        return true;
+      }
+    }
+    
+    return false;
   }
 
   /**

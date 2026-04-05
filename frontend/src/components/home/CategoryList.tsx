@@ -14,6 +14,12 @@ const CATEGORY_LIMIT = 8;
 export function CategoryList({ categories }: CategoryListProps) {
   const [showAllCategories, setShowAllCategories] = React.useState(false);
 
+  // Debug: Log categories
+  React.useEffect(() => {
+    console.log('CategoryList received categories:', categories);
+    console.log('Categories length:', categories?.length);
+  }, [categories]);
+
   const displayedCategories = showAllCategories 
     ? categories 
     : categories?.slice(0, CATEGORY_LIMIT);
@@ -40,13 +46,19 @@ export function CategoryList({ categories }: CategoryListProps) {
       {displayedCategories?.map((category, index) => (
         <div key={category.id} className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition">
           <div className={`relative h-48 bg-gradient-to-br ${gradients[index % gradients.length]}`}>
-            <Image 
-              src={category.image || '/hero-bg.png'} 
-              alt={category.name} 
-              fill
-              className="object-cover mix-blend-multiply"
-              sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
-            />
+            {category.image ? (
+              <Image 
+                src={category.image} 
+                alt={category.name} 
+                fill
+                className="object-cover mix-blend-multiply"
+                sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <span className="text-6xl opacity-30">📦</span>
+              </div>
+            )}
           </div>
           <div className="bg-pink-50 px-4 py-3 flex items-center justify-center gap-2 min-h-[60px]">
             <h3 className="text-base font-bold text-gray-900 text-center leading-tight">{category.name}</h3>

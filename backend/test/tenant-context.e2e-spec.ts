@@ -27,8 +27,8 @@ describe('Tenant Context Resolution (e2e)', () => {
         slug: 'teststore',
         email: 'test@teststore.com',
         status: 'ACTIVE',
-        onboardingStatus: 'COMPLETED',
-        billingStatus: 'ACTIVE',
+        onboardingStatus: 'LIVE',
+        billingStatus: 'BILLING_ACTIVE',
       },
     });
 

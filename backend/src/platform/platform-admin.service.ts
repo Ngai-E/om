@@ -353,7 +353,7 @@ export class PlatformAdminService {
       this.prisma.order.count(),
       this.prisma.order.aggregate({
         _sum: { total: true },
-        where: { status: 'COMPLETED' },
+        where: { status: 'DELIVERED' },
       }),
     ]);
 
