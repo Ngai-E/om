@@ -81,8 +81,23 @@ export default function SettingsPage() {
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
+      // Transform formData to snake_case for backend
+      const backendData = {
+        store_name: formData.storeName,
+        store_email: formData.storeEmail,
+        phone_number: formData.phoneNumber,
+        whatsapp_number: formData.whatsappNumber,
+        store_address: formData.address,
+        delivery_banner_message: formData.deliveryMessage,
+        promotional_banner: formData.promoBanner,
+        about_us: formData.aboutUs,
+        contact_email: formData.contactEmail,
+        opening_hours: formData.openingHours,
+        google_maps_embed_url: formData.googleMapsEmbedUrl,
+      };
+
       // Save to backend API
-      const { data } = await apiClient.put('/settings', formData);
+      const { data } = await apiClient.put('/settings', backendData);
       
       // Update the settings store (persists to localStorage)
       updateSettings(formData);
