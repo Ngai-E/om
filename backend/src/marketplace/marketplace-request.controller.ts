@@ -9,7 +9,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MarketplaceRequestService } from './services/marketplace-request.service';
 import { MarketplaceOfferService } from './services/marketplace-offer.service';
 import { CreateMarketplaceRequestDto, AddRequestImageDto } from './dto';

@@ -54,6 +54,16 @@ export default async function Home() {
   const googleMapsUrl = settings.google_maps_embed_url || settings.googleMapsEmbedUrl || '';
   const openingHours = settings.opening_hours || settings.openingHours || '';
 
+  // Debug logging (server-side only)
+  console.log('Settings loaded:', {
+    whatsappNumber,
+    phoneNumber,
+    googleMapsUrl,
+    openingHours,
+    delivery_banner_message: settings.delivery_banner_message,
+    store_address: settings.store_address,
+  });
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero Section */}
@@ -162,76 +172,74 @@ export default async function Home() {
       )}
 
       {/* Customer Testimonials - 3 Videos */}
-      <section className="py-12 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900">
-              What customers say 💛
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {testimonials && testimonials.length > 0 ? (
-              testimonials.slice(0, 3).map((testimonial: any) => (
-                <div key={testimonial.id} className="relative rounded-lg overflow-hidden bg-gray-900 aspect-video">
-                  <video
-                    src={testimonial.videoUrl}
-                    poster={testimonial.thumbnailUrl || undefined}
-                    controls
-                    className="w-full h-full object-cover"
-                  />
-                  {testimonial.title && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-                      <p className="text-white font-semibold">{testimonial.title}</p>
-                      {testimonial.description && (
-                        <p className="text-white/80 text-sm">{testimonial.description}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              <>
-                {/* Fallback placeholders could go here */}
-              </>
+      {((testimonials && testimonials.length > 0) || (homepageReviews && homepageReviews.length > 0)) && (
+        <section className="py-12 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl md:text-4xl font-black text-gray-900">
+                What customers say 💛
+              </h2>
+            </div>
+            
+            {testimonials && testimonials.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                {testimonials.slice(0, 3).map((testimonial: any) => (
+                  <div key={testimonial.id} className="relative rounded-lg overflow-hidden bg-gray-900 aspect-video">
+                    <video
+                      src={testimonial.videoUrl}
+                      poster={testimonial.thumbnailUrl || undefined}
+                      controls
+                      className="w-full h-full object-cover"
+                    />
+                    {testimonial.title && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+                        <p className="text-white font-semibold">{testimonial.title}</p>
+                        {testimonial.description && (
+                          <p className="text-white/80 text-sm">{testimonial.description}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
-          </div>
-          
-          {/* Customer Reviews */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Customer Reviews */}
             {homepageReviews && homepageReviews.length > 0 && (
-              homepageReviews.slice(0, 3).map((review: any) => (
-                <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-                  <div className="flex items-center gap-1 mb-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-4 h-4 ${
-                          i < review.rating
-                            ? 'text-yellow-500 fill-yellow-500'
-                            : 'text-gray-300'
-                        }`}
-                      />
-                    ))}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {homepageReviews.slice(0, 3).map((review: any) => (
+                  <div key={review.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                    <div className="flex items-center gap-1 mb-3">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-4 h-4 ${
+                            i < review.rating
+                              ? 'text-yellow-500 fill-yellow-500'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    {review.title && (
+                      <h3 className="font-bold text-gray-900 mb-2">{review.title}</h3>
+                    )}
+                    <p className="text-gray-700 mb-4 line-clamp-3">{review.comment}</p>
+                    <div className="border-t pt-3">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {review.user?.firstName} {review.user?.lastName}
+                      </p>
+                      <Link href={`/products/${review.product?.slug}`} className="text-sm text-primary hover:underline">
+                        {review.product?.name}
+                      </Link>
+                    </div>
                   </div>
-                  {review.title && (
-                    <h3 className="font-bold text-gray-900 mb-2">{review.title}</h3>
-                  )}
-                  <p className="text-gray-700 mb-4 line-clamp-3">{review.comment}</p>
-                  <div className="border-t pt-3">
-                    <p className="text-sm font-semibold text-gray-900">
-                      {review.user?.firstName} {review.user?.lastName}
-                    </p>
-                    <Link href={`/products/${review.product?.slug}`} className="text-sm text-primary hover:underline">
-                      {review.product?.name}
-                    </Link>
-                  </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA Section - Before Footer */}
       <section className="relative py-20 bg-primary overflow-hidden">
@@ -255,6 +263,14 @@ export default async function Home() {
                     Shop Now
                   </button>
                 </Link>
+                {phoneNumber && (
+                  <a href={`tel:${phoneNumber.replace(/\s/g, '')}`}>
+                    <button className="bg-white text-primary hover:bg-gray-100 px-10 py-4 rounded-lg font-bold transition inline-flex items-center gap-2">
+                      <Phone className="w-5 h-5" />
+                      Call Now
+                    </button>
+                  </a>
+                )}
                 {whatsappNumber && (
                   <a href={`https://wa.me/${whatsappNumber}`} target="_blank" rel="noopener noreferrer">
                     <button className="bg-secondary hover:bg-secondary/80 text-white px-10 py-4 rounded-lg font-bold transition inline-flex items-center gap-2">
