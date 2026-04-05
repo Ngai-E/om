@@ -13,6 +13,7 @@ import { BrandingTab } from '@/components/admin/settings/branding-tab';
 import { SystemCleanupSection } from '@/components/admin/settings/system-cleanup-section';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api/client';
+import { settingsApi } from '@/lib/api/settings';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('store');
@@ -43,29 +44,36 @@ export default function SettingsPage() {
     apiSecret: '',
   });
 
-  // Sync form data with settings when they change, fall back to tenant info for new stores
+  // Sync form data with backend settings when they change, fall back to tenant info for new stores
   useEffect(() => {
     setFormData({
-      storeName: settings.storeName || tenant?.name || '',
-      storeEmail: settings.storeEmail || tenant?.email || '',
-      phoneNumber: settings.phoneNumber || tenant?.phone || '',
-      whatsappNumber: settings.whatsappNumber || '',
-      address: settings.address || '',
-      deliveryMessage: settings.deliveryMessage || '',
-      promoBanner: settings.promoBanner || '',
-      aboutUs: settings.aboutUs || tenant?.description || '',
-      contactEmail: settings.contactEmail || tenant?.email || '',
-      openingHours: settings.openingHours || '',
-      googleMapsEmbedUrl: settings.googleMapsEmbedUrl || '',
+      storeName: publicSettings?.store_name || settings.storeName || tenant?.name || '',
+      storeEmail: publicSettings?.store_email || settings.storeEmail || tenant?.email || '',
+      phoneNumber: publicSettings?.phone_number || settings.phoneNumber || '',
+      whatsappNumber: publicSettings?.whatsapp_number || settings.whatsappNumber || '',
+      address: publicSettings?.store_address || settings.address || '',
+      deliveryMessage: publicSettings?.delivery_banner_message || settings.deliveryMessage || '',
+      promoBanner: publicSettings?.promotional_banner || settings.promoBanner || '',
+      aboutUs: publicSettings?.about_us || settings.aboutUs || tenant?.description || '',
+      contactEmail: publicSettings?.contact_email || settings.contactEmail || tenant?.email || '',
+      openingHours: publicSettings?.opening_hours || settings.openingHours || '',
+      googleMapsEmbedUrl: publicSettings?.google_maps_embed_url || settings.googleMapsEmbedUrl || '',
     });
-  }, [settings, tenant]);
+  }, [publicSettings, settings, tenant]);
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
+      // Save to backend API
+      const { data } = await apiClient.put('/settings', formData);
+      
       // Update the settings store (persists to localStorage)
       updateSettings(formData);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['public-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+      
       success('Settings saved successfully! Changes will appear on the homepage immediately.');
       
       // Force a small delay to ensure localStorage is updated
@@ -74,7 +82,8 @@ export default function SettingsPage() {
         window.dispatchEvent(new Event('storage'));
       }, 100);
     } catch (err) {
-      error('Failed to save settings');
+      console.error('Failed to save settings:', err);
+      error('Failed to save settings. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -89,6 +98,12 @@ export default function SettingsPage() {
       const { data } = await apiClient.get('/settings');
       return data;
     },
+  });
+
+  // Fetch public settings (including store information) from backend
+  const { data: publicSettings } = useQuery({
+    queryKey: ['public-settings'],
+    queryFn: () => settingsApi.getPublicSettings(),
   });
 
   // Toggle guest checkout
