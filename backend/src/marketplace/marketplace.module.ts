@@ -4,6 +4,7 @@ import { MarketplaceService } from './marketplace.service';
 import { MarketplaceProviderController } from './marketplace-provider.controller';
 import { MarketplaceRequestController } from './marketplace-request.controller';
 import { MarketplaceOfferController } from './marketplace-offer.controller';
+import { MarketplaceMatchController } from './marketplace-match.controller';
 import { MarketplaceAdminController } from './marketplace-admin.controller';
 import { MarketplaceProviderService } from './services/marketplace-provider.service';
 import { MarketplaceRequestService } from './services/marketplace-request.service';
@@ -19,6 +20,7 @@ import { PrismaModule } from '../prisma/prisma.module';
     MarketplaceProviderController,
     MarketplaceRequestController,
     MarketplaceOfferController,
+    MarketplaceMatchController,
     MarketplaceAdminController,
   ],
   providers: [

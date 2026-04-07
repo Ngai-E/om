@@ -192,19 +192,6 @@ export default function RequestDetailPage() {
                 Offers ({offers.length})
               </div>
             </button>
-            <button
-              onClick={() => setActiveTab('chat')}
-              className={`py-3 px-1 border-b-2 font-medium transition-colors ${
-                activeTab === 'chat'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4" />
-                Chat
-              </div>
-            </button>
           </div>
         </div>
       </div>
@@ -311,19 +298,6 @@ export default function RequestDetailPage() {
                 <p className="text-muted-foreground">No offers yet. Providers will submit offers soon!</p>
               </div>
             )}
-          </div>
-        )}
-
-        {activeTab === 'chat' && (
-          <div className="max-w-3xl">
-            <div className="bg-card rounded-lg border border-border p-6">
-              <div className="text-center py-12">
-                <MessageCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">
-                  Select a provider from the offers tab to start chatting
-                </p>
-              </div>
-            </div>
           </div>
         )}
       </div>

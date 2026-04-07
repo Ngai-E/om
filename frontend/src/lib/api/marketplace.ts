@@ -61,6 +61,18 @@ export interface MarketplaceOffer {
   provider?: MarketplaceProvider;
 }
 
+export interface MarketplaceMatch {
+  id: string;
+  requestId: string;
+  providerId: string;
+  score: number;
+  reasonSummary: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  request?: MarketplaceRequest;
+}
+
 export interface ListRequestsParams {
   status?: string;
   categoryKey?: string;
@@ -217,6 +229,27 @@ export const marketplaceOffersApi = {
   // Withdraw offer (authenticated)
   withdrawOffer: async (id: string) => {
     const { data } = await apiClient.patch<MarketplaceOffer>(`/marketplace/offers/${id}/withdraw`);
+    return data;
+  },
+};
+
+// Marketplace Matches API
+export const marketplaceMatchesApi = {
+  // Get my matches (authenticated provider)
+  getMyMatches: async (params?: { status?: string; limit?: number; offset?: number }) => {
+    const { data } = await apiClient.get<{ matches: MarketplaceMatch[]; total: number }>('/marketplace/providers/me/matches', { params });
+    return data;
+  },
+
+  // Mark match as viewed
+  markMatchViewed: async (matchId: string) => {
+    const { data } = await apiClient.patch<MarketplaceMatch>(`/marketplace/matches/${matchId}/view`);
+    return data;
+  },
+
+  // Skip a match
+  skipMatch: async (matchId: string) => {
+    const { data } = await apiClient.patch<MarketplaceMatch>(`/marketplace/matches/${matchId}/skip`);
     return data;
   },
 };
