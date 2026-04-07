@@ -1,26 +1,45 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, Upload, MapPin } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Upload, MapPin, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TopNav } from '@/components/marketplace/top-nav';
 import { MobileNav } from '@/components/marketplace/mobile-nav';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { marketplaceRequestsApi } from '@/lib/api/marketplace';
+import { MARKETPLACE_CATEGORIES, URGENCY_LEVELS, REQUEST_TYPES } from '@/lib/constants/marketplace';
 
 const steps = ['Details', 'Budget & Urgency', 'Location', 'Review'];
 
+interface FormData {
+  title: string;
+  category: string;
+  description: string;
+  budgetMin: string;
+  budgetMax: string;
+  urgency: string;
+  city: string;
+  countryCode: string;
+  radius: string;
+  images: string[];
+}
+
 export default function PostRequestPage() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     title: '',
     category: '',
     description: '',
-    budget: '',
-    urgency: 'normal',
-    location: '',
+    budgetMin: '',
+    budgetMax: '',
+    urgency: 'NORMAL',
+    city: '',
+    countryCode: 'US',
     radius: '10',
-    images: [] as string[],
+    images: [],
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { isAuthenticated } = useAuthStore();
 
@@ -31,12 +50,54 @@ export default function PostRequestPage() {
     }
   }, [isAuthenticated, router]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    setError(null);
+    
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      // Submit request
-      router.push('/marketplace');
+      // Submit request to API
+      await handleSubmit();
+    }
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // Validate required fields
+      if (!formData.title || !formData.category || !formData.description) {
+        throw new Error('Please fill in all required fields');
+      }
+
+      // Parse budget values
+      const budgetMin = formData.budgetMin ? parseFloat(formData.budgetMin) : undefined;
+      const budgetMax = formData.budgetMax ? parseFloat(formData.budgetMax) : undefined;
+
+      // Determine request type based on category
+      const requestType = ['Products'].includes(formData.category) ? 'PRODUCT' : 'SERVICE';
+
+      // Create request
+      const request = await marketplaceRequestsApi.createRequest({
+        requestType,
+        title: formData.title,
+        description: formData.description,
+        categoryKey: formData.category,
+        budgetMin,
+        budgetMax,
+        currencyCode: 'USD',
+        urgency: formData.urgency as any,
+        city: formData.city || undefined,
+        countryCode: formData.countryCode || undefined,
+      });
+
+      // Redirect to the created request
+      router.push(`/marketplace/requests/${request.id}`);
+    } catch (err: any) {
+      console.error('Failed to create request:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to create request. Please try again.');
+      setIsSubmitting(false);
     }
   };
 
@@ -48,8 +109,9 @@ export default function PostRequestPage() {
     }
   };
 
-  const updateFormData = (field: string, value: any) => {
+  const updateFormData = <K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData({ ...formData, [field]: value });
+    setError(null);
   };
 
   return (
@@ -121,11 +183,11 @@ export default function PostRequestPage() {
                   className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">Select a category</option>
-                  <option value="products">Products</option>
-                  <option value="services">Services</option>
-                  <option value="logistics">Logistics</option>
-                  <option value="agriculture">Agriculture</option>
-                  <option value="creative">Creative</option>
+                  {MARKETPLACE_CATEGORIES.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
@@ -143,30 +205,43 @@ export default function PostRequestPage() {
 
           {currentStep === 1 && (
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Budget</label>
-                <input
-                  type="text"
-                  value={formData.budget}
-                  onChange={(e) => updateFormData('budget', e.target.value)}
-                  placeholder="e.g., $2,000 - $3,000"
-                  className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Min Budget ($)</label>
+                  <input
+                    type="number"
+                    value={formData.budgetMin}
+                    onChange={(e) => updateFormData('budgetMin', e.target.value)}
+                    placeholder="e.g., 2000"
+                    className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Max Budget ($)</label>
+                  <input
+                    type="number"
+                    value={formData.budgetMax}
+                    onChange={(e) => updateFormData('budgetMax', e.target.value)}
+                    placeholder="e.g., 3000"
+                    className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">Urgency</label>
                 <div className="grid grid-cols-3 gap-3">
-                  {['low', 'normal', 'urgent'].map((level) => (
+                  {URGENCY_LEVELS.map((level) => (
                     <button
-                      key={level}
-                      onClick={() => updateFormData('urgency', level)}
-                      className={`px-4 py-3 rounded-lg border font-medium capitalize ${
-                        formData.urgency === level
+                      key={level.value}
+                      type="button"
+                      onClick={() => updateFormData('urgency', level.value)}
+                      className={`px-4 py-3 rounded-lg border font-medium ${
+                        formData.urgency === level.value
                           ? 'border-primary bg-primary/10 text-primary'
                           : 'border-border hover:bg-muted'
                       }`}
                     >
-                      {level}
+                      {level.label}
                     </button>
                   ))}
                 </div>
@@ -188,16 +263,26 @@ export default function PostRequestPage() {
 
           {currentStep === 2 && (
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Location</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">City</label>
                   <input
                     type="text"
-                    value={formData.location}
-                    onChange={(e) => updateFormData('location', e.target.value)}
-                    placeholder="Enter your city or address"
-                    className="w-full pl-10 pr-4 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                    value={formData.city}
+                    onChange={(e) => updateFormData('city', e.target.value)}
+                    placeholder="e.g., San Francisco"
+                    className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Country</label>
+                  <input
+                    type="text"
+                    value={formData.countryCode}
+                    onChange={(e) => updateFormData('countryCode', e.target.value)}
+                    placeholder="e.g., US"
+                    maxLength={2}
+                    className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
               </div>
@@ -237,15 +322,25 @@ export default function PostRequestPage() {
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">Budget:</span>
-                    <span className="font-medium">{formData.budget || 'Not set'}</span>
+                    <span className="font-medium">
+                      {formData.budgetMin || formData.budgetMax
+                        ? `$${formData.budgetMin || '0'} - $${formData.budgetMax || 'unlimited'}`
+                        : 'Not set'}
+                    </span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">Urgency:</span>
-                    <span className="font-medium capitalize">{formData.urgency}</span>
+                    <span className="font-medium">
+                      {URGENCY_LEVELS.find(l => l.value === formData.urgency)?.label || formData.urgency}
+                    </span>
                   </div>
                   <div className="flex justify-between py-2 border-b border-border">
                     <span className="text-muted-foreground">Location:</span>
-                    <span className="font-medium">{formData.location || 'Not set'}</span>
+                    <span className="font-medium">
+                      {formData.city || formData.countryCode
+                        ? `${formData.city || ''} ${formData.countryCode || ''}`.trim()
+                        : 'Not set'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -255,6 +350,12 @@ export default function PostRequestPage() {
                   Your request will be visible to verified providers in your area.
                 </p>
               </div>
+
+              {error && (
+                <div className="bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-lg">
+                  {error}
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -269,10 +370,20 @@ export default function PostRequestPage() {
           </button>
           <button
             onClick={handleNext}
-            className="flex-1 px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold flex items-center justify-center gap-2"
+            disabled={isSubmitting}
+            className="flex-1 px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {currentStep === steps.length - 1 ? 'Publish request' : 'Continue'}
-            {currentStep < steps.length - 1 && <ArrowRight className="h-4 w-4" />}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Publishing...
+              </>
+            ) : (
+              <>
+                {currentStep === steps.length - 1 ? 'Publish request' : 'Continue'}
+                {currentStep < steps.length - 1 && <ArrowRight className="h-4 w-4" />}
+              </>
+            )}
           </button>
         </div>
       </div>

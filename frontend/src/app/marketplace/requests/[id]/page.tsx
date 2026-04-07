@@ -1,17 +1,22 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ArrowLeft, MapPin, Clock, DollarSign, MessageCircle, FileText, Users } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, DollarSign, MessageCircle, FileText, Users, Loader2 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { MobileNav } from '@/components/marketplace/mobile-nav';
-import { useQuery } from '@tanstack/react-query';
-import { marketplaceRequestsApi } from '@/lib/api/marketplace';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { marketplaceRequestsApi, MarketplaceOffer } from '@/lib/api/marketplace';
+import { formatTimeAgo, formatPrice } from '@/lib/utils/formatters';
+import { useAuthStore } from '@/lib/store/auth-store';
 
 export default function RequestDetailPage() {
   const [activeTab, setActiveTab] = useState<'details' | 'offers' | 'chat'>('details');
+  const [acceptingOfferId, setAcceptingOfferId] = useState<string | null>(null);
   const router = useRouter();
   const params = useParams();
   const requestId = params.id as string;
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
 
   // Fetch request details
   const { data: request, isLoading: requestLoading } = useQuery({
@@ -30,16 +35,32 @@ export default function RequestDetailPage() {
 
   const offers = offersData?.offers || [];
 
-  // Helper functions
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
+  // Accept offer mutation
+  const acceptOfferMutation = useMutation({
+    mutationFn: (offerId: string) => marketplaceRequestsApi.acceptOffer(requestId, offerId),
+    onSuccess: () => {
+      // Invalidate and refetch
+      queryClient.invalidateQueries({ queryKey: ['request', requestId] });
+      queryClient.invalidateQueries({ queryKey: ['request-offers', requestId] });
+      setAcceptingOfferId(null);
+    },
+    onError: (error: any) => {
+      console.error('Failed to accept offer:', error);
+      alert(error.response?.data?.message || 'Failed to accept offer. Please try again.');
+      setAcceptingOfferId(null);
+    },
+  });
+
+  const handleAcceptOffer = async (offerId: string) => {
+    if (!user || request?.buyerUserId !== user.id) {
+      alert('You can only accept offers on your own requests');
+      return;
+    }
+
+    if (confirm('Are you sure you want to accept this offer? This will reject all other offers.')) {
+      setAcceptingOfferId(offerId);
+      acceptOfferMutation.mutate(offerId);
+    }
   };
 
   const formatBudget = () => {
@@ -54,10 +75,9 @@ export default function RequestDetailPage() {
     return 'Budget not specified';
   };
 
-  const formatPrice = (offer: any) => {
-    const currency = offer.currency || '$';
-    return `${currency}${offer.price.toLocaleString()}`;
-  };
+  // Check if user is the request owner
+  const isOwner = user && request && request.buyerUserId === user.id;
+  const canAcceptOffers = isOwner && request?.status === 'RECEIVING_OFFERS';
 
   if (requestLoading) {
     return (
@@ -195,15 +215,15 @@ export default function RequestDetailPage() {
                 <p className="text-muted-foreground">Loading offers...</p>
               </div>
             ) : offers.length > 0 ? (
-              offers.map((offer) => (
+              offers.map((offer: MarketplaceOffer) => (
                 <div key={offer.id} className="bg-card border border-border rounded-lg p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div>
-                      <h3 className="font-semibold">{offer.provider?.businessName || 'Provider'}</h3>
+                      <h3 className="font-semibold">{offer.provider?.displayName || 'Provider'}</h3>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        {offer.provider?.rating && (
+                        {offer.provider?.averageRating && (
                           <>
-                            <span>⭐ {offer.provider.rating.toFixed(1)}</span>
+                            <span>⭐ {offer.provider.averageRating.toFixed(1)}</span>
                             <span>•</span>
                           </>
                         )}
@@ -218,10 +238,39 @@ export default function RequestDetailPage() {
                     </div>
                   </div>
                   <p className="text-muted-foreground mb-4">{offer.message}</p>
+                  {offer.status && (
+                    <div className="mb-4">
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                        offer.status === 'ACCEPTED' ? 'bg-green-100 text-green-800' :
+                        offer.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {offer.status}
+                      </span>
+                    </div>
+                  )}
                   <div className="flex gap-2">
-                    <button className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium">
-                      Accept Offer
-                    </button>
+                    {canAcceptOffers && offer.status === 'SUBMITTED' && (
+                      <button
+                        onClick={() => handleAcceptOffer(offer.id)}
+                        disabled={acceptingOfferId === offer.id}
+                        className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {acceptingOfferId === offer.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Accepting...
+                          </>
+                        ) : (
+                          'Accept Offer'
+                        )}
+                      </button>
+                    )}
+                    {!canAcceptOffers && offer.status === 'SUBMITTED' && (
+                      <div className="flex-1 px-4 py-2 bg-muted text-muted-foreground rounded-lg text-center font-medium">
+                        {isOwner ? 'Cannot accept (request not active)' : 'Only request owner can accept'}
+                      </div>
+                    )}
                     <button className="flex-1 px-4 py-2 border border-border rounded-lg hover:bg-muted transition-colors font-medium">
                       Message
                     </button>

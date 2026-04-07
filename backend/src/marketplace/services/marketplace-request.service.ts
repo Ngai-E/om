@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateMarketplaceRequestDto, AddRequestImageDto } from '../dto';
 import { MarketplaceRequestStatus } from '@prisma/client';
 
 @Injectable()
 export class MarketplaceRequestService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    @Inject(forwardRef(() => require('./marketplace-matching.service').MarketplaceMatchingService))
+    private matchingService?: any,
+  ) {}
 
   /**
    * Create a new marketplace request
@@ -79,9 +83,37 @@ export class MarketplaceRequestService {
   }
 
   /**
-   * Get request by ID
+   * Get public request view (limited information, no offers/matches)
+   * If userId is provided and matches the buyer, returns full buyer view
    */
-  async getRequest(requestId: string) {
+  async getPublicRequest(requestId: string, userId?: string) {
+    const request = await this.prisma.marketplaceRequest.findUnique({
+      where: { id: requestId },
+      include: {
+        images: {
+          orderBy: { sortOrder: 'asc' },
+        },
+      },
+    });
+
+    if (!request) {
+      throw new NotFoundException('Request not found');
+    }
+
+    // If authenticated user is the buyer, return full view
+    if (userId && request.buyerUserId === userId) {
+      return this.getBuyerRequest(requestId, userId);
+    }
+
+    // Public view - no offers, no matches, basic info only
+    return request;
+  }
+
+  /**
+   * Get buyer's full request view (with offers and matches)
+   * Verifies ownership
+   */
+  async getBuyerRequest(requestId: string, buyerUserId: string) {
     const request = await this.prisma.marketplaceRequest.findUnique({
       where: { id: requestId },
       include: {
@@ -121,6 +153,10 @@ export class MarketplaceRequestService {
 
     if (!request) {
       throw new NotFoundException('Request not found');
+    }
+
+    if (request.buyerUserId !== buyerUserId) {
+      throw new ForbiddenException('You can only view your own requests');
     }
 
     return request;
@@ -303,6 +339,18 @@ export class MarketplaceRequestService {
       limit: filters.limit || 50,
       offset: filters.offset || 0,
     };
+  }
+
+  /**
+   * Trigger matching for a request (async)
+   */
+  async triggerMatching(requestId: string) {
+    if (!this.matchingService) {
+      const { MarketplaceMatchingService } = require('./marketplace-matching.service');
+      // Service will be injected on first use
+      throw new Error('Matching service not available');
+    }
+    return this.matchingService.matchRequest(requestId);
   }
 
   /**

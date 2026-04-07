@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MarketplaceRequestService } from './marketplace-request.service';
 
@@ -19,6 +19,7 @@ export class MarketplaceMatchingService {
 
   /**
    * Find and create matches for a marketplace request
+   * Uses transaction to ensure atomicity
    */
   async matchRequest(requestId: string) {
     const request = await this.prisma.marketplaceRequest.findUnique({
@@ -26,33 +27,71 @@ export class MarketplaceMatchingService {
     });
 
     if (!request) {
-      throw new Error('Request not found');
+      throw new NotFoundException('Request not found');
     }
 
     this.logger.log(`Starting matching for request ${requestId}`);
 
-    // Find candidate providers
-    const candidates = await this.findCandidateProviders(request);
+    // Set status to MATCHING
+    await this.requestService.updateRequestStatus(requestId, 'MATCHING');
 
-    this.logger.log(`Found ${candidates.length} candidate providers`);
+    try {
+      // Find candidate providers
+      const candidates = await this.findCandidateProviders(request);
 
-    // Create match records
-    const matches = await Promise.all(
-      candidates.map((candidate) =>
-        this.createMatch(requestId, candidate),
-      ),
-    );
+      this.logger.log(`Found ${candidates.length} candidate providers`);
 
-    // Update request status and matched count
-    await this.requestService.updateRequestStatus(requestId, 'RECEIVING_OFFERS');
-    await this.prisma.marketplaceRequest.update({
-      where: { id: requestId },
-      data: { matchedCount: matches.length },
-    });
+      // If no candidates found, keep request OPEN for manual provider discovery
+      if (candidates.length === 0) {
+        this.logger.warn(`No matching providers found for request ${requestId}`);
+        await this.requestService.updateRequestStatus(requestId, 'OPEN');
+        return [];
+      }
 
-    this.logger.log(`Created ${matches.length} matches for request ${requestId}`);
+      // Create matches in a transaction with upsert to handle duplicates
+      const matches = await this.prisma.$transaction(
+        candidates.map((candidate) =>
+          this.prisma.marketplaceMatch.upsert({
+            where: {
+              requestId_providerId: {
+                requestId,
+                providerId: candidate.providerId,
+              },
+            },
+            update: {
+              score: candidate.score,
+              reasonSummary: candidate.reasons.join(' + '),
+              status: 'MATCHED',
+            },
+            create: {
+              requestId,
+              providerId: candidate.providerId,
+              score: candidate.score,
+              reasonSummary: candidate.reasons.join(' + '),
+              status: 'MATCHED',
+            },
+          }),
+        ),
+      );
 
-    return matches;
+      // Update request status and matched count
+      await this.prisma.marketplaceRequest.update({
+        where: { id: requestId },
+        data: {
+          status: 'RECEIVING_OFFERS',
+          matchedCount: matches.length,
+        },
+      });
+
+      this.logger.log(`Created ${matches.length} matches for request ${requestId}`);
+
+      return matches;
+    } catch (error) {
+      // On error, revert to OPEN status
+      this.logger.error(`Matching failed for request ${requestId}:`, error);
+      await this.requestService.updateRequestStatus(requestId, 'OPEN');
+      throw error;
+    }
   }
 
   /**
@@ -179,20 +218,6 @@ export class MarketplaceMatchingService {
     };
   }
 
-  /**
-   * Create a match record
-   */
-  private async createMatch(requestId: string, candidate: MatchCandidate) {
-    return this.prisma.marketplaceMatch.create({
-      data: {
-        requestId,
-        providerId: candidate.providerId,
-        score: candidate.score,
-        reasonSummary: candidate.reasons.join(' + '),
-        status: 'MATCHED',
-      },
-    });
-  }
 
   /**
    * Get matches for a provider

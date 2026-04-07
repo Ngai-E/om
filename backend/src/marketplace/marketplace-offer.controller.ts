@@ -8,6 +8,9 @@ import {
   Query,
   UseGuards,
   Request,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MarketplaceOfferService } from './services/marketplace-offer.service';
@@ -24,6 +27,9 @@ export class MarketplaceOfferController {
   /**
    * Submit offer to a request
    * POST /marketplace/requests/:id/offers
+   * 
+   * Sprint B: Only tenant-backed providers supported
+   * User must have tenantId and an active provider profile
    */
   @Post('requests/:id/offers')
   @UseGuards(JwtAuthGuard)
@@ -34,10 +40,26 @@ export class MarketplaceOfferController {
   ) {
     const user = req.user;
     
+    // Sprint B: Enforce tenant-backed providers only
+    if (!user.tenantId) {
+      throw new ForbiddenException(
+        'Only tenant-backed providers can submit offers. Please create a store first at /onboarding'
+      );
+    }
+    
     // Get provider for this user's tenant
     const provider = await this.providerService.getProviderByTenantId(user.tenantId);
     if (!provider) {
-      throw new Error('Provider profile not found. Please create a provider profile first.');
+      throw new NotFoundException(
+        'Provider profile not found. Please complete your store setup at /onboarding'
+      );
+    }
+
+    // Validate provider is active and can submit offers
+    if (provider.status !== 'ACTIVE') {
+      throw new ForbiddenException(
+        `Cannot submit offers. Provider status is ${provider.status}. Please contact support.`
+      );
     }
 
     return this.offerService.submitOffer(requestId, provider.id, dto);
@@ -52,9 +74,13 @@ export class MarketplaceOfferController {
   async withdrawOffer(@Param('id') offerId: string, @Request() req) {
     const user = req.user;
     
+    if (!user.tenantId) {
+      throw new ForbiddenException('Only tenant-backed providers can withdraw offers');
+    }
+    
     const provider = await this.providerService.getProviderByTenantId(user.tenantId);
     if (!provider) {
-      throw new Error('Provider profile not found');
+      throw new NotFoundException('Provider profile not found');
     }
 
     return this.offerService.withdrawOffer(offerId, provider.id);

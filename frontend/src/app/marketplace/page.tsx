@@ -9,9 +9,11 @@ import { CategoryChip } from '@/components/marketplace/category-chip';
 import { MobileNav } from '@/components/marketplace/mobile-nav';
 import { TopNav } from '@/components/marketplace/top-nav';
 import { useQuery } from '@tanstack/react-query';
-import { marketplaceRequestsApi, marketplaceProvidersApi } from '@/lib/api/marketplace';
+import { marketplaceRequestsApi, marketplaceProvidersApi, MarketplaceRequest } from '@/lib/api/marketplace';
+import { MARKETPLACE_CATEGORIES } from '@/lib/constants/marketplace';
+import { formatTimeAgo, formatBudget, formatLocation } from '@/lib/utils/formatters';
 
-const categories = ['All', 'Products', 'Services', 'Logistics', 'Agriculture', 'Creative'];
+const categories = ['All', ...MARKETPLACE_CATEGORIES.map(c => c.label)];
 
 export default function MarketplacePage() {
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -21,11 +23,17 @@ export default function MarketplacePage() {
   // Fetch requests based on selected category
   const { data: requestsData, isLoading: requestsLoading } = useQuery({
     queryKey: ['marketplace-requests', selectedCategory],
-    queryFn: () => marketplaceRequestsApi.listRequests({
-      status: 'RECEIVING_OFFERS',
-      categoryKey: selectedCategory !== 'All' ? selectedCategory : undefined,
-      limit: 20,
-    }),
+    queryFn: () => {
+      const categoryValue = selectedCategory !== 'All' 
+        ? MARKETPLACE_CATEGORIES.find(c => c.label === selectedCategory)?.value 
+        : undefined;
+      
+      return marketplaceRequestsApi.listRequests({
+        status: 'RECEIVING_OFFERS',
+        categoryKey: categoryValue,
+        limit: 20,
+      });
+    },
     retry: false,
   });
 
@@ -40,28 +48,6 @@ export default function MarketplacePage() {
 
   const requests = requestsData?.requests || [];
   const featuredProviders = providersData?.providers || [];
-
-  // Helper functions
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-  };
-
-  const formatBudget = (request: any) => {
-    if (!request.budgetMin && !request.budgetMax) return undefined;
-    const currency = request.budgetCurrency || '$';
-    if (request.budgetMin && request.budgetMax) {
-      return `${currency}${request.budgetMin.toLocaleString()} - ${currency}${request.budgetMax.toLocaleString()}`;
-    }
-    if (request.budgetMin) return `${currency}${request.budgetMin.toLocaleString()}+`;
-    return `Up to ${currency}${request.budgetMax.toLocaleString()}`;
-  };
 
   // Filter requests by search query
   const filteredRequests = searchQuery
@@ -134,7 +120,7 @@ export default function MarketplacePage() {
                   title={request.title}
                   category={request.categoryKey}
                   budget={formatBudget(request)}
-                  location={request.city && request.countryCode ? `${request.city}, ${request.countryCode}` : request.city || 'Location not specified'}
+                  location={formatLocation(request.city, request.countryCode)}
                   timePosted={formatTimeAgo(request.createdAt)}
                   status={request.status}
                   offers={request.offerCount}

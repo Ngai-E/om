@@ -63,24 +63,41 @@ export default function ProviderDashboardPage() {
       <TopNav />
       
       <div className="max-w-7xl mx-auto px-4">
+        {/* Placeholder Warning Banner */}
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-700">
+                <strong>Placeholder UI:</strong> This provider dashboard uses mock data. Wallet credits, bid statistics, and revenue metrics are not connected to real backend APIs. This is for UI demonstration only.
+              </p>
+            </div>
+          </div>
+        </div>
+
         <h1 className="text-3xl font-bold mb-8">Provider Dashboard</h1>
 
-        {/* Stats Grid */}
+        {/* Stats Grid - MOCK DATA */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Wallet */}
           <div className="bg-card rounded-lg border border-border p-6">
             <div className="flex items-center justify-between mb-2">
               <Wallet className="h-5 w-5 text-muted-foreground" />
               <button
-                onClick={() => setShowTopUpModal(true)}
-                className="text-xs text-accent hover:text-accent/80 font-medium flex items-center gap-1"
+                disabled
+                className="text-xs text-muted-foreground font-medium flex items-center gap-1 cursor-not-allowed opacity-50"
+                title="Placeholder feature - not implemented"
               >
                 <Plus className="h-3 w-3" />
                 Top up
               </button>
             </div>
-            <p className="text-2xl font-bold">250</p>
-            <p className="text-sm text-muted-foreground">Credits available</p>
+            <p className="text-2xl font-bold text-muted-foreground">250</p>
+            <p className="text-sm text-muted-foreground">Credits (mock data)</p>
           </div>
 
           {/* Active Bids */}
@@ -88,8 +105,8 @@ export default function ProviderDashboardPage() {
             <div className="flex items-center justify-between mb-2">
               <Target className="h-5 w-5 text-muted-foreground" />
             </div>
-            <p className="text-2xl font-bold">12</p>
-            <p className="text-sm text-muted-foreground">Active bids</p>
+            <p className="text-2xl font-bold text-muted-foreground">12</p>
+            <p className="text-sm text-muted-foreground">Active bids (mock)</p>
           </div>
 
           {/* Win Rate */}
@@ -97,8 +114,8 @@ export default function ProviderDashboardPage() {
             <div className="flex items-center justify-between mb-2">
               <TrendingUp className="h-5 w-5 text-muted-foreground" />
             </div>
-            <p className="text-2xl font-bold">68%</p>
-            <p className="text-sm text-muted-foreground">Win rate</p>
+            <p className="text-2xl font-bold text-muted-foreground">68%</p>
+            <p className="text-sm text-muted-foreground">Win rate (mock)</p>
           </div>
 
           {/* Revenue */}
@@ -106,12 +123,12 @@ export default function ProviderDashboardPage() {
             <div className="flex items-center justify-between mb-2">
               <DollarSign className="h-5 w-5 text-muted-foreground" />
             </div>
-            <p className="text-2xl font-bold">$24,500</p>
-            <p className="text-sm text-muted-foreground">This month</p>
+            <p className="text-2xl font-bold text-muted-foreground">$8,450</p>
+            <p className="text-sm text-muted-foreground">Revenue (mock)</p>
           </div>
         </div>
 
-        {/* Available Requests */}
+        {/* Available Requests - MOCK DATA */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold">Available requests</h2>
@@ -125,10 +142,11 @@ export default function ProviderDashboardPage() {
                 </div>
                 <RequestCard {...request} />
                 <button
-                  onClick={() => handleBid(request.id)}
-                  className="w-full mt-2 bg-primary text-primary-foreground py-2 rounded-lg hover:bg-primary/90 transition-colors font-medium"
+                  disabled
+                  className="px-4 py-2 bg-muted text-muted-foreground rounded-lg cursor-not-allowed font-medium"
+                  title="Placeholder feature - not implemented"
                 >
-                  Place bid (5 credits)
+                  Place bid (disabled)
                 </button>
               </div>
             ))}
