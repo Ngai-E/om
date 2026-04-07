@@ -1,7 +1,0 @@
-# Ignore all markdown files
-*.md
-
-# But keep README.md
-!README.md
-!PRODUCTION_DEPLOYMENT_CHECKLIST.md
-!STRIPE_WEBHOOK_SETUP.md
