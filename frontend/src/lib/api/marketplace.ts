@@ -81,15 +81,20 @@ export interface ListProvidersParams {
 }
 
 export interface CreateRequestDto {
+  requestType: 'PRODUCT' | 'SERVICE';
   title: string;
   description: string;
   categoryKey: string;
   budgetMin?: number;
   budgetMax?: number;
-  budgetCurrency?: string;
-  urgency: string;
+  currencyCode?: string;
+  urgency?: string;
   city?: string;
   countryCode?: string;
+  region?: string;
+  latitude?: number;
+  longitude?: number;
+  radiusKm?: number;
 }
 
 export interface CreateOfferDto {

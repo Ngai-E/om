@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, ArrowRight, Upload, MapPin, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Upload, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TopNav } from '@/components/marketplace/top-nav';
 import { MobileNav } from '@/components/marketplace/mobile-nav';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { marketplaceRequestsApi } from '@/lib/api/marketplace';
-import { MARKETPLACE_CATEGORIES, URGENCY_LEVELS, REQUEST_TYPES } from '@/lib/constants/marketplace';
+import { MARKETPLACE_CATEGORIES, URGENCY_LEVELS } from '@/lib/constants/marketplace';
 
 const steps = ['Details', 'Budget & Urgency', 'Location', 'Review'];
 
@@ -75,8 +75,9 @@ export default function PostRequestPage() {
       const budgetMin = formData.budgetMin ? parseFloat(formData.budgetMin) : undefined;
       const budgetMax = formData.budgetMax ? parseFloat(formData.budgetMax) : undefined;
 
-      // Determine request type based on category
-      const requestType = ['Products'].includes(formData.category) ? 'PRODUCT' : 'SERVICE';
+      // Determine request type based on category value
+      // Products category = PRODUCT, all others = SERVICE
+      const requestType: 'PRODUCT' | 'SERVICE' = formData.category === 'Products' ? 'PRODUCT' : 'SERVICE';
 
       // Create request
       const request = await marketplaceRequestsApi.createRequest({
@@ -87,7 +88,7 @@ export default function PostRequestPage() {
         budgetMin,
         budgetMax,
         currencyCode: 'USD',
-        urgency: formData.urgency as any,
+        urgency: formData.urgency,
         city: formData.city || undefined,
         countryCode: formData.countryCode || undefined,
       });
