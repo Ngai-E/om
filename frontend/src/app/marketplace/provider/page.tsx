@@ -128,135 +128,34 @@ export default function ProviderDashboardPage() {
           </div>
         </div>
 
-        {/* Available Requests - MOCK DATA */}
+        {/* Available Requests - PLACEHOLDER */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold">Available requests</h2>
-            <span className="text-sm text-muted-foreground">Sorted by match score</span>
+            <h2 className="text-2xl font-bold">Matched Requests <span className="text-sm font-normal text-muted-foreground">(Coming Soon)</span></h2>
           </div>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {mockAvailableRequests.map((request) => (
-              <div key={request.id} className="relative">
-                <div className="absolute top-4 right-4 z-10 bg-accent text-accent-foreground px-2 py-1 rounded-full text-xs font-semibold">
-                  {request.matchScore}% match
-                </div>
-                <RequestCard {...request} />
-                <button
-                  disabled
-                  className="px-4 py-2 bg-muted text-muted-foreground rounded-lg cursor-not-allowed font-medium"
-                  title="Placeholder feature - not implemented"
-                >
-                  Place bid (disabled)
-                </button>
+          
+          {/* Placeholder State */}
+          <div className="bg-muted/30 border-2 border-dashed border-border rounded-lg p-12 text-center">
+            <div className="max-w-md mx-auto">
+              <div className="bg-muted rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <Target className="h-8 w-8 text-muted-foreground" />
               </div>
-            ))}
+              <h3 className="text-lg font-semibold mb-2">Provider Matching Coming Soon</h3>
+              <p className="text-muted-foreground mb-4">
+                The automatic matching system will connect you with relevant marketplace requests based on your categories, service areas, and ratings.
+              </p>
+              <div className="bg-card border border-border rounded-lg p-4 text-left space-y-2">
+                <p className="text-sm font-medium">Planned Features:</p>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• AI-powered request matching</li>
+                  <li>• Credit-based bidding system</li>
+                  <li>• Real-time notifications</li>
+                  <li>• Match score analytics</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Top-up Modal */}
-        {showTopUpModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-lg max-w-md w-full p-6">
-              <h3 className="text-xl font-bold mb-4">Top up credits</h3>
-              <div className="space-y-3 mb-6">
-                {[
-                  { credits: 100, price: 49, popular: false },
-                  { credits: 250, price: 99, popular: true },
-                  { credits: 500, price: 179, popular: false },
-                ].map((package_) => (
-                  <button
-                    key={package_.credits}
-                    className={`w-full p-4 rounded-lg border-2 text-left hover:border-primary transition-colors ${
-                      package_.popular ? 'border-accent bg-accent/5' : 'border-border'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold">{package_.credits} credits</p>
-                        <p className="text-sm text-muted-foreground">
-                          ${(package_.price / package_.credits).toFixed(2)} per credit
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold">${package_.price}</p>
-                        {package_.popular && (
-                          <span className="text-xs text-accent font-medium">Most popular</span>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowTopUpModal(false)}
-                  className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors"
-                >
-                  Cancel
-                </button>
-                <button className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors font-semibold">
-                  Purchase
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Bid Composer Modal */}
-        {showBidModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-card rounded-lg max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
-              <h3 className="text-xl font-bold mb-4">Place your bid</h3>
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Your price</label>
-                  <input
-                    type="text"
-                    placeholder="e.g., $2,500"
-                    className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Estimated completion time</label>
-                  <input
-                    type="text"
-                    placeholder="e.g., 2-3 weeks"
-                    className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Message to buyer</label>
-                  <textarea
-                    placeholder="Explain why you're the best fit for this request..."
-                    rows={6}
-                    className="w-full px-4 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                  />
-                </div>
-                <div className="bg-muted/50 rounded-lg p-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Cost to submit bid:</span>
-                    <span className="font-semibold">5 credits</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm mt-2">
-                    <span className="text-muted-foreground">Your balance after:</span>
-                    <span className="font-semibold">245 credits</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowBidModal(false)}
-                  className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors"
-                >
-                  Cancel
-                </button>
-                <button className="flex-1 px-4 py-2 rounded-lg bg-accent text-accent-foreground hover:bg-accent/90 transition-colors font-semibold">
-                  Submit bid
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       <MobileNav />

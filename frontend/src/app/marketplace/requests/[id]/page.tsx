@@ -8,15 +8,29 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { marketplaceRequestsApi, MarketplaceOffer } from '@/lib/api/marketplace';
 import { formatTimeAgo, formatPrice } from '@/lib/utils/formatters';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { ConfirmationModal, AlertModal } from '@/components/ui/confirmation-modal';
 
 export default function RequestDetailPage() {
   const [activeTab, setActiveTab] = useState<'details' | 'offers' | 'chat'>('details');
   const [acceptingOfferId, setAcceptingOfferId] = useState<string | null>(null);
+  const [headerHeight, setHeaderHeight] = useState(0);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [pendingOfferId, setPendingOfferId] = useState<string | null>(null);
+  const headerRef = React.useRef<HTMLDivElement>(null);
   const router = useRouter();
   const params = useParams();
   const requestId = params.id as string;
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
+
+  // Calculate header height dynamically
+  React.useEffect(() => {
+    if (headerRef.current) {
+      setHeaderHeight(headerRef.current.offsetHeight);
+    }
+  }, []);
 
   // Fetch request details
   const { data: request, isLoading: requestLoading } = useQuery({
@@ -43,23 +57,34 @@ export default function RequestDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['request', requestId] });
       queryClient.invalidateQueries({ queryKey: ['request-offers', requestId] });
       setAcceptingOfferId(null);
+      setShowConfirmModal(false);
+      setPendingOfferId(null);
     },
     onError: (error: any) => {
       console.error('Failed to accept offer:', error);
-      alert(error.response?.data?.message || 'Failed to accept offer. Please try again.');
+      setErrorMessage(error.response?.data?.message || 'Failed to accept offer. Please try again.');
+      setShowErrorModal(true);
       setAcceptingOfferId(null);
+      setShowConfirmModal(false);
+      setPendingOfferId(null);
     },
   });
 
-  const handleAcceptOffer = async (offerId: string) => {
+  const handleAcceptOffer = (offerId: string) => {
     if (!user || request?.buyerUserId !== user.id) {
-      alert('You can only accept offers on your own requests');
+      setErrorMessage('You can only accept offers on your own requests');
+      setShowErrorModal(true);
       return;
     }
 
-    if (confirm('Are you sure you want to accept this offer? This will reject all other offers.')) {
-      setAcceptingOfferId(offerId);
-      acceptOfferMutation.mutate(offerId);
+    setPendingOfferId(offerId);
+    setShowConfirmModal(true);
+  };
+
+  const confirmAcceptOffer = () => {
+    if (pendingOfferId) {
+      setAcceptingOfferId(pendingOfferId);
+      acceptOfferMutation.mutate(pendingOfferId);
     }
   };
 
@@ -104,9 +129,9 @@ export default function RequestDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-20 md:pb-8">
       {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-10">
+      <div ref={headerRef} className="bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center gap-2">
             <button
@@ -135,7 +160,10 @@ export default function RequestDetailPage() {
       </div>
 
       {/* Tabs */}
-      <div className="bg-card border-b border-border sticky top-[120px] z-10">
+      <div 
+        className="bg-card border-b border-border sticky z-10"
+        style={{ top: `${headerHeight}px` }}
+      >
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-6">
             <button
@@ -301,6 +329,31 @@ export default function RequestDetailPage() {
       </div>
 
       <MobileNav />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setPendingOfferId(null);
+        }}
+        onConfirm={confirmAcceptOffer}
+        title="Accept Offer"
+        message="Are you sure you want to accept this offer? This will reject all other offers and you won't be able to undo this action."
+        confirmText="Accept Offer"
+        cancelText="Cancel"
+        variant="success"
+        isLoading={!!acceptingOfferId}
+      />
+
+      {/* Error Modal */}
+      <AlertModal
+        isOpen={showErrorModal}
+        onClose={() => setShowErrorModal(false)}
+        title="Error"
+        message={errorMessage}
+        variant="error"
+      />
     </div>
   );
 }
