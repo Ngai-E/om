@@ -15,6 +15,8 @@ export default function AdminDashboardPage() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: adminApi.getDashboardStats,
+    retry: false, // Don't retry on failure (e.g., 401)
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
   });
 
   useEffect(() => {

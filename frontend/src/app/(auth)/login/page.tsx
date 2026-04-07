@@ -24,22 +24,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [sessionMessage, setSessionMessage] = useState<string | null>(null);
-  const [isPlatform, setIsPlatform] = useState(false);
-
-  // Detect platform
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const port = window.location.port;
-      const hostname = window.location.hostname;
-      
-      const platformDomains = ['stores.xxx', 'app.stores.xxx', 'market.stores.xxx', 'console.stores.xxx'];
-      const isPlatformDomain = platformDomains.includes(hostname) || 
-                               hostname.split('.')[0] === 'app' ||
-                               port === '3000';
-      
-      setIsPlatform(isPlatformDomain);
-    }
-  }, []);
 
   // Handle session expired message from URL params
   useEffect(() => {
@@ -71,15 +55,18 @@ export default function LoginPage() {
       // Reset AuthGuard after successful login
       AuthGuard.reset();
 
-      // Redirect based on role
-      if (response.user.role === 'SUPER_ADMIN') {
+      // Redirect based on role or redirect param
+      const redirect = searchParams.get('redirect');
+      if (redirect) {
+        router.push(redirect);
+      } else if (response.user.role === 'SUPER_ADMIN') {
         router.push('/platform');
       } else if (response.user.role === 'ADMIN') {
-        router.push('/admin');
+        router.push(response.user.tenantId ? '/admin' : '/platform');
       } else if (response.user.role === 'STAFF') {
         router.push('/staff/dashboard');
       } else {
-        router.push('/products');
+        router.push('/platform');
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed. Please try again.');
@@ -89,103 +76,93 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="bg-card border rounded-lg shadow-lg p-8">
-      <h2 className="text-2xl font-bold mb-6">Sign In</h2>
+    <div className="bg-card border border-border rounded-xl shadow-xl p-8">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-2">Welcome Back</h2>
+        <p className="text-muted-foreground">Sign in to your account to continue</p>
+      </div>
 
       {sessionMessage && (
-        <div className="bg-amber-50 border border-amber-500 text-amber-700 px-4 py-3 rounded mb-4">
+        <div className="bg-amber-500/10 border border-amber-500/50 text-amber-700 dark:text-amber-400 px-4 py-3 rounded-lg mb-6">
           {sessionMessage}
         </div>
       )}
 
       {error && (
-        <div className="bg-red-50 border border-red-500 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-lg mb-6">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-2">
-            Email
+          <label htmlFor="email" className="block text-sm font-semibold mb-2">
+            Email Address
           </label>
           <input
             {...register('email')}
             type="email"
             id="email"
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-              isPlatform ? 'focus:ring-blue-600' : 'focus:ring-primary'
-            }`}
+            className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
             placeholder="you@example.com"
             disabled={isLoading}
           />
           {errors.email && (
-            <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
+            <p className="text-destructive text-sm mt-1.5">{errors.email.message}</p>
           )}
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-2">
+          <label htmlFor="password" className="block text-sm font-semibold mb-2">
             Password
           </label>
           <input
             {...register('password')}
             type="password"
             id="password"
-            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
-              isPlatform ? 'focus:ring-blue-600' : 'focus:ring-primary'
-            }`}
-            placeholder="••••••••"
+            className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+            placeholder="Enter your password"
             disabled={isLoading}
           />
           {errors.password && (
-            <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
+            <p className="text-destructive text-sm mt-1.5">{errors.password.message}</p>
           )}
         </div>
 
         <button
           type="submit"
           disabled={isLoading}
-          className={`w-full py-3 rounded-lg font-medium hover:opacity-90 transition disabled:opacity-50 ${
-            isPlatform 
-              ? 'bg-blue-600 text-white' 
-              : 'bg-primary text-primary-foreground'
-          }`}
+          className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
         >
           {isLoading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
 
-      <div className="mt-6 text-center">
+      <div className="mt-8 text-center">
         <p className="text-sm text-muted-foreground">
           Don't have an account?{' '}
           <Link 
             href="/register" 
-            className={`hover:underline font-medium ${
-              isPlatform ? 'text-blue-600' : 'text-primary'
-            }`}
+            className="text-primary hover:underline font-semibold"
           >
-            Sign up
+            Create account
           </Link>
         </p>
       </div>
 
       {/* Only show test accounts in development */}
       {process.env.NODE_ENV === 'development' && (
-        <div className="mt-8 pt-6 border-t">
-          <p className="text-xs text-muted-foreground text-center mb-3">Test Accounts:</p>
+        <div className="mt-8 pt-6 border-t border-border">
+          <p className="text-xs font-semibold text-muted-foreground text-center mb-3">Test Accounts (Dev Only):</p>
           <div className="space-y-2 text-xs">
-            <div className="bg-muted/50 p-2 rounded">
-              <strong>Customer:</strong> customer@example.com / Customer123!
+            <div className="bg-muted/30 p-3 rounded-lg border border-border">
+              <strong className="text-foreground">Buyer:</strong> buyer1@example.com / password123
             </div>
-            <div className="bg-muted/50 p-2 rounded">
-              <strong>Staff:</strong> staff@omegaafroshop.com / Staff123!
+            <div className="bg-muted/30 p-3 rounded-lg border border-border">
+              <strong className="text-foreground">Provider:</strong> provider1@example.com / password123
             </div>
-            <div className="bg-muted/50 p-2 rounded">
-              <strong>Admin:</strong> admin@omegaafroshop.com / Admin123!
-            </div>
-            <div className="bg-muted/50 p-2 rounded">
-              <strong>Super Admin:</strong> superadmin@omegaafroshop.com / SuperAdmin123!
+            <div className="bg-muted/30 p-3 rounded-lg border border-border">
+              <strong className="text-foreground">Admin:</strong> admin@omegaafroshop.com / Admin123!
             </div>
           </div>
         </div>

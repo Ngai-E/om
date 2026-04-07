@@ -2,12 +2,14 @@
 export interface User {
   id: string;
   email: string;
+  name?: string; // Full name
   firstName: string;
   lastName: string;
   phone?: string;
-  role: 'CUSTOMER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN';
+  role: 'CUSTOMER' | 'STAFF' | 'ADMIN' | 'PICKER' | 'DRIVER' | 'SUPER_ADMIN';
   permissions?: string[]; // Fine-grained permissions for staff (e.g., ['inventory', 'reports'])
-  tenantSlug?: string | null; // The tenant this user belongs to
+  tenantId?: string | null; // The tenant ID this user belongs to
+  tenantSlug?: string | null; // The tenant slug this user belongs to
   emailVerified: boolean;
   isActive: boolean;
   createdAt: string;

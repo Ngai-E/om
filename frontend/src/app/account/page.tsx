@@ -1,14 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { User, Mail, Phone, MapPin, Package, Lock } from 'lucide-react';
 import { useProfile } from '@/lib/hooks/use-account';
 import { useAuthStore } from '@/lib/store/auth-store';
 
 export default function AccountPage() {
-  const { user } = useAuthStore();
+  const router = useRouter();
+  const { user, isAuthenticated } = useAuthStore();
   const { data: profile, isLoading } = useProfile();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push('/login?redirect=/account');
+    }
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   if (isLoading) {
     return (
