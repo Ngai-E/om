@@ -22,6 +22,23 @@ export default function SettingsPage() {
   const { settings, updateSettings } = useSettingsStore();
   const { tenant } = useTenant();
 
+  const queryClient = useQueryClient();
+
+  // Fetch public settings (including store information) from backend
+  const { data: publicSettings } = useQuery({
+    queryKey: ['public-settings'],
+    queryFn: () => settingsApi.getPublicSettings(),
+  });
+
+  // Fetch system settings from backend
+  const { data: systemSettings } = useQuery({
+    queryKey: ['system-settings'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/settings');
+      return data;
+    },
+  });
+
   const [formData, setFormData] = useState({
     storeName: settings.storeName || '',
     storeEmail: settings.storeEmail || '',
@@ -64,8 +81,23 @@ export default function SettingsPage() {
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
+      // Transform formData to snake_case for backend
+      const backendData = {
+        store_name: formData.storeName,
+        store_email: formData.storeEmail,
+        phone_number: formData.phoneNumber,
+        whatsapp_number: formData.whatsappNumber,
+        store_address: formData.address,
+        delivery_banner_message: formData.deliveryMessage,
+        promotional_banner: formData.promoBanner,
+        about_us: formData.aboutUs,
+        contact_email: formData.contactEmail,
+        opening_hours: formData.openingHours,
+        google_maps_embed_url: formData.googleMapsEmbedUrl,
+      };
+
       // Save to backend API
-      const { data } = await apiClient.put('/settings', formData);
+      const { data } = await apiClient.put('/settings', backendData);
       
       // Update the settings store (persists to localStorage)
       updateSettings(formData);
@@ -88,23 +120,6 @@ export default function SettingsPage() {
       setIsSaving(false);
     }
   };
-
-  const queryClient = useQueryClient();
-
-  // Fetch system settings from backend
-  const { data: systemSettings } = useQuery({
-    queryKey: ['system-settings'],
-    queryFn: async () => {
-      const { data } = await apiClient.get('/settings');
-      return data;
-    },
-  });
-
-  // Fetch public settings (including store information) from backend
-  const { data: publicSettings } = useQuery({
-    queryKey: ['public-settings'],
-    queryFn: () => settingsApi.getPublicSettings(),
-  });
 
   // Toggle guest checkout
   const toggleGuestCheckout = useMutation({

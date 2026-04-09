@@ -120,14 +120,14 @@ export function Header() {
           <div className="flex items-center justify-between text-xs md:text-sm">
             <div className="flex items-center gap-4">
               <span className="font-medium">
-                {settings.promoBanner || tenant?.name || 'Welcome to our store'}
+                {settings.promotional_banner || settings.promoBanner || tenant?.name || 'Welcome to our store'}
               </span>
             </div>
-            {settings.phoneNumber && (
+            {(settings.phone_number || settings.phoneNumber) && (
               <div className="flex items-center gap-2">
                 <Phone className="w-3 h-3 md:w-4 md:h-4" />
-                <a href={`tel:${settings.phoneNumber.replace(/\s/g, '')}`} className="hover:text-secondary transition">
-                  Call us: {settings.phoneNumber}
+                <a href={`tel:${(settings.phone_number || settings.phoneNumber).replace(/\s/g, '')}`} className="hover:text-secondary transition">
+                  Call us: {settings.phone_number || settings.phoneNumber}
                 </a>
               </div>
             )}

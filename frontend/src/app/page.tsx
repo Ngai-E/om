@@ -30,12 +30,12 @@ export default async function RootPage() {
   
   // Development: Check port
   if (port === '3000') {
-    redirect('/platform/home');
+    redirect('/platform');
   }
   
   // Production: Check domain
   if (isPlatformDomain(hostname)) {
-    redirect('/platform/home');
+    redirect('/platform');
   }
   
   // Tenant domain - redirect to tenant home

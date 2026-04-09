@@ -58,5 +58,7 @@ export function useProfile() {
   return useQuery({
     queryKey: ['profile'],
     queryFn: authApi.getProfile,
+    retry: false,
+    refetchOnWindowFocus: false,
   });
 }

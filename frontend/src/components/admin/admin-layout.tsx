@@ -72,6 +72,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       }
     },
     refetchInterval: 30000, // Refresh every 30 seconds
+    retry: false, // Don't retry on failure (e.g., 401)
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
   });
 
   // Navigation items with dynamic counts

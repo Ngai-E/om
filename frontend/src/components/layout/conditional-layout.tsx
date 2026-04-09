@@ -25,13 +25,16 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     }
   }, []);
   
-  // Hide header/nav on admin, staff, platform routes, and signup pages
+  // Hide header/nav on admin, staff, platform, marketplace routes, auth pages, and signup pages
   const isAdminPage = pathname.startsWith('/admin');
   const isStaffPage = pathname.startsWith('/staff');
   const isPlatformPage = pathname.startsWith('/platform');
+  const isMarketplacePage = pathname.startsWith('/marketplace');
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/register');
   const isSignupPage = pathname.startsWith('/signup');
+  const isOnboardingPage = pathname.startsWith('/onboarding');
   
-  const hideHeader = isAdminPage || isStaffPage || isPlatformPage || isSignupPage;
+  const hideHeader = isAdminPage || isStaffPage || isPlatformPage || isMarketplacePage || isAuthPage || isSignupPage || isOnboardingPage;
 
   return (
     <>

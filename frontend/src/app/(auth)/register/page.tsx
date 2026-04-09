@@ -60,24 +60,24 @@ export default function RegisterPage() {
 
   if (showVerificationMessage) {
     return (
-      <div className="bg-card border rounded-lg shadow-lg p-8 max-w-md mx-auto text-center">
-        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-card border border-border rounded-xl shadow-xl p-8 text-center">
+        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-10 h-10 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold mb-4">Verify Your Email</h2>
-        <p className="text-muted-foreground mb-6">
-          We've sent a verification email to <strong>{userEmail}</strong>. 
+        <h2 className="text-3xl font-bold mb-4">Check Your Email</h2>
+        <p className="text-muted-foreground mb-6 text-base">
+          We've sent a verification email to <strong className="text-foreground">{userEmail}</strong>. 
           Please check your inbox and click the verification link to activate your account.
         </p>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-sm text-muted-foreground mb-8">
           Didn't receive the email? Check your spam folder or{' '}
-          <button className="text-primary hover:underline">resend verification email</button>.
+          <button className="text-primary hover:underline font-semibold">resend verification email</button>.
         </p>
         <Link
           href="/login"
-          className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition"
+          className="inline-block bg-primary text-primary-foreground px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 transition shadow-lg shadow-primary/20"
         >
           Go to Login
         </Link>
@@ -86,26 +86,29 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="bg-card border rounded-lg shadow-lg p-8">
-      <h2 className="text-2xl font-bold mb-6">Create Account</h2>
+    <div className="bg-card border border-border rounded-xl shadow-xl p-8">
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold mb-2">Create Account</h2>
+        <p className="text-muted-foreground">Join our marketplace platform</p>
+      </div>
 
       {error && (
-        <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded mb-4">
+        <div className="bg-destructive/10 border border-destructive/50 text-destructive px-4 py-3 rounded-lg mb-6">
           {error}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="firstName" className="block text-sm font-medium mb-2">
+            <label htmlFor="firstName" className="block text-sm font-semibold mb-2">
               First Name
             </label>
             <input
               {...register('firstName')}
               type="text"
               id="firstName"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
               placeholder="John"
               disabled={isLoading}
             />
@@ -115,14 +118,14 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="lastName" className="block text-sm font-medium mb-2">
+            <label htmlFor="lastName" className="block text-sm font-semibold mb-2">
               Last Name
             </label>
             <input
               {...register('lastName')}
               type="text"
               id="lastName"
-              className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
               placeholder="Doe"
               disabled={isLoading}
             />
@@ -133,14 +136,14 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-2">
-            Email
+          <label htmlFor="email" className="block text-sm font-semibold mb-2">
+            Email Address
           </label>
           <input
             {...register('email')}
             type="email"
             id="email"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
             placeholder="you@example.com"
             disabled={isLoading}
           />
@@ -150,15 +153,15 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium mb-2">
-            Phone <span className="text-muted-foreground">(optional)</span>
+          <label htmlFor="phone" className="block text-sm font-semibold mb-2">
+            Phone <span className="text-muted-foreground font-normal">(optional)</span>
           </label>
           <input
             {...register('phone')}
             type="tel"
             id="phone"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder="+44 7700 900000"
+            className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+            placeholder="+1 (555) 123-4567"
             disabled={isLoading}
           />
           {errors.phone && (
@@ -167,15 +170,15 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-2">
+          <label htmlFor="password" className="block text-sm font-semibold mb-2">
             Password
           </label>
           <input
             {...register('password')}
             type="password"
             id="password"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder="••••••••"
+            className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+            placeholder="Create a strong password"
             disabled={isLoading}
           />
           {errors.password && (
@@ -184,15 +187,15 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
+          <label htmlFor="confirmPassword" className="block text-sm font-semibold mb-2">
             Confirm Password
           </label>
           <input
             {...register('confirmPassword')}
             type="password"
             id="confirmPassword"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            placeholder="••••••••"
+            className="w-full px-4 py-3 border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+            placeholder="Re-enter your password"
             disabled={isLoading}
           />
           {errors.confirmPassword && (
@@ -203,16 +206,16 @@ export default function RegisterPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:opacity-90 transition disabled:opacity-50"
+          className="w-full py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
         >
           {isLoading ? 'Creating account...' : 'Create Account'}
         </button>
       </form>
 
-      <div className="mt-6 text-center">
+      <div className="mt-8 text-center">
         <p className="text-sm text-muted-foreground">
           Already have an account?{' '}
-          <Link href="/login" className="text-primary hover:underline font-medium">
+          <Link href="/login" className="text-primary hover:underline font-semibold">
             Sign in
           </Link>
         </p>
