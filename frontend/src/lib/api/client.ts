@@ -40,18 +40,19 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Unauthorized - clear token and redirect to login
+      // Unauthorized - clear token and auth state but don't redirect, let user continue as guest
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+        localStorage.removeItem('auth-storage'); // Clear Zustand persist storage
+        window.location.reload(); // Force rehydrate of auth store
       }
     } else if (globalErrorHandler) {
       // Call global error handler for other errors
       const apiError = handleApiError(error);
       globalErrorHandler(apiError);
     }
-    
+
     return Promise.reject(error);
   }
 );
