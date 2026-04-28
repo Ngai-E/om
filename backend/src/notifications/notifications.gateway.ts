@@ -13,6 +13,7 @@ import { Server, Socket } from 'socket.io';
       'http://172.20.10.6:3000',
       'https://www.omegaafro.com',
       'https://omegaafro.com',
+      'https://sales.omegaafro.com',
       process.env.FRONTEND_URL,
     ].filter(Boolean),
     credentials: true,

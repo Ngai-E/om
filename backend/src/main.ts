@@ -41,6 +41,7 @@ async function bootstrap() {
     'https://www.omegaafro.com',
     'https://omegaafro.com',
     'https://om-ebon-omega.vercel.app',
+    'https://sales.omegaafro.com',
     process.env.FRONTEND_URL,
   ].filter(Boolean);
 
