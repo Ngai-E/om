@@ -68,7 +68,7 @@ INSERT INTO "tenant_domains" (
 ) VALUES (
   'domain_omega',
   'tenant_omega',
-  'omegaafro.stores.xxx',
+  'omegaafro.stores.com',
   'SUBDOMAIN',
   true,
   'PENDING',

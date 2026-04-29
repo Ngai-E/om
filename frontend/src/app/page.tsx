@@ -4,20 +4,23 @@ import { headers } from 'next/headers';
 function isPlatformDomain(hostname: string): boolean {
   // Platform domains (production)
   const platformDomains = [
-    'stores.xxx',
-    'app.stores.xxx',
-    'market.stores.xxx',
-    'console.stores.xxx',
+    'stores.com',
+    'stores.com',
+    'app.stores.com',
+    'market.stores.com',
+    'console.stores.com',
   ];
   
   if (platformDomains.includes(hostname)) {
     return true;
   }
   
-  // Platform subdomains
+  // Platform subdomains.
+  // NOTE: `www` is intentionally NOT here — it is the canonical prefix for
+  // tenant custom domains (e.g. www.omegaafro.com) and must route to /home.
   const subdomain = hostname.split('.')[0];
-  const platformSubdomains = ['app', 'market', 'console', 'platform', 'www'];
-  
+  const platformSubdomains = ['app', 'market', 'console', 'platform', 'admin'];
+
   return platformSubdomains.includes(subdomain);
 }
 

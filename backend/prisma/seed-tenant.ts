@@ -67,7 +67,7 @@ async function main() {
     await prisma.tenantDomain.create({
       data: {
         tenantId,
-        domain: `${TENANT_OMEGA_SLUG}.stores.xxx`,
+        domain: `${TENANT_OMEGA_SLUG}.stores.com`,
         type: 'SUBDOMAIN',
         isPrimary: true,
         sslStatus: 'ACTIVE',
@@ -123,7 +123,7 @@ async function main() {
   console.log('\n🎉 Tenant backfill complete!');
   console.log(`\n📋 Tenant ID: ${tenantId}`);
   console.log(`📋 Tenant Slug: ${TENANT_OMEGA_SLUG}`);
-  console.log(`📋 Store URL: ${TENANT_OMEGA_SLUG}.stores.xxx`);
+  console.log(`📋 Store URL: ${TENANT_OMEGA_SLUG}.stores.com`);
 }
 
 main()

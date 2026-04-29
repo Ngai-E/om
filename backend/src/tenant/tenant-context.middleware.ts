@@ -8,7 +8,7 @@ import { TenantContext } from '../common/interfaces/tenant-context.interface';
  * 
  * Resolution order:
  * 1. X-Tenant-Slug header (trusted internal/dev use only)
- * 2. Subdomain from Host header ({slug}.stores.xxx)
+ * 2. Subdomain from Host header ({slug}.stores.com)
  * 3. Custom domain lookup from tenant_domains table
  * 4. In development: Falls back to omegaafro
  * 5. In production: NO FALLBACK - tenant must be resolved
@@ -250,14 +250,14 @@ export class TenantContextMiddleware implements NestMiddleware {
    * Platform domains serve: landing page, marketplace, onboarding, super admin.
    * 
    * Platform domains:
-   *   - stores.xxx (root domain)
-   *   - app.stores.xxx (platform admin)
-   *   - market.stores.xxx (marketplace)
-   *   - console.stores.xxx (super admin)
+   *   - stores.com (root domain)
+   *   - app.stores.com (platform admin)
+   *   - market.stores.com (marketplace)
+   *   - console.stores.com (super admin)
    *   - localhost:3000 (platform dev)
    * 
    * Tenant domains:
-   *   - {slug}.stores.xxx (tenant storefront)
+   *   - {slug}.stores.com (tenant storefront)
    *   - localhost:3001 (tenant dev)
    */
   /**
@@ -297,10 +297,10 @@ export class TenantContextMiddleware implements NestMiddleware {
 
     // Production platform domains
     const platformDomains = [
-      'stores.xxx',           // Root domain (landing page)
-      'app.stores.xxx',       // Platform admin
-      'market.stores.xxx',    // Marketplace
-      'console.stores.xxx',   // Super admin console
+      'stores.com',           // Root domain (landing page)
+      'app.stores.com',       // Platform admin
+      'market.stores.com',    // Marketplace
+      'console.stores.com',   // Super admin console
     ];
 
     if (platformDomains.includes(cleanHost)) {
@@ -323,16 +323,16 @@ export class TenantContextMiddleware implements NestMiddleware {
   /**
    * Extract subdomain slug from host.
    * Examples:
-   *   "myshop.stores.xxx" → "myshop"
-   *   "myshop.stores.xxx:3000" → "myshop"
+   *   "myshop.stores.com" → "myshop"
+   *   "myshop.stores.com:3000" → "myshop"
    *   "localhost:3001" → null
-   *   "stores.xxx" → null
+   *   "stores.com" → null
    */
   private extractSubdomain(host: string): string | null {
     const cleanHost = host.split(':')[0]; // Remove port
     const parts = cleanHost.split('.');
 
-    // Need at least 3 parts for subdomain: slug.stores.xxx
+    // Need at least 3 parts for subdomain: slug.stores.com
     if (parts.length >= 3) {
       const slug = parts[0];
       // Skip common non-tenant subdomains

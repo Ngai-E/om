@@ -410,7 +410,7 @@ const superAdminSections: DocSection[] = [
             'Go to Platform Console → Settings → General tab.',
             'Set "Platform Name" — shown on the signup page and marketing site.',
             'Set "Platform Domain" — the root domain (e.g. stores.yourplatform.com).',
-            'Set "Subdomain Suffix" — appended to tenant slugs (e.g. my-store.stores.xxx).',
+            'Set "Subdomain Suffix" — appended to tenant slugs (e.g. my-store.stores.com).',
             'Toggle "Maintenance Mode" to take all storefronts offline temporarily.',
             'Set "Default Trial Period" in days (applied to all new signups).',
             'Toggle "Signup Enabled" to open or close self-serve tenant registration.',
@@ -485,7 +485,7 @@ const superAdminSections: DocSection[] = [
         description: 'Tenants can create their own store at /platform/signup without any Super Admin involvement.',
         steps: [
             'Direct new tenants to /platform/signup.',
-            'They enter their store name, choose a URL slug (e.g. my-store → my-store.stores.xxx), and their personal details.',
+            'They enter their store name, choose a URL slug (e.g. my-store → my-store.stores.com), and their personal details.',
             'The system auto-checks slug availability in real time.',
             'On submit, the platform instantly provisions: a Tenant record, default branding, a subdomain, and an admin user account.',
             'The new tenant is taken directly to their Admin Dashboard on a 14-day free trial.',

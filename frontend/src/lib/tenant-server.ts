@@ -1,7 +1,9 @@
 import { headers } from 'next/headers';
 
 const DEFAULT_TENANT_SLUG = 'omegaafro';
-const PLATFORM_SUBDOMAINS = new Set(['market', 'console', 'api', 'www', 'app']);
+// NOTE: `www` is intentionally excluded — it is a common prefix on tenant
+// custom domains (e.g. www.omegaafro.com) and must not be treated as platform.
+const PLATFORM_SUBDOMAINS = new Set(['market', 'console', 'api', 'app', 'admin', 'platform']);
 
 /**
  * Extract tenant slug from a hostname on the server.
@@ -12,7 +14,7 @@ function extractSlugFromHost(host: string | null): string | null {
   const cleanHost = host.split(':')[0]; // Remove port
   const parts = cleanHost.split('.');
 
-  // Need at least 3 parts for subdomain (slug.stores.xxx)
+  // Need at least 3 parts for subdomain (slug.stores.com)
   // or 2 parts for local dev (slug.localhost)
   if (parts.length >= 3) {
     const subdomain = parts[0];

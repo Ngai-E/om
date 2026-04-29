@@ -16,7 +16,7 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
       const hostname = window.location.hostname;
       
       // Platform detection
-      const platformDomains = ['stores.xxx', 'app.stores.xxx', 'market.stores.xxx', 'console.stores.xxx'];
+      const platformDomains = ['stores.com', 'app.stores.com', 'market.stores.com', 'console.stores.com'];
       const isPlatformDomain = platformDomains.includes(hostname) || 
                                hostname.split('.')[0] === 'app' ||
                                port === '3000';

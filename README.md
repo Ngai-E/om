@@ -361,3 +361,9 @@ Proprietary - OMEGA AFRO CARIBBEAN SUPERSTORE LTD
 ---
 
 **Built with ❤️ for the African & Caribbean community in Bolton, UK**
+
+# Tenant
+NEXT_BUILD_DIR=.next-tenant PORT=3001 npm run dev
+
+# Platform
+NEXT_PUBLIC_IS_PLATFORM=true NEXT_BUILD_DIR=.next-platform PORT=3000 npm run dev

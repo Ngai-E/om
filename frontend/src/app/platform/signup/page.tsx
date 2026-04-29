@@ -105,7 +105,7 @@ export default function PlatformSignupPage() {
           <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Store URL</span>
-              <span className="font-mono font-medium">{success.tenant.slug}.stores.xxx</span>
+              <span className="font-mono font-medium">{success.tenant.slug}.stores.com</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-500">Status</span>
@@ -174,7 +174,7 @@ export default function PlatformSignupPage() {
                 minLength={3}
               />
               <span className="px-3 text-sm text-gray-400 border-l bg-gray-50 rounded-r-xl py-3">
-                .stores.xxx
+                .stores.com
               </span>
             </div>
             <div className="mt-1 flex items-center gap-1 h-5">

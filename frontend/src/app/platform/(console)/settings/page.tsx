@@ -8,7 +8,7 @@ import { Save, RefreshCw, Globe, Settings, Shield, DollarSign, Upload, CreditCar
 const SETTING_LABELS: Record<string, { label: string; description: string; placeholder?: string }> = {
   platform_name: { label: 'Platform Name', description: 'The name displayed on the platform landing page and emails', placeholder: 'OMEGA Platform' },
   platform_domain: { label: 'Platform Domain', description: 'The root domain for the platform (e.g. stores.yourdomain.com)', placeholder: 'stores.yourdomain.com' },
-  platform_subdomain_suffix: { label: 'Subdomain Suffix', description: 'Appended to tenant slugs for storefront URLs (e.g. slug.stores.xxx)', placeholder: 'stores.xxx' },
+  platform_subdomain_suffix: { label: 'Subdomain Suffix', description: 'Appended to tenant slugs for storefront URLs (e.g. slug.stores.com)', placeholder: 'stores.com' },
   platform_maintenance_mode: { label: 'Maintenance Mode', description: 'When enabled, all storefronts show a maintenance page', placeholder: 'false' },
   default_trial_days: { label: 'Default Trial Period (days)', description: 'Number of trial days for new tenant signups', placeholder: '14' },
   default_plan_id: { label: 'Default Plan ID', description: 'Package assigned to new tenants on signup', placeholder: '' },
@@ -530,7 +530,7 @@ export default function PlatformSettingsPage() {
               <p className="text-sm text-gray-500 mt-1">
                 Configure the domain used for tenant storefronts. Tenant URLs follow the pattern:{' '}
                 <code className="bg-gray-100 px-1.5 py-0.5 rounded text-xs font-mono">
-                  {'{slug}'}.{getValue('platform_subdomain_suffix') || 'stores.xxx'}
+                  {'{slug}'}.{getValue('platform_subdomain_suffix') || 'stores.com'}
                 </code>
               </p>
             </div>

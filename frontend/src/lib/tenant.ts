@@ -3,7 +3,7 @@
  *
  * Resolution order:
  * 1. NEXT_PUBLIC_TENANT_SLUG env var (for local dev override)
- * 2. Subdomain from current hostname ({slug}.stores.xxx)
+ * 2. Subdomain from current hostname ({slug}.stores.com)
  * 3. Falls back to 'omegaafro'
  *
  * The resolved slug is sent as X-Tenant-Slug header to the backend,
@@ -15,17 +15,19 @@ const DEFAULT_TENANT_SLUG = 'omegaafro';
 /**
  * Known platform subdomains that are NOT tenant slugs.
  */
-const PLATFORM_SUBDOMAINS = new Set(['market', 'console', 'api', 'www', 'app']);
+// NOTE: `www` is intentionally excluded — it is a common prefix on tenant
+// custom domains (e.g. www.omegaafro.com) and must not be treated as platform.
+const PLATFORM_SUBDOMAINS = new Set(['market', 'console', 'api', 'app', 'admin', 'platform']);
 
 /**
  * Extract tenant slug from a hostname.
- * Expected format: {slug}.stores.xxx or {slug}.localhost
+ * Expected format: {slug}.stores.com or {slug}.localhost
  */
 function extractSlugFromHost(host: string): string | null {
   const cleanHost = host.split(':')[0]; // Remove port
   const parts = cleanHost.split('.');
 
-  // Need at least 3 parts for subdomain (slug.stores.xxx)
+  // Need at least 3 parts for subdomain (slug.stores.com)
   // or 2 parts for local dev (slug.localhost)
   if (parts.length >= 3) {
     const subdomain = parts[0];
