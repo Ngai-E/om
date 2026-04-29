@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import NextImage from 'next/image';
 import { ShoppingCart, Check, Heart, TrendingUp } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { settingsApi } from '@/lib/api/settings';
@@ -134,10 +135,12 @@ export function ProductCard({ product }: ProductCardProps) {
           {/* Social Proof Badge - positioned absolutely on image */}
           <SocialProofBadge product={product} />
           {product.images && product.images.length > 0 ? (
-            <img
+            <NextImage
               src={product.images[0].url}
               alt={product.images[0].altText || product.name}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -154,7 +157,7 @@ export function ProductCard({ product }: ProductCardProps) {
           
           {/* Discount Tag */}
           {product.compareAtPrice && parseFloat(product.compareAtPrice) > parseFloat(product.price) && (
-            <div className="absolute top-2 left-2 bg-omega-orange text-white px-2 py-1 rounded text-xs font-bold" style={{ marginTop: product.isBestSeller ? '32px' : '0' }}>
+            <div className="absolute top-2 left-2 bg-secondary text-white px-2 py-1 rounded text-xs font-bold" style={{ marginTop: product.isBestSeller ? '32px' : '0' }}>
               Save £{(parseFloat(product.compareAtPrice) - parseFloat(product.price)).toFixed(2)}
             </div>
           )}
@@ -194,7 +197,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <h3 className="text-sm font-bold text-gray-900 mb-1 line-clamp-2 min-h-[2.5rem]">
             {product.name}
           </h3>
-          <p className="text-3xl font-black text-omega-orange mb-1">
+          <p className="text-3xl font-black text-secondary mb-1">
             £{parseFloat(product.price).toFixed(2)}
           </p>
           {hasVariants && product.variants && product.variants.length > 1 && (
@@ -211,8 +214,8 @@ export function ProductCard({ product }: ProductCardProps) {
                 : !inStock
                 ? 'bg-gray-400 text-white'
                 : hasVariants
-                ? 'bg-omega-green-dark hover:bg-omega-green text-white'
-                : 'bg-omega-green-dark hover:bg-omega-green text-white'
+                ? 'bg-primary hover:bg-primary/80 text-white'
+                : 'bg-primary hover:bg-primary/80 text-white'
             }`}
             title={
               !inStock 

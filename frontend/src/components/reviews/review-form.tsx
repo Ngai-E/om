@@ -65,7 +65,7 @@ export function ReviewForm({ productId, orderId, onSuccess, onCancel }: ReviewFo
 
   return (
     <form onSubmit={handleSubmit} className="bg-white rounded-lg border border-gray-200 p-6">
-      <h3 className="text-lg font-bold text-[#036637] mb-4">Write a Review</h3>
+      <h3 className="text-lg font-bold text-primary mb-4">Write a Review</h3>
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
@@ -91,7 +91,7 @@ export function ReviewForm({ productId, orderId, onSuccess, onCancel }: ReviewFo
               <Star
                 className={`w-8 h-8 ${
                   star <= (hoveredRating || rating)
-                    ? 'fill-[#FF7730] text-[#FF7730]'
+                    ? 'fill-secondary text-secondary'
                     : 'text-gray-300'
                 }`}
               />
@@ -112,7 +112,7 @@ export function ReviewForm({ productId, orderId, onSuccess, onCancel }: ReviewFo
           onChange={(e) => setTitle(e.target.value)}
           maxLength={100}
           placeholder="Sum up your experience"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#036637] focus:border-transparent"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
         />
       </div>
 
@@ -128,7 +128,7 @@ export function ReviewForm({ productId, orderId, onSuccess, onCancel }: ReviewFo
           maxLength={1000}
           rows={4}
           placeholder="Share your thoughts about this product..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#036637] focus:border-transparent resize-none"
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
         />
         <p className="text-xs text-gray-500 mt-1">{comment.length}/1000 characters</p>
       </div>
@@ -144,7 +144,7 @@ export function ReviewForm({ productId, orderId, onSuccess, onCancel }: ReviewFo
         <button
           type="submit"
           disabled={isSubmitting || rating === 0}
-          className="flex-1 bg-[#036637] hover:bg-[#014D29] text-white px-6 py-3 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1 bg-primary hover:bg-primary/80 text-white px-6 py-3 rounded-lg font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Submitting...' : 'Submit Review'}
         </button>

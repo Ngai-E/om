@@ -3,7 +3,7 @@
 import { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Package, Phone, LogOut, User, BarChart3, Users, FileText } from 'lucide-react';
+import { Package, Phone, LogOut, User, BarChart3, Users, FileText, BookOpen } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
 
 interface StaffLayoutProps {
@@ -56,7 +56,7 @@ export function StaffLayout({ children }: StaffLayoutProps) {
 
   // Filter permission items based on user's permissions
   const userPermissions = user?.permissions || [];
-  const permittedItems = permissionNavItems.filter(item => 
+  const permittedItems = permissionNavItems.filter(item =>
     userPermissions.includes(item.permission)
   );
 
@@ -82,11 +82,10 @@ export function StaffLayout({ children }: StaffLayoutProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition ${
-                  item.active
-                    ? 'bg-green-50 text-green-700 border border-green-200'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg font-semibold transition ${item.active
+                  ? 'bg-green-50 text-green-700 border border-green-200'
+                  : 'text-gray-700 hover:bg-gray-50'
+                  }`}
               >
                 <Icon className="w-5 h-5" />
                 {item.label}
@@ -108,6 +107,16 @@ export function StaffLayout({ children }: StaffLayoutProps) {
               <p className="text-xs text-gray-500 truncate">{user?.email}</p>
             </div>
           </div>
+          <Link
+            href="/admin/docs"
+            className={`w-full flex items-center gap-3 px-4 py-3 mb-1 rounded-lg font-semibold transition ${pathname === '/admin/docs'
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : 'text-gray-700 hover:bg-gray-50'
+              }`}
+          >
+            <BookOpen className="w-5 h-5" />
+            Documentation
+          </Link>
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg font-semibold transition"

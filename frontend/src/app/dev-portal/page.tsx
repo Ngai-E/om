@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Shield, Package, Key, TrendingUp, Users, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
+import { tenantFetch } from '@/lib/tenant';
 
 export default function DevPortalPage() {
   const [secretKey, setSecretKey] = useState('');
@@ -35,7 +36,7 @@ export default function DevPortalPage() {
   const { data: stats } = useQuery({
     queryKey: ['licensing-stats'],
     queryFn: async () => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/licensing/statistics`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/licensing/statistics`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },

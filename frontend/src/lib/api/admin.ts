@@ -29,10 +29,15 @@ export const adminApi = {
     return data;
   },
 
+  getInventoryStats: async () => {
+    const { data } = await apiClient.get('/admin/inventory/stats');
+    return data;
+  },
+
   getAllOrders: async (page = 1, limit = 20, filters?: { status?: string; isPhoneOrder?: boolean }) => {
     const { data } = await apiClient.get('/admin/orders', {
-      params: { 
-        page, 
+      params: {
+        page,
         limit,
         ...(filters?.status && { status: filters.status }),
         ...(filters?.isPhoneOrder !== undefined && { isPhoneOrder: filters.isPhoneOrder }),
@@ -57,7 +62,7 @@ export const adminApi = {
   },
 
   getAllUsers: async (page = 1, limit = 20) => {
-    const { data} = await apiClient.get('/admin/users', {
+    const { data } = await apiClient.get('/admin/users', {
       params: { page, limit },
     });
     return data;

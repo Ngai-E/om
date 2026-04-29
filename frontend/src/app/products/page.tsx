@@ -87,7 +87,7 @@ function ProductsContent() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-black text-[#036637] mb-2">
+          <h1 className="text-3xl md:text-4xl font-black text-primary mb-2">
             {urlSearch ? `Search: "${urlSearch}"` : selectedCategory ? toTitleCase(categories?.find(c => c.slug === selectedCategory)?.name || '') : 'Our Products'}
           </h1>
           <p className="text-gray-600">
@@ -102,7 +102,7 @@ function ProductsContent() {
               <div className="space-y-6">
                 {/* Categories */}
                 <div>
-                  <h3 className="font-semibold text-[#036637] mb-3 flex items-center">
+                  <h3 className="font-semibold text-primary mb-3 flex items-center">
                     <Filter className="w-4 h-4 mr-2" />
                     Categories
                   </h3>
@@ -112,7 +112,7 @@ function ProductsContent() {
                       onClick={() => setSelectedCategory('')}
                       className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
                         selectedCategory === ''
-                          ? 'bg-[#E8F5E9] text-[#036637] font-medium'
+                          ? 'bg-primary/10 text-primary font-medium'
                           : 'hover:bg-gray-50'
                       }`}
                     >
@@ -124,7 +124,7 @@ function ProductsContent() {
                         onClick={() => setSelectedCategory(category.slug)}
                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
                           selectedCategory === category.slug
-                            ? 'bg-[#E8F5E9] text-[#036637] font-medium'
+                            ? 'bg-primary/10 text-primary font-medium'
                             : 'hover:bg-gray-50'
                         }`}
                       >
@@ -135,7 +135,7 @@ function ProductsContent() {
                   {categories && categories.length > CATEGORY_LIMIT && (
                     <button
                       onClick={() => setShowAllCategories(!showAllCategories)}
-                      className="text-sm text-[#FF7730] hover:text-[#FF6520] font-medium inline-flex items-center gap-1 mt-2"
+                      className="text-sm text-secondary hover:text-secondary/80 font-medium inline-flex items-center gap-1 mt-2"
                     >
                       {showAllCategories ? (
                         <>
@@ -152,13 +152,13 @@ function ProductsContent() {
 
                 {/* Stock Filter */}
                 <div>
-                  <h3 className="font-semibold text-[#036637] mb-3">Stock Status</h3>
+                  <h3 className="font-semibold text-primary mb-3">Stock Status</h3>
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={showInStockOnly}
                       onChange={(e) => setShowInStockOnly(e.target.checked)}
-                      className="w-4 h-4 text-[#036637] border-gray-300 rounded focus:ring-[#036637]"
+                      className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
                     />
                     <span className="text-sm">In Stock Only</span>
                   </label>
@@ -171,7 +171,7 @@ function ProductsContent() {
                       setSelectedCategory('');
                       setShowInStockOnly(false);
                     }}
-                    className="w-full border-2 border-[#036637] text-[#036637] hover:bg-[#E8F5E9] px-4 py-2 rounded-lg font-medium text-sm transition"
+                    className="w-full border-2 border-primary text-primary hover:bg-primary/10 px-4 py-2 rounded-lg font-medium text-sm transition"
                   >
                     Clear All Filters
                   </button>
@@ -205,7 +205,7 @@ function ProductsContent() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
-                  className="border border-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#036637] focus:border-transparent"
+                  className="border border-gray-300 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
                   <option value="name">Name: A to Z</option>
                   <option value="price-asc">Price: Low to High</option>
@@ -218,7 +218,7 @@ function ProductsContent() {
             {isMobileMenuOpen && (
               <div className="lg:hidden bg-white rounded-lg border border-gray-200 p-6 mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-[#036637]">Filters</h3>
+                  <h3 className="font-semibold text-primary">Filters</h3>
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="p-2 hover:bg-gray-100 rounded-lg"
@@ -228,7 +228,7 @@ function ProductsContent() {
                 </div>
                 <div className="space-y-6">
                   <div>
-                    <h4 className="font-medium text-[#036637] mb-3">Categories</h4>
+                    <h4 className="font-medium text-primary mb-3">Categories</h4>
                     <div className="space-y-2">
                       <button
                         onClick={() => {
@@ -237,7 +237,7 @@ function ProductsContent() {
                         }}
                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
                           selectedCategory === ''
-                            ? 'bg-[#E8F5E9] text-[#036637] font-medium'
+                            ? 'bg-primary/10 text-primary font-medium'
                             : 'hover:bg-gray-50'
                         }`}
                       >
@@ -252,7 +252,7 @@ function ProductsContent() {
                           }}
                           className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
                             selectedCategory === category.slug
-                              ? 'bg-[#E8F5E9] text-[#036637] font-medium'
+                              ? 'bg-primary/10 text-primary font-medium'
                               : 'hover:bg-gray-50'
                           }`}
                         >
@@ -262,13 +262,13 @@ function ProductsContent() {
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-medium text-[#036637] mb-3">Stock Status</h4>
+                    <h4 className="font-medium text-primary mb-3">Stock Status</h4>
                     <label className="flex items-center space-x-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={showInStockOnly}
                         onChange={(e) => setShowInStockOnly(e.target.checked)}
-                        className="w-4 h-4 text-[#036637] border-gray-300 rounded focus:ring-[#036637]"
+                        className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
                       />
                       <span className="text-sm">In Stock Only</span>
                     </label>
@@ -307,7 +307,7 @@ function ProductsContent() {
                     setSelectedCategory('');
                     setShowInStockOnly(false);
                   }}
-                  className="border-2 border-[#036637] text-[#036637] hover:bg-[#E8F5E9] px-6 py-2 rounded-lg font-medium transition"
+                  className="border-2 border-primary text-primary hover:bg-primary/10 px-6 py-2 rounded-lg font-medium transition"
                 >
                   Clear Filters
                 </button>
@@ -338,7 +338,7 @@ function ProductsContent() {
                           onClick={() => setPage(pageNum)}
                           className={`px-4 py-2 rounded-lg transition ${
                             page === pageNum
-                              ? 'bg-[#036637] text-white'
+                              ? 'bg-primary text-white'
                               : 'hover:bg-gray-100'
                           }`}
                         >

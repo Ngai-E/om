@@ -11,7 +11,7 @@ export class GuestCheckoutService {
    * Find or create a guest user based on email or phone
    * This allows returning customers to reuse their information
    */
-  async findOrCreateGuestUser(dto: GuestCheckoutDto) {
+  async findOrCreateGuestUser(dto: GuestCheckoutDto, tenantId?: string) {
     // Try to find existing user by email or phone
     let user = await this.prisma.user.findFirst({
       where: {
@@ -66,6 +66,7 @@ export class GuestCheckoutService {
           isGuest: true, // Create as guest
           emailVerified: false, // Guests don't need verification
           role: 'CUSTOMER',
+          ...(tenantId && { tenantId }),
         },
         include: {
           addresses: true,

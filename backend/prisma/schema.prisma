@@ -13,11 +13,181 @@ datasource db {
 }
 
 // ============================================
+// MULTI-TENANCY
+// ============================================
+
+enum TenantStatus {
+  PENDING_SETUP
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+  DISABLED
+}
+
+enum OnboardingStatus {
+  PENDING
+  BRANDING_INCOMPLETE
+  READY
+  LIVE
+}
+
+enum BillingStatus {
+  TRIAL
+  BILLING_ACTIVE
+  PAST_DUE
+  BILLING_CANCELLED
+  FREE
+}
+
+enum DomainType {
+  SUBDOMAIN
+  CUSTOM
+}
+
+enum DomainVerificationStatus {
+  PENDING
+  VERIFIED
+  FAILED
+}
+
+enum SslStatus {
+  PENDING
+  ACTIVE
+  FAILED
+}
+
+model Tenant {
+  id               String            @id @default(uuid())
+  name             String
+  slug             String            @unique
+  email            String
+  phone            String?
+  description      String?
+  status           TenantStatus      @default(PENDING_SETUP)
+  onboardingStatus OnboardingStatus  @default(PENDING)
+
+  // Trial & Billing
+  billingStatus    BillingStatus @default(TRIAL)
+  trialStartsAt    DateTime?
+  trialEndsAt      DateTime?
+  stripeCustomerId String?       @unique
+
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  deletedAt        DateTime?
+
+  // Relations
+  domains              TenantDomain[]
+  branding             TenantBranding?
+  licenses             License[]
+  subscriptions        Subscription[]
+  onboarding           TenantOnboarding?
+  settings             TenantSetting[]
+  users                User[]
+  categories           Category[]
+  products             Product[]
+  reviews              Review[]
+  testimonials         Testimonial[]
+  carts                Cart[]
+  orders               Order[]
+  deliveryZones        DeliveryZone[]
+  deliverySlots        DeliverySlot[]
+  slotTemplates        DeliverySlotTemplate[]
+  slotOverrides        DeliverySlotOverride[]
+  systemSettings       SystemSettings[]
+  promotions           Promotion[]
+  auditLogs            AuditLog[]
+  tenantBalance        TenantBalance?
+  tenantPayouts        TenantPayout[]
+
+  @@index([slug])
+  @@index([status])
+  @@index([billingStatus])
+  @@map("tenants")
+}
+
+model TenantDomain {
+  id                 String                   @id @default(uuid())
+  tenantId           String
+  tenant             Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  domain             String                   @unique
+  type               DomainType               @default(SUBDOMAIN)
+  isPrimary          Boolean                  @default(false)
+  verificationStatus DomainVerificationStatus @default(PENDING)
+  sslStatus          SslStatus                @default(PENDING)
+  createdAt          DateTime                 @default(now())
+  updatedAt          DateTime                 @updatedAt
+
+  verification TenantDomainVerification?
+
+  @@index([tenantId])
+  @@index([domain])
+  @@map("tenant_domains")
+}
+
+model TenantBranding {
+  id              String   @id @default(uuid())
+  tenantId        String   @unique
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  logoUrl         String?
+  faviconUrl      String?
+  primaryColor    String   @default("#036637")
+  secondaryColor  String   @default("#FF7730")
+  accentColor     String?
+  fontHeading     String?  @default("Inter")
+  fontBody        String?  @default("Inter")
+  heroConfig      Json?
+  themeKey        String?  @default("default")
+  customCss       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("tenant_branding")
+}
+
+model TenantDomainVerification {
+  id              String   @id @default(uuid())
+  tenantDomainId  String   @unique
+  token           String   @unique
+  method          String
+  createdAt       DateTime @default(now())
+  expiresAt       DateTime?
+
+  tenantDomain TenantDomain @relation(fields: [tenantDomainId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_domain_verifications")
+}
+
+model TenantOnboarding {
+  id                 String   @id @default(uuid())
+  tenantId           String   @unique
+  businessCategory   String?
+  countryCode        String?
+  contactEmail       String?
+  contactPhone       String?
+  selectedPlanCode   String?
+  completedBranding  Boolean  @default(false)
+  completedDomain    Boolean  @default(false)
+  completedCatalog   Boolean  @default(false)
+  completedPayments  Boolean  @default(false)
+  currentStep        String?
+  completedAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_onboardings")
+}
+
+// ============================================
 // USER MANAGEMENT
 // ============================================
 
 model User {
   id            String    @id @default(uuid())
+  tenantId      String?
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id])
   email         String    @unique
   password      String?   // Optional for guest users
   firstName     String
@@ -40,6 +210,7 @@ model User {
   auditLogs       AuditLog[]
   reviews         Review[]
 
+  @@index([tenantId])
   @@index([email])
   @@index([role])
   @@index([phone])
@@ -52,6 +223,7 @@ enum Role {
   ADMIN
   PICKER
   DRIVER
+  SUPER_ADMIN
 }
 
 model CustomerProfile {
@@ -126,8 +298,10 @@ model Address {
 
 model Category {
   id              String     @id @default(uuid())
+  tenantId        String?
+  tenant          Tenant?    @relation(fields: [tenantId], references: [id])
   name            String
-  slug            String     @unique
+  slug            String
   description     String?
   image           String? // S3 URL
   parentId        String?
@@ -142,6 +316,8 @@ model Category {
   // Relations
   products Product[]
 
+  @@unique([tenantId, slug])
+  @@index([tenantId])
   @@index([slug])
   @@index([parentId])
   @@index([isQuickCategory])
@@ -150,12 +326,14 @@ model Category {
 
 model Product {
   id              String         @id @default(uuid())
+  tenantId        String?
+  tenant          Tenant?        @relation(fields: [tenantId], references: [id])
   name            String
-  slug            String         @unique
+  slug            String
   description     String?
   price           Decimal        @db.Decimal(10, 2)
   compareAtPrice  Decimal?       @db.Decimal(10, 2) // Original price (for sales)
-  sku             String?        @unique
+  sku             String?
   barcode         String?
   unitSize        String? // e.g., "1kg", "500g"
   origin          String? // Country of origin
@@ -184,6 +362,8 @@ model Product {
   orderItems OrderItem[]
   reviews    Review[]
 
+  @@unique([tenantId, slug])
+  @@index([tenantId])
   @@index([slug])
   @@index([categoryId])
   @@index([sku])
@@ -246,6 +426,8 @@ model Inventory {
 
 model Review {
   id          String       @id @default(uuid())
+  tenantId    String?
+  tenant      Tenant?      @relation(fields: [tenantId], references: [id])
   productId   String
   product     Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
   userId      String
@@ -265,6 +447,7 @@ model Review {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
+  @@index([tenantId])
   @@index([productId])
   @@index([userId])
   @@index([status])
@@ -285,6 +468,8 @@ enum ReviewStatus {
 
 model Testimonial {
   id          String   @id @default(uuid())
+  tenantId    String?
+  tenant      Tenant?  @relation(fields: [tenantId], references: [id])
   videoUrl    String   // URL to video (ImgBB/Cloudinary or external)
   thumbnailUrl String? // Optional thumbnail image
   title       String?  // Optional title for the testimonial
@@ -294,6 +479,7 @@ model Testimonial {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@index([tenantId])
   @@index([isActive, sortOrder])
   @@map("testimonials")
 }
@@ -304,6 +490,8 @@ model Testimonial {
 
 model Cart {
   id        String     @id @default(uuid())
+  tenantId  String?
+  tenant    Tenant?    @relation(fields: [tenantId], references: [id])
   userId    String? // Null for guest carts
   user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
   sessionId String? // For guest carts
@@ -314,6 +502,7 @@ model Cart {
   // Relations
   items CartItem[]
 
+  @@index([tenantId])
   @@index([userId])
   @@index([sessionId])
   @@map("carts")
@@ -342,6 +531,8 @@ model CartItem {
 
 model Order {
   id                String              @id @default(uuid())
+  tenantId          String?
+  tenant            Tenant?             @relation(fields: [tenantId], references: [id])
   orderNumber       String              @unique // Human-readable (e.g., "ORD-2024-00001")
   userId            String? // Null for guest orders
   user              User?               @relation(fields: [userId], references: [id])
@@ -373,6 +564,7 @@ model Order {
   statusHistory OrderStatusHistory[]
   promotionRedemptions PromotionRedemption[]
 
+  @@index([tenantId])
   @@index([orderNumber])
   @@index([userId])
   @@index([status])
@@ -478,6 +670,8 @@ enum PaymentMethod {
 
 model DeliveryZone {
   id                    String    @id @default(uuid())
+  tenantId              String?
+  tenant                Tenant?   @relation(fields: [tenantId], references: [id])
   name                  String // e.g., "Bolton Central"
   postcodePrefix        String[] // e.g., ["BL1", "BL2"]
   deliveryFee           Decimal   @db.Decimal(10, 2)
@@ -490,11 +684,14 @@ model DeliveryZone {
   // Relations
   addresses Address[]
 
+  @@index([tenantId])
   @@map("delivery_zones")
 }
 
 model DeliverySlot {
   id        String   @id @default(uuid())
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
   date      DateTime @db.Date
   startTime String // e.g., "10:00"
   endTime   String // e.g., "12:00"
@@ -506,13 +703,16 @@ model DeliverySlot {
   // Relations
   orders Order[]
 
-  @@unique([date, startTime, endTime])
+  @@unique([tenantId, date, startTime, endTime])
+  @@index([tenantId])
   @@index([date])
   @@map("delivery_slots")
 }
 
 model DeliverySlotTemplate {
   id        String   @id @default(cuid())
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
   dayOfWeek Int // 0=Sunday, 1=Monday, etc.
   startTime String // "09:00"
   endTime   String // "11:00"
@@ -521,11 +721,14 @@ model DeliverySlotTemplate {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([tenantId])
   @@map("delivery_slot_templates")
 }
 
 model DeliverySlotOverride {
   id         String   @id @default(cuid())
+  tenantId   String?
+  tenant     Tenant?  @relation(fields: [tenantId], references: [id])
   date       DateTime // Specific date
   startTime  String
   endTime    String
@@ -534,6 +737,7 @@ model DeliverySlotOverride {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
+  @@index([tenantId])
   @@map("delivery_slot_overrides")
 }
 
@@ -543,13 +747,100 @@ model DeliverySlotOverride {
 
 model SystemSettings {
   id                    String   @id @default(uuid())
-  key                   String   @unique // e.g., "payment_method", "store_name"
+  tenantId              String?
+  tenant                Tenant?  @relation(fields: [tenantId], references: [id])
+  key                   String   // e.g., "payment_method", "store_name"
   value                 String // JSON string for complex values
   description           String?
   updatedAt             DateTime @updatedAt
   updatedBy             String? // User ID who last updated
 
+  @@unique([tenantId, key])
+  @@index([tenantId])
   @@map("system_settings")
+}
+
+// ============================================
+// PLATFORM CONFIGURATION & PAYOUTS
+// ============================================
+
+model PlatformConfig {
+  id                    String   @id @default(uuid())
+  key                   String   @unique // e.g., "stripe_secret_key", "imgbb_api_key"
+  value                 String   // Encrypted or plain text
+  description           String?
+  isEncrypted           Boolean  @default(false) // Mark sensitive fields
+  updatedAt             DateTime @updatedAt
+  updatedBy             String? // Super Admin user ID
+
+  @@index([key])
+  @@map("platform_config")
+}
+
+model TenantBalance {
+  id                    String   @id @default(uuid())
+  tenantId              String   @unique
+  tenant                Tenant   @relation(fields: [tenantId], references: [id])
+  
+  // Balance tracking
+  currentBalance        Decimal  @db.Decimal(12, 2) @default(0) // Available balance
+  totalEarned           Decimal  @db.Decimal(12, 2) @default(0) // Lifetime earnings
+  totalWithdrawn        Decimal  @db.Decimal(12, 2) @default(0) // Lifetime withdrawals
+  
+  // Fee tracking
+  totalPlatformFees     Decimal  @db.Decimal(12, 2) @default(0) // Total platform fees paid
+  totalTaxes            Decimal  @db.Decimal(12, 2) @default(0) // Total taxes withheld
+  
+  lastUpdated           DateTime @updatedAt
+  lastPayoutAt          DateTime?
+
+  @@index([tenantId])
+  @@map("tenant_balances")
+}
+
+model TenantPayout {
+  id                    String   @id @default(uuid())
+  tenantId              String
+  tenant                Tenant   @relation(fields: [tenantId], references: [id])
+  
+  // Payout details
+  amount                Decimal  @db.Decimal(12, 2)
+  currency              String   @default("GBP")
+  status                PayoutStatus @default(PENDING)
+  
+  // Fee breakdown
+  grossAmount           Decimal  @db.Decimal(12, 2) // Before fees
+  platformFee           Decimal  @db.Decimal(12, 2) // Platform fee amount
+  taxAmount             Decimal  @db.Decimal(12, 2) // Tax withheld
+  netAmount             Decimal  @db.Decimal(12, 2) // Amount to tenant
+  
+  // Processing
+  paymentMethod         String   // "bank_transfer", "stripe_connect", etc.
+  bankAccountName       String?  // For bank transfers
+  bankAccountNumber     String?  // Encrypted
+  bankSortCode          String?  // Encrypted
+  stripePayoutId        String?  // If using Stripe Connect
+  
+  // Metadata
+  reference             String?  // Reference number
+  notes                 String?
+  processedAt           DateTime? // When payout was sent
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  processedBy           String?  // Super Admin who processed
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("tenant_payouts")
+}
+
+enum PayoutStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
 }
 
 // ============================================
@@ -558,10 +849,12 @@ model SystemSettings {
 
 model Promotion {
   id          String           @id @default(uuid())
+  tenantId    String?
+  tenant      Tenant?          @relation(fields: [tenantId], references: [id])
   name        String
   description String?
   imageUrl    String? // Promotion banner image
-  code        String?          @unique // Optional promo code (null = automatic)
+  code        String?          // Optional promo code (null = automatic)
   
   // Status & Scheduling
   status      PromotionStatus  @default(DRAFT)
@@ -605,6 +898,8 @@ model Promotion {
   // Relations
   redemptions PromotionRedemption[]
   
+  @@unique([tenantId, code])
+  @@index([tenantId])
   @@index([status])
   @@index([code])
   @@index([startAt, endAt])
@@ -657,6 +952,8 @@ enum DiscountType {
 
 model AuditLog {
   id        String   @id @default(uuid())
+  tenantId  String?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   action    String // e.g., "CREATE_PRODUCT", "UPDATE_ORDER"
@@ -667,6 +964,7 @@ model AuditLog {
   userAgent String?
   createdAt DateTime @default(now())
 
+  @@index([tenantId])
   @@index([userId])
   @@index([entity, entityId])
   @@index([createdAt])
@@ -718,6 +1016,8 @@ model License {
   licenseKey        String        @unique
   packageId         String
   package           Package       @relation(fields: [packageId], references: [id])
+  tenantId          String?
+  tenant            Tenant?       @relation(fields: [tenantId], references: [id])
   
   // Licensee Information
   companyName       String
@@ -745,6 +1045,7 @@ model License {
   
   usageLogs         LicenseUsageLog[]
 
+  @@index([tenantId])
   @@index([licenseKey])
   @@index([status])
   @@index([expiresAt])
@@ -777,4 +1078,126 @@ model FeatureFlag {
   updatedAt     DateTime @updatedAt
 
   @@map("feature_flags")
+}
+
+// ============================================
+// SPRINT A: SAAS PLANS & SUBSCRIPTIONS
+// ============================================
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+  SUSPENDED
+}
+
+enum EntitlementValueType {
+  BOOLEAN
+  INTEGER
+  STRING
+}
+
+model Plan {
+  id            String   @id @default(uuid())
+  code          String   @unique
+  name          String
+  description   String?
+  monthlyPrice  Decimal? @db.Decimal(10,2)
+  yearlyPrice   Decimal? @db.Decimal(10,2)
+  trialDays     Int      @default(14)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  entitlements  PlanEntitlement[]
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id                    String             @id @default(uuid())
+  tenantId              String
+  planId                String
+  status                SubscriptionStatus @default(TRIALING)
+  trialStartsAt         DateTime?
+  trialEndsAt           DateTime?
+  currentPeriodStartsAt DateTime?
+  currentPeriodEndsAt   DateTime?
+  stripeCustomerId      String?
+  stripeSubscriptionId  String?
+  canceledAt            DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan   Plan   @relation(fields: [planId], references: [id])
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model PlanEntitlement {
+  id           String               @id @default(uuid())
+  planId       String
+  key          String
+  valueType    EntitlementValueType
+  booleanValue Boolean?
+  intValue     Int?
+  textValue    String?
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, key])
+  @@map("plan_entitlements")
+}
+
+// ============================================
+// SPRINT A: SETTINGS SEPARATION
+// ============================================
+
+model PlatformSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("platform_settings")
+}
+
+model TenantSetting {
+  id        String   @id @default(uuid())
+  tenantId  String
+  key       String
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, key])
+  @@map("tenant_settings")
+}
+
+// ============================================
+// SPRINT A: PLATFORM AUDIT LOG
+// ============================================
+
+model PlatformAuditLog {
+  id          String   @id @default(uuid())
+  actorUserId String?
+  action      String
+  targetType  String
+  targetId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@index([actorUserId])
+  @@map("platform_audit_logs")
 }

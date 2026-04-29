@@ -12,24 +12,28 @@ import { DeliveryService } from './delivery.service';
 import { CheckPostcodeDto, GetDeliverySlotsDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { TenantRequiredGuard } from '../common/guards/tenant-required.guard';
+import { CurrentTenant } from '../common/decorators/current-tenant.decorator';
+import { TenantContext } from '../common/interfaces/tenant-context.interface';
 
 @ApiTags('delivery')
 @Controller('delivery')
+@UseGuards(TenantRequiredGuard)
 export class DeliveryController {
   constructor(private deliveryService: DeliveryService) {}
 
   @Post('check-postcode')
   @ApiOperation({ summary: 'Check if postcode is in delivery zone' })
   @ApiResponse({ status: 200, description: 'Postcode checked' })
-  async checkPostcode(@Body() dto: CheckPostcodeDto) {
-    return this.deliveryService.checkPostcode(dto);
+  async checkPostcode(@CurrentTenant() tenant: TenantContext, @Body() dto: CheckPostcodeDto) {
+    return this.deliveryService.checkPostcode(dto, tenant.id);
   }
 
   @Get('zones')
   @ApiOperation({ summary: 'Get all delivery zones' })
   @ApiResponse({ status: 200, description: 'Zones retrieved' })
-  async getZones() {
-    return this.deliveryService.getZones();
+  async getZones(@CurrentTenant() tenant: TenantContext) {
+    return this.deliveryService.getZones(tenant.id);
   }
 
   @Get('slots')
@@ -37,8 +41,8 @@ export class DeliveryController {
   @ApiQuery({ name: 'zoneId', required: false, description: 'Filter by zone ID' })
   @ApiQuery({ name: 'date', required: false, description: 'Filter by date (YYYY-MM-DD)' })
   @ApiResponse({ status: 200, description: 'Slots retrieved' })
-  async getAvailableSlots(@Query() dto: GetDeliverySlotsDto) {
-    return this.deliveryService.getAvailableSlots(dto);
+  async getAvailableSlots(@CurrentTenant() tenant: TenantContext, @Query() dto: GetDeliverySlotsDto) {
+    return this.deliveryService.getAvailableSlots(dto, tenant.id);
   }
 
   @Get('slots/:id')
@@ -70,9 +74,10 @@ export class DeliveryController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Validate cart against delivery zone requirements' })
   async validateCart(
+    @CurrentTenant() tenant: TenantContext,
     @CurrentUser() user: any,
     @Query('addressId') addressId?: string,
   ) {
-    return this.deliveryService.validateCartForDelivery(user.id, addressId);
+    return this.deliveryService.validateCartForDelivery(user.id, addressId, tenant.id);
   }
 }

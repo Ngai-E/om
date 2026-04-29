@@ -1,5 +1,8 @@
 import axios from 'axios';
 import { handleApiError } from './error-handler';
+import { getTenantSlug } from '../tenant';
+import AuthGuard from '../auth/auth-guard';
+import AuthRecovery from '../auth/auth-recovery';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
 
@@ -18,7 +21,7 @@ export const apiClient = axios.create({
   withCredentials: true, // Important for cookies
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and tenant context
 apiClient.interceptors.request.use(
   (config) => {
     // Get token from localStorage
@@ -26,6 +29,14 @@ apiClient.interceptors.request.use(
     
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    // Check if we're on platform port (3000) - don't send tenant slug
+    const isPlatform = typeof window !== 'undefined' && window.location.port === '3000';
+    
+    // Add tenant slug header for multi-tenancy (only for tenant app)
+    if (!isPlatform) {
+      config.headers['X-Tenant-Slug'] = getTenantSlug();
     }
     
     return config;
@@ -38,15 +49,29 @@ apiClient.interceptors.request.use(
 // Response interceptor to handle errors
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
-      // Unauthorized - clear token and auth state but don't redirect, let user continue as guest
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('auth-storage'); // Clear Zustand persist storage
-        window.location.reload(); // Force rehydrate of auth store
+      const requestUrl = error.config?.url || '';
+
+      // Don't retry auth endpoints (login, register, etc.) - they're supposed to return 401 on failure
+      const isAuthEndpoint = requestUrl.includes('/auth/login') ||
+                            requestUrl.includes('/auth/register') ||
+                            requestUrl.includes('/auth/refresh');
+
+      if (!isAuthEndpoint) {
+        // Try automatic recovery for non-auth endpoints
+        const recovered = await AuthRecovery.handleAuthError(error);
+
+        if (recovered) {
+          console.log('✅ Auth error automatically recovered, retrying request...');
+          // Retry the original request with fresh auth
+          return apiClient.request(error.config);
+        }
       }
+
+      // Auth endpoint failed or recovery failed - handle normally
+      const authError = AuthGuard.handleAuthError(error);
+      console.error('Authentication error:', AuthGuard.getErrorMessage(authError));
     } else if (globalErrorHandler) {
       // Call global error handler for other errors
       const apiError = handleApiError(error);

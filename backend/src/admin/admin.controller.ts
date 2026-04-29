@@ -14,10 +14,12 @@ import {
   UploadedFile,
   UseInterceptors,
   Res,
+  Req,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Response } from 'express';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Request, Response } from 'express';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiConsumes } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { CreateProductDto, UpdateProductDto, UpdateInventoryDto, CreateStaffDto, UpdateStaffDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -26,6 +28,8 @@ import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RequirePermissions } from '../auth/decorators/permissions.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequireFeature, RequireLimit } from '../auth/decorators/feature-gate.decorator';
+import { FeatureGateGuard, LimitGateGuard } from '../auth/guards/feature-gate.guard';
 
 @ApiTags('admin')
 @Controller('admin')
@@ -43,8 +47,8 @@ export class AdminController {
   @Roles('ADMIN', 'STAFF')
   @ApiOperation({ summary: 'Get badge counts for admin navigation' })
   @ApiResponse({ status: 200, description: 'Badge counts retrieved' })
-  async getBadgeCounts() {
-    return this.adminService.getBadgeCounts();
+  async getBadgeCounts(@Req() req: Request) {
+    return this.adminService.getBadgeCounts((req as any).tenantId);
   }
 
   @Get('inventory/stats')
@@ -52,8 +56,8 @@ export class AdminController {
   @RequirePermissions('inventory')
   @ApiOperation({ summary: 'Get inventory statistics (Admin or Staff with inventory permission)' })
   @ApiResponse({ status: 200, description: 'Inventory stats retrieved' })
-  async getInventoryStats() {
-    return this.adminService.getInventoryStats();
+  async getInventoryStats(@Req() req: Request) {
+    return this.adminService.getInventoryStats((req as any).tenantId);
   }
 
   @Get('audit-logs')
@@ -66,6 +70,7 @@ export class AdminController {
   @ApiQuery({ name: 'userId', required: false, type: String })
   @ApiResponse({ status: 200, description: 'Audit logs retrieved' })
   async getAuditLogs(
+    @Req() req: Request,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit?: number,
     @Query('search') search?: string,
@@ -73,7 +78,7 @@ export class AdminController {
     @Query('action') action?: string,
     @Query('userId') userId?: string,
   ) {
-    return this.adminService.getAuditLogs(page, limit, search, entity, action, userId);
+    return this.adminService.getAuditLogs(page, limit, search, entity, action, userId, (req as any).tenantId);
   }
 
   // ============================================
@@ -85,10 +90,11 @@ export class AdminController {
   @ApiQuery({ name: 'includeInactive', required: false, type: Boolean, description: 'Include inactive products' })
   @ApiResponse({ status: 200, description: 'CSV file downloaded' })
   async exportProductsToCSV(
+    @Req() req: Request,
     @Query('includeInactive') includeInactive: boolean,
     @Res() res: Response,
   ) {
-    const csv = await this.adminService.exportProductsToCSV(includeInactive);
+    const csv = await this.adminService.exportProductsToCSV(includeInactive, (req as any).tenantId);
     
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="products-export-${new Date().toISOString().split('T')[0]}.csv"`);
@@ -114,10 +120,12 @@ export class AdminController {
   }
 
   @Post('products')
+  @UseGuards(LimitGateGuard)
+  @RequireLimit('products')
   @ApiOperation({ summary: 'Create new product (Admin only)' })
   @ApiResponse({ status: 201, description: 'Product created' })
-  async createProduct(@Body() dto: CreateProductDto) {
-    return this.adminService.createProduct(dto);
+  async createProduct(@Req() req: Request, @Body() dto: CreateProductDto) {
+    return this.adminService.createProduct(dto, undefined, (req as any).tenantId);
   }
 
   @Put('products/:id')
@@ -125,8 +133,8 @@ export class AdminController {
   @ApiParam({ name: 'id', description: 'Product ID' })
   @ApiResponse({ status: 200, description: 'Product updated' })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  async updateProduct(@Param('id') productId: string, @Body() dto: UpdateProductDto) {
-    return this.adminService.updateProduct(productId, dto);
+  async updateProduct(@Req() req: Request, @Param('id') productId: string, @Body() dto: UpdateProductDto) {
+    return this.adminService.updateProduct(productId, dto, (req as any).tenantId);
   }
 
   @Patch('products/:id/status')
@@ -145,10 +153,11 @@ export class AdminController {
   @ApiParam({ name: 'id', description: 'Product ID' })
   @ApiResponse({ status: 201, description: 'Product duplicated' })
   async duplicateProduct(
+    @Req() req: Request,
     @Param('id') productId: string,
     @Body() dto: { nameSuffix?: string },
   ) {
-    return this.adminService.duplicateProduct(productId, dto.nameSuffix || ' (Copy)');
+    return this.adminService.duplicateProduct(productId, dto.nameSuffix || ' (Copy)', (req as any).tenantId);
   }
 
   @Delete('products/:id')
@@ -186,8 +195,8 @@ export class AdminController {
   @Get('categories')
   @ApiOperation({ summary: 'Get all categories (Admin only)' })
   @ApiResponse({ status: 200, description: 'Categories retrieved' })
-  async getAllCategories() {
-    return this.adminService.getAllCategories();
+  async getAllCategories(@Req() req: Request) {
+    return this.adminService.getAllCategories((req as any).tenantId);
   }
 
   @Get('categories/:id')
@@ -203,8 +212,8 @@ export class AdminController {
   @ApiOperation({ summary: 'Create a new category (Admin only)' })
   @ApiResponse({ status: 201, description: 'Category created' })
   @ApiResponse({ status: 400, description: 'Category already exists' })
-  async createCategory(@Body() dto: { name: string; description?: string; image?: string; parentId?: string }) {
-    return this.adminService.createCategory(dto.name, dto.description, dto.image, dto.parentId);
+  async createCategory(@Req() req: Request, @Body() dto: { name: string; description?: string; image?: string; parentId?: string }) {
+    return this.adminService.createCategory(dto.name, dto.description, dto.image, dto.parentId, (req as any).tenantId);
   }
 
   @Put('categories/:id')
@@ -305,13 +314,14 @@ export class AdminController {
   @ApiQuery({ name: 'isPhoneOrder', required: false, type: Boolean })
   @ApiResponse({ status: 200, description: 'Orders retrieved' })
   async getAllOrders(
+    @Req() req: Request,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
     @Query('status') status?: string,
     @Query('isPhoneOrder') isPhoneOrder?: string,
   ) {
     const phoneOrderFilter = isPhoneOrder === 'true' ? true : isPhoneOrder === 'false' ? false : undefined;
-    return this.adminService.getAllOrders(page, limit, status, phoneOrderFilter);
+    return this.adminService.getAllOrders(page, limit, status, phoneOrderFilter, (req as any).tenantId);
   }
 
   @Get('orders/:id')
@@ -379,10 +389,11 @@ export class AdminController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Users retrieved' })
   async getAllUsers(
+    @Req() req: Request,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit?: number,
   ) {
-    return this.adminService.getAllUsers(page, limit);
+    return this.adminService.getAllUsers(page, limit, (req as any).tenantId);
   }
 
   @Get('users/:id')
@@ -402,8 +413,8 @@ export class AdminController {
   @Get('dashboard/stats')
   @ApiOperation({ summary: 'Get dashboard statistics (Admin only)' })
   @ApiResponse({ status: 200, description: 'Stats retrieved' })
-  async getDashboardStats() {
-    return this.adminService.getDashboardStats();
+  async getDashboardStats(@Req() req: Request) {
+    return this.adminService.getDashboardStats((req as any).tenantId);
   }
 
   // ============================================
@@ -414,15 +425,15 @@ export class AdminController {
   @Get('delivery-zones')
   @ApiOperation({ summary: 'Get all delivery zones (Admin only)' })
   @ApiResponse({ status: 200, description: 'Zones retrieved' })
-  async getDeliveryZones() {
-    return this.adminService.getAllDeliveryZones();
+  async getDeliveryZones(@Req() req: Request) {
+    return this.adminService.getAllDeliveryZones((req as any).tenantId);
   }
 
   @Post('delivery-zones')
   @ApiOperation({ summary: 'Create delivery zone (Admin only)' })
   @ApiResponse({ status: 201, description: 'Zone created' })
-  async createDeliveryZone(@Body() dto: any) {
-    return this.adminService.createDeliveryZone(dto);
+  async createDeliveryZone(@Req() req: Request, @Body() dto: any) {
+    return this.adminService.createDeliveryZone(dto, (req as any).tenantId);
   }
 
   @Patch('delivery-zones/:id')
@@ -446,15 +457,15 @@ export class AdminController {
   @ApiOperation({ summary: 'Get delivery slots (Admin only)' })
   @ApiQuery({ name: 'date', required: false, description: 'Filter by date (YYYY-MM-DD)' })
   @ApiResponse({ status: 200, description: 'Slots retrieved' })
-  async getDeliverySlots(@Query('date') date?: string) {
-    return this.adminService.getAllDeliverySlots(date);
+  async getDeliverySlots(@Req() req: Request, @Query('date') date?: string) {
+    return this.adminService.getAllDeliverySlots(date, (req as any).tenantId);
   }
 
   @Post('delivery-slots')
   @ApiOperation({ summary: 'Create delivery slot (Admin only)' })
   @ApiResponse({ status: 201, description: 'Slot created' })
-  async createDeliverySlot(@Body() dto: any) {
-    return this.adminService.createDeliverySlot(dto);
+  async createDeliverySlot(@Req() req: Request, @Body() dto: any) {
+    return this.adminService.createDeliverySlot(dto, (req as any).tenantId);
   }
 
   @Patch('delivery-slots/:id')
@@ -481,8 +492,8 @@ export class AdminController {
   @ApiOperation({ summary: 'Create new staff member (Admin only)' })
   @ApiResponse({ status: 201, description: 'Staff created' })
   @ApiResponse({ status: 400, description: 'Email already in use' })
-  async createStaff(@Body() dto: CreateStaffDto, @CurrentUser() user: any) {
-    return this.adminService.createStaff(dto, user.id);
+  async createStaff(@Req() req: Request, @Body() dto: CreateStaffDto, @CurrentUser() user: any) {
+    return this.adminService.createStaff(dto, user.id, (req as any).tenantId);
   }
 
   @Get('staff')
@@ -491,12 +502,14 @@ export class AdminController {
   @ApiQuery({ name: 'limit', required: false })
   @ApiResponse({ status: 200, description: 'Staff list retrieved' })
   async getAllStaff(
+    @Req() req: Request,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
     return this.adminService.getAllStaff(
       page ? parseInt(page) : 1,
       limit ? parseInt(limit) : 50,
+      (req as any).tenantId,
     );
   }
 
@@ -552,5 +565,44 @@ export class AdminController {
     @CurrentUser() user: any,
   ) {
     return this.adminService.updateStaffPermissions(id, permissions, user.id);
+  }
+
+  // ============================================
+  // BRANDING
+  // ============================================
+
+  @Get('branding')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Get tenant branding (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Branding retrieved' })
+  async getBranding(@Req() req: Request) {
+    const tenantId = (req as any).tenantId;
+    return this.adminService.getBranding(tenantId);
+  }
+
+  @Put('branding')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Update tenant branding (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Branding updated' })
+  async updateBranding(@Req() req: Request, @Body() dto: any) {
+    const tenantId = (req as any).tenantId;
+    return this.adminService.updateBranding(tenantId, dto);
+  }
+
+  @Post('branding/upload')
+  @Roles('ADMIN', 'SUPER_ADMIN')
+  @ApiOperation({ summary: 'Upload branding asset (logo, favicon, hero image)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Asset uploaded' })
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadBrandingAsset(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+    const result = await this.adminService.uploadBrandingAsset(file);
+    return {
+      message: 'Branding asset uploaded successfully',
+      url: result.url,
+    };
   }
 }

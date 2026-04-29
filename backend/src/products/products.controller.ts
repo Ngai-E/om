@@ -1,9 +1,13 @@
-import { Controller, Get, Query, Param, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import { Controller, Get, Query, Param, ParseIntPipe, DefaultValuePipe, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { ProductsService } from './products.service';
+import { TenantRequiredGuard } from '../common/guards/tenant-required.guard';
+import { CurrentTenant } from '../common/decorators/current-tenant.decorator';
+import { TenantContext } from '../common/interfaces/tenant-context.interface';
 
 @ApiTags('products')
 @Controller('products')
+@UseGuards(TenantRequiredGuard)
 export class ProductsController {
   constructor(private productsService: ProductsService) {}
 
@@ -21,6 +25,7 @@ export class ProductsController {
   @ApiQuery({ name: 'includeInactive', required: false, type: Boolean, description: 'Include inactive products (admin only)' })
   @ApiResponse({ status: 200, description: 'Products retrieved successfully' })
   async findAll(
+    @CurrentTenant() tenant: TenantContext,
     @Query('categoryId') categoryId?: string,
     @Query('category') categorySlug?: string,
     @Query('search') search?: string,
@@ -33,6 +38,7 @@ export class ProductsController {
     @Query('includeInactive') includeInactive?: boolean,
   ) {
     return this.productsService.findAll({
+      tenantId: tenant.id,
       categoryId,
       categorySlug,
       search,
@@ -50,30 +56,30 @@ export class ProductsController {
   @ApiOperation({ summary: 'Get featured products' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of products to return (default: 8)' })
   @ApiResponse({ status: 200, description: 'Featured products retrieved successfully' })
-  async getFeatured(@Query('limit', new DefaultValuePipe(8), ParseIntPipe) limit?: number) {
-    return this.productsService.getFeatured(limit);
+  async getFeatured(@CurrentTenant() tenant: TenantContext, @Query('limit', new DefaultValuePipe(8), ParseIntPipe) limit?: number) {
+    return this.productsService.getFeatured(limit, tenant.id);
   }
 
   @Get('best-sellers')
   @ApiOperation({ summary: 'Get best seller products' })
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of products to return (default: 8)' })
   @ApiResponse({ status: 200, description: 'Best seller products retrieved successfully' })
-  async getBestSellers(@Query('limit', new DefaultValuePipe(8), ParseIntPipe) limit?: number) {
-    return this.productsService.getBestSellers(limit);
+  async getBestSellers(@CurrentTenant() tenant: TenantContext, @Query('limit', new DefaultValuePipe(8), ParseIntPipe) limit?: number) {
+    return this.productsService.getBestSellers(limit, tenant.id);
   }
 
   @Get('categories')
   @ApiOperation({ summary: 'Get all categories with product counts' })
   @ApiResponse({ status: 200, description: 'Categories retrieved successfully' })
-  async getCategories() {
-    return this.productsService.getCategories();
+  async getCategories(@CurrentTenant() tenant: TenantContext) {
+    return this.productsService.getCategories(tenant.id);
   }
 
   @Get('categories/quick')
   @ApiOperation({ summary: 'Get quick categories or top 5 by product count' })
   @ApiResponse({ status: 200, description: 'Quick categories retrieved successfully' })
-  async getQuickCategories() {
-    return this.productsService.getQuickCategories();
+  async getQuickCategories(@CurrentTenant() tenant: TenantContext) {
+    return this.productsService.getQuickCategories(tenant.id);
   }
 
   @Get('slug/:slug')
@@ -81,8 +87,8 @@ export class ProductsController {
   @ApiParam({ name: 'slug', description: 'Product slug' })
   @ApiResponse({ status: 200, description: 'Product found' })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  async findBySlug(@Param('slug') slug: string) {
-    return this.productsService.findBySlug(slug);
+  async findBySlug(@CurrentTenant() tenant: TenantContext, @Param('slug') slug: string) {
+    return this.productsService.findBySlug(slug, tenant.id);
   }
 
   @Get(':id')
@@ -90,7 +96,7 @@ export class ProductsController {
   @ApiParam({ name: 'id', description: 'Product ID' })
   @ApiResponse({ status: 200, description: 'Product found' })
   @ApiResponse({ status: 404, description: 'Product not found' })
-  async findOne(@Param('id') id: string) {
-    return this.productsService.findOne(id);
+  async findOne(@CurrentTenant() tenant: TenantContext, @Param('id') id: string) {
+    return this.productsService.findOne(id, tenant.id);
   }
 }

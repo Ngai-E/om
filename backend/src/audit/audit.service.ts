@@ -9,6 +9,7 @@ export interface AuditLogData {
   changes?: any;
   ipAddress?: string;
   userAgent?: string;
+  tenantId?: string;
 }
 
 @Injectable()
@@ -40,6 +41,7 @@ export class AuditService {
           changes: data.changes || null,
           ipAddress: data.ipAddress || null,
           userAgent: data.userAgent || null,
+          ...(data.tenantId && { tenantId: data.tenantId }),
         },
       });
 
@@ -58,6 +60,7 @@ export class AuditService {
     endDate?: Date;
     page?: number;
     limit?: number;
+    tenantId?: string;
   }) {
     const { page = 1, limit = 50, ...where } = filters;
     const skip = (page - 1) * limit;
@@ -68,6 +71,7 @@ export class AuditService {
     if (where.entity) whereClause.entity = where.entity;
     if (where.entityId) whereClause.entityId = where.entityId;
     if (where.action) whereClause.action = where.action;
+    if (where.tenantId) whereClause.tenantId = where.tenantId;
 
     if (where.startDate || where.endDate) {
       whereClause.createdAt = {};

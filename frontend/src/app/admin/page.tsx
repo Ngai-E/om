@@ -20,7 +20,7 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     // Only redirect if we know the user is authenticated but not an admin
     // Don't redirect while auth is still loading (user === null)
-    if (isAuthenticated && user && user.role !== 'ADMIN') {
+    if (isAuthenticated && user && user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN') {
       router.push('/');
     }
   }, [user, isAuthenticated, router]);
@@ -80,7 +80,7 @@ export default function AdminDashboardPage() {
               <ShoppingCart className="w-5 h-5 text-blue-600" />
             </div>
             <p className="text-3xl font-bold text-gray-900">{newOrdersToday}</p>
-            <p className="text-xs text-gray-500 mt-1">+2 from yesterday</p>
+            <p className="text-xs text-gray-500 mt-1">Today</p>
           </div>
 
           <div className="bg-white border rounded-lg p-5">

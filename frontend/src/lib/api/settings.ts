@@ -1,11 +1,12 @@
 import { apiClient } from './client';
+import { tenantFetch } from '../tenant';
 
 export const settingsApi = {
   /**
    * Get guest checkout enabled status
    */
   async getGuestCheckoutEnabled(): Promise<boolean> {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/guest-checkout`, {
+    const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/guest-checkout`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -25,7 +26,7 @@ export const settingsApi = {
    * Get all public settings
    */
   async getPublicSettings(): Promise<any> {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/public`, {
+    const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/settings/public`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

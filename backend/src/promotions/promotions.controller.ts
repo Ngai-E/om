@@ -11,7 +11,6 @@ import {
   UseGuards,
   DefaultValuePipe,
   ParseIntPipe,
-  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery, ApiParam } from '@nestjs/swagger';
 import { PromotionsService } from './promotions.service';
@@ -20,9 +19,15 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequireFeature } from '../auth/decorators/feature-gate.decorator';
+import { FeatureGateGuard } from '../auth/guards/feature-gate.guard';
+import { TenantRequiredGuard } from '../common/guards/tenant-required.guard';
+import { CurrentTenant } from '../common/decorators/current-tenant.decorator';
+import { TenantContext } from '../common/interfaces/tenant-context.interface';
 
 @ApiTags('promotions')
 @Controller('promotions')
+@UseGuards(TenantRequiredGuard)
 export class PromotionsController {
   constructor(private promotionsService: PromotionsService) {}
 
@@ -33,8 +38,8 @@ export class PromotionsController {
   @Get('active')
   @ApiOperation({ summary: 'Get all active promotions (public)' })
   @ApiResponse({ status: 200, description: 'Active promotions retrieved' })
-  async getActivePromotions() {
-    return this.promotionsService.getActivePromotions();
+  async getActivePromotions(@CurrentTenant() tenant: TenantContext) {
+    return this.promotionsService.getActivePromotions(tenant.id);
   }
 
   @Get('eligible')
@@ -48,8 +53,8 @@ export class PromotionsController {
   @ApiParam({ name: 'code', description: 'Promo code' })
   @ApiResponse({ status: 200, description: 'Promotion found' })
   @ApiResponse({ status: 404, description: 'Promo code not found' })
-  async getByCode(@Param('code') code: string) {
-    return this.promotionsService.findByCode(code);
+  async getByCode(@CurrentTenant() tenant: TenantContext, @Param('code') code: string) {
+    return this.promotionsService.findByCode(code, tenant.id);
   }
 
   @Get(':id/public')
@@ -66,14 +71,15 @@ export class PromotionsController {
   // ============================================
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard, FeatureGateGuard)
   @Roles('ADMIN')
+  @RequireFeature('promotions')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create promotion (Admin only)' })
   @ApiResponse({ status: 201, description: 'Promotion created' })
   @ApiResponse({ status: 400, description: 'Validation failed' })
-  async create(@Body() dto: CreatePromotionDto, @CurrentUser() user: any) {
-    return this.promotionsService.create(dto, user.id);
+  async create(@CurrentTenant() tenant: TenantContext, @Body() dto: CreatePromotionDto, @CurrentUser() user: any) {
+    return this.promotionsService.create(dto, user.id, tenant.id);
   }
 
   @Get()
@@ -87,12 +93,13 @@ export class PromotionsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Promotions retrieved' })
   async findAll(
+    @CurrentTenant() tenant: TenantContext,
     @Query('status') status?: string,
     @Query('search') search?: string,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(50), ParseIntPipe) limit?: number,
   ) {
-    return this.promotionsService.findAll({ status, search, page, limit });
+    return this.promotionsService.findAll({ tenantId: tenant.id, status, search, page, limit });
   }
 
   @Get(':id')
@@ -116,11 +123,12 @@ export class PromotionsController {
   @ApiResponse({ status: 200, description: 'Promotion updated' })
   @ApiResponse({ status: 404, description: 'Promotion not found' })
   async update(
+    @CurrentTenant() tenant: TenantContext,
     @Param('id') id: string,
     @Body() dto: UpdatePromotionDto,
     @CurrentUser() user: any,
   ) {
-    return this.promotionsService.update(id, dto, user.id);
+    return this.promotionsService.update(id, dto, user.id, tenant.id);
   }
 
   @Delete(':id')

@@ -10,6 +10,7 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { productsApi } from '@/lib/api/products';
+import { tenantFetch } from '@/lib/tenant';
 
 export default function AdminProductsPage() {
   const [searchInput, setSearchInput] = useState(''); // User's input
@@ -61,7 +62,7 @@ export default function AdminProductsPage() {
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/export-csv`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/export-csv`, {
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -100,7 +101,7 @@ export default function AdminProductsPage() {
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/import-csv`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/import-csv`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

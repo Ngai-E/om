@@ -12,6 +12,7 @@ import { useAuthStore } from '@/lib/store/auth-store';
 import { useGuestCartStore } from '@/lib/store/guest-cart-store';
 import { Product } from '@/types';
 import { useQuery } from '@tanstack/react-query';
+import { tenantFetch } from '@/lib/tenant';
 
 // Format large numbers: 10000 → 10k, 1000000 → 1M
 function formatNumber(num: number): string {
@@ -77,7 +78,7 @@ export default function CartPage() {
         try {
           const productsWithDetails = await Promise.all(
             guestCart.items.map(async (item) => {
-              const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${item.productId}`);
+              const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${item.productId}`);
               if (response.ok) {
                 const product = await response.json();
                 return { product, quantity: item.quantity };

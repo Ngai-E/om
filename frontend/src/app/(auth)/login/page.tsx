@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { authApi } from '@/lib/api/auth';
 import { useAuthStore } from '@/lib/store/auth-store';
+import AuthGuard from '@/lib/auth/auth-guard';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -18,9 +19,38 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setAuth = useAuthStore((state) => state.setAuth);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionMessage, setSessionMessage] = useState<string | null>(null);
+  const [isPlatform, setIsPlatform] = useState(false);
+
+  // Detect platform
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const port = window.location.port;
+      const hostname = window.location.hostname;
+      
+      const platformDomains = ['stores.xxx', 'app.stores.xxx', 'market.stores.xxx', 'console.stores.xxx'];
+      const isPlatformDomain = platformDomains.includes(hostname) || 
+                               hostname.split('.')[0] === 'app' ||
+                               port === '3000';
+      
+      setIsPlatform(isPlatformDomain);
+    }
+  }, []);
+
+  // Handle session expired message from URL params
+  useEffect(() => {
+    const reason = searchParams.get('reason');
+    if (reason === 'expired') {
+      setSessionMessage('Your session has expired. Please login again.');
+      // Clear any stale auth data
+      AuthGuard.clearAuthData();
+      AuthGuard.reset();
+    }
+  }, [searchParams]);
 
   const {
     register,
@@ -38,8 +68,13 @@ export default function LoginPage() {
       const response = await authApi.login(data);
       setAuth(response.user, response.accessToken);
 
+      // Reset AuthGuard after successful login
+      AuthGuard.reset();
+
       // Redirect based on role
-      if (response.user.role === 'ADMIN') {
+      if (response.user.role === 'SUPER_ADMIN') {
+        router.push('/platform');
+      } else if (response.user.role === 'ADMIN') {
         router.push('/admin');
       } else if (response.user.role === 'STAFF') {
         router.push('/staff/dashboard');
@@ -57,6 +92,12 @@ export default function LoginPage() {
     <div className="bg-card border rounded-lg shadow-lg p-8">
       <h2 className="text-2xl font-bold mb-6">Sign In</h2>
 
+      {sessionMessage && (
+        <div className="bg-amber-50 border border-amber-500 text-amber-700 px-4 py-3 rounded mb-4">
+          {sessionMessage}
+        </div>
+      )}
+
       {error && (
         <div className="bg-red-50 border border-red-500 text-red-700 px-4 py-3 rounded mb-4">
           {error}
@@ -72,7 +113,9 @@ export default function LoginPage() {
             {...register('email')}
             type="email"
             id="email"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+              isPlatform ? 'focus:ring-blue-600' : 'focus:ring-primary'
+            }`}
             placeholder="you@example.com"
             disabled={isLoading}
           />
@@ -89,7 +132,9 @@ export default function LoginPage() {
             {...register('password')}
             type="password"
             id="password"
-            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+              isPlatform ? 'focus:ring-blue-600' : 'focus:ring-primary'
+            }`}
             placeholder="••••••••"
             disabled={isLoading}
           />
@@ -101,7 +146,11 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-medium hover:opacity-90 transition disabled:opacity-50"
+          className={`w-full py-3 rounded-lg font-medium hover:opacity-90 transition disabled:opacity-50 ${
+            isPlatform 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-primary text-primary-foreground'
+          }`}
         >
           {isLoading ? 'Signing in...' : 'Sign In'}
         </button>
@@ -110,7 +159,12 @@ export default function LoginPage() {
       <div className="mt-6 text-center">
         <p className="text-sm text-muted-foreground">
           Don't have an account?{' '}
-          <Link href="/register" className="text-primary hover:underline font-medium">
+          <Link 
+            href="/register" 
+            className={`hover:underline font-medium ${
+              isPlatform ? 'text-blue-600' : 'text-primary'
+            }`}
+          >
             Sign up
           </Link>
         </p>
@@ -129,6 +183,9 @@ export default function LoginPage() {
             </div>
             <div className="bg-muted/50 p-2 rounded">
               <strong>Admin:</strong> admin@omegaafroshop.com / Admin123!
+            </div>
+            <div className="bg-muted/50 p-2 rounded">
+              <strong>Super Admin:</strong> superadmin@omegaafroshop.com / SuperAdmin123!
             </div>
           </div>
         </div>

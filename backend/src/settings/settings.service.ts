@@ -30,50 +30,141 @@ export interface PaymentMethodsConfig {
   };
 }
 
+/**
+ * Settings that only SUPER_ADMIN can manage at the platform level.
+ * Tenants cannot override these.
+ */
+const PLATFORM_ONLY_KEYS = new Set([
+  'platform_name',
+  'platform_maintenance_mode',
+  'default_trial_days',
+  'default_plan_id',
+  'marketplace_enabled',
+  'marketplace_commission_percent',
+  'global_rate_limit',
+  'signup_enabled',
+]);
+
 @Injectable()
 export class SettingsService {
   constructor(private prisma: PrismaService) {}
 
-  async getSetting(key: string): Promise<string | null> {
-    const setting = await this.prisma.systemSettings.findUnique({
-      where: { key },
+  /**
+   * Get a setting value with tenant → platform fallback.
+   * 1. If tenantId provided, look for tenant-specific value first
+   * 2. Fall back to platform default (tenantId IS NULL)
+   * 3. Return null if neither exists
+   */
+  async getSetting(key: string, tenantId?: string): Promise<string | null> {
+    if (tenantId) {
+      // Try tenant-specific first
+      const tenantSetting = await this.prisma.systemSettings.findFirst({
+        where: { key, tenantId },
+      });
+      if (tenantSetting) return tenantSetting.value;
+    }
+
+    // Fall back to platform default (tenantId = null)
+    const platformSetting = await this.prisma.systemSettings.findFirst({
+      where: { key, tenantId: null },
+    });
+    return platformSetting?.value || null;
+  }
+
+  /**
+   * Get a platform-level setting only (no tenant fallback).
+   */
+  async getPlatformSetting(key: string): Promise<string | null> {
+    const setting = await this.prisma.systemSettings.findFirst({
+      where: { key, tenantId: null },
     });
     return setting?.value || null;
   }
 
-  async setSetting(key: string, value: string, description?: string, updatedBy?: string): Promise<void> {
-    await this.prisma.systemSettings.upsert({
-      where: { key },
-      create: {
-        key,
-        value,
-        description,
-        updatedBy,
-      },
-      update: {
-        value,
-        description,
-        updatedBy,
-      },
+  /**
+   * Set a platform-level setting (tenantId = null).
+   */
+  async setPlatformSetting(key: string, value: string, description?: string, updatedBy?: string): Promise<void> {
+    const existing = await this.prisma.systemSettings.findFirst({
+      where: { key, tenantId: null },
     });
+
+    if (existing) {
+      await this.prisma.systemSettings.update({
+        where: { id: existing.id },
+        data: { value, description, updatedBy },
+      });
+    } else {
+      await this.prisma.systemSettings.create({
+        data: { key, value, description, updatedBy },
+      });
+    }
   }
 
-  async getPaymentMethod(): Promise<PaymentMethod> {
-    const method = await this.getSetting('payment_method');
+  async setSetting(key: string, value: string, description?: string, updatedBy?: string, tenantId?: string): Promise<void> {
+    // Platform-only keys cannot be set at tenant level
+    if (tenantId && PLATFORM_ONLY_KEYS.has(key)) {
+      throw new Error(`Setting '${key}' can only be configured at the platform level`);
+    }
+
+    const existing = await this.prisma.systemSettings.findFirst({
+      where: { key, ...(tenantId ? { tenantId } : { tenantId: null }) },
+    });
+
+    if (existing) {
+      await this.prisma.systemSettings.update({
+        where: { id: existing.id },
+        data: { value, description, updatedBy },
+      });
+    } else {
+      await this.prisma.systemSettings.create({
+        data: { key, value, description, updatedBy, ...(tenantId && { tenantId }) },
+      });
+    }
+  }
+
+  /**
+   * Check if a setting key is platform-only.
+   */
+  isPlatformOnly(key: string): boolean {
+    return PLATFORM_ONLY_KEYS.has(key);
+  }
+
+  /**
+   * Get all platform-level settings (for super admin console).
+   */
+  async getAllPlatformSettings(): Promise<Record<string, any>> {
+    const settings = await this.prisma.systemSettings.findMany({
+      where: { tenantId: null },
+    });
+    const result: Record<string, any> = {};
+    for (const setting of settings) {
+      try {
+        result[setting.key] = JSON.parse(setting.value);
+      } catch {
+        result[setting.key] = setting.value;
+      }
+    }
+    return result;
+  }
+
+  async getPaymentMethod(tenantId?: string): Promise<PaymentMethod> {
+    const method = await this.getSetting('payment_method', tenantId);
     return (method as PaymentMethod) || PaymentMethod.STRIPE_CHECKOUT;
   }
 
-  async setPaymentMethod(method: PaymentMethod, updatedBy?: string): Promise<void> {
+  async setPaymentMethod(method: PaymentMethod, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'payment_method',
       method,
       'Payment processing method for checkout',
       updatedBy,
+      tenantId,
     );
   }
 
-  async getPaymentMethodsConfig(): Promise<PaymentMethodsConfig> {
-    const config = await this.getSetting('payment_methods_config');
+  async getPaymentMethodsConfig(tenantId?: string): Promise<PaymentMethodsConfig> {
+    const config = await this.getSetting('payment_methods_config', tenantId);
     
     if (config) {
       try {
@@ -99,73 +190,78 @@ export class SettingsService {
   }
 
   // Social Proof Settings
-  async getProductOrdersInflation(): Promise<number> {
-    const value = await this.getSetting('product_orders_inflation');
+  async getProductOrdersInflation(tenantId?: string): Promise<number> {
+    const value = await this.getSetting('product_orders_inflation', tenantId);
     return value ? parseFloat(value) : 1.0;
   }
 
-  async setProductOrdersInflation(multiplier: number, updatedBy?: string): Promise<void> {
+  async setProductOrdersInflation(multiplier: number, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'product_orders_inflation',
       multiplier.toString(),
       'Global multiplier for product order count display (e.g., 2.5 = show 2.5x actual orders)',
       updatedBy,
+      tenantId,
     );
   }
 
-  async getPromotionUsageInflation(): Promise<number> {
-    const value = await this.getSetting('promotion_usage_inflation');
+  async getPromotionUsageInflation(tenantId?: string): Promise<number> {
+    const value = await this.getSetting('promotion_usage_inflation', tenantId);
     return value ? parseFloat(value) : 1.0;
   }
 
-  async setPromotionUsageInflation(multiplier: number, updatedBy?: string): Promise<void> {
+  async setPromotionUsageInflation(multiplier: number, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'promotion_usage_inflation',
       multiplier.toString(),
       'Global multiplier for promotion usage count display (e.g., 3.0 = show 3x actual usage)',
       updatedBy,
+      tenantId,
     );
   }
 
-  async getShowProductOrderBadges(): Promise<boolean> {
-    const value = await this.getSetting('show_product_order_badges');
+  async getShowProductOrderBadges(tenantId?: string): Promise<boolean> {
+    const value = await this.getSetting('show_product_order_badges', tenantId);
     return value === 'true';
   }
 
-  async setShowProductOrderBadges(enabled: boolean, updatedBy?: string): Promise<void> {
+  async setShowProductOrderBadges(enabled: boolean, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'show_product_order_badges',
       enabled.toString(),
       'Global toggle to show/hide order count badges on all product cards',
       updatedBy,
+      tenantId,
     );
   }
 
-  async getShowPromotionUsageBadges(): Promise<boolean> {
-    const value = await this.getSetting('show_promotion_usage_badges');
+  async getShowPromotionUsageBadges(tenantId?: string): Promise<boolean> {
+    const value = await this.getSetting('show_promotion_usage_badges', tenantId);
     return value === 'true';
   }
 
-  async setShowPromotionUsageBadges(enabled: boolean, updatedBy?: string): Promise<void> {
+  async setShowPromotionUsageBadges(enabled: boolean, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'show_promotion_usage_badges',
       enabled.toString(),
       'Global toggle to show/hide usage count badges on all promotion cards',
       updatedBy,
+      tenantId,
     );
   }
 
-  async setPaymentMethodsConfig(config: PaymentMethodsConfig, updatedBy?: string): Promise<void> {
+  async setPaymentMethodsConfig(config: PaymentMethodsConfig, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'payment_methods_config',
       JSON.stringify(config),
       'Configuration for enabled payment methods',
       updatedBy,
+      tenantId,
     );
   }
 
-  async getEnabledPaymentTypes(): Promise<PaymentType[]> {
-    const config = await this.getPaymentMethodsConfig();
+  async getEnabledPaymentTypes(tenantId?: string): Promise<PaymentType[]> {
+    const config = await this.getPaymentMethodsConfig(tenantId);
     const enabled: PaymentType[] = [];
 
     if (config.card.enabled) {
@@ -181,8 +277,9 @@ export class SettingsService {
     return enabled;
   }
 
-  async getAllSettings(): Promise<Record<string, any>> {
-    const settings = await this.prisma.systemSettings.findMany();
+  async getAllSettings(tenantId?: string): Promise<Record<string, any>> {
+    const where: any = tenantId ? { tenantId } : {};
+    const settings = await this.prisma.systemSettings.findMany({ where });
     const result: Record<string, any> = {};
     
     for (const setting of settings) {
@@ -198,91 +295,97 @@ export class SettingsService {
     return result;
   }
 
-  async getGuestCheckoutEnabled(): Promise<boolean> {
-    const enabled = await this.getSetting('guest_checkout_enabled');
+  async getGuestCheckoutEnabled(tenantId?: string): Promise<boolean> {
+    const enabled = await this.getSetting('guest_checkout_enabled', tenantId);
     return enabled === 'true' || enabled === null; // Default to true
   }
 
-  async setGuestCheckoutEnabled(enabled: boolean, updatedBy?: string): Promise<void> {
+  async setGuestCheckoutEnabled(enabled: boolean, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'guest_checkout_enabled',
       enabled.toString(),
       'Allow customers to checkout without creating an account',
       updatedBy,
+      tenantId,
     );
   }
 
-  async getEmailNotificationsEnabled(): Promise<boolean> {
-    const enabled = await this.getSetting('email_notifications_enabled');
+  async getEmailNotificationsEnabled(tenantId?: string): Promise<boolean> {
+    const enabled = await this.getSetting('email_notifications_enabled', tenantId);
     return enabled === 'true' || enabled === null; // Default to true
   }
 
-  async setEmailNotificationsEnabled(enabled: boolean, updatedBy?: string): Promise<void> {
+  async setEmailNotificationsEnabled(enabled: boolean, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'email_notifications_enabled',
       enabled.toString(),
       'Send email notifications to customers for order updates',
       updatedBy,
+      tenantId,
     );
   }
 
-  async getAllowImageUpload(): Promise<boolean> {
-    const enabled = await this.getSetting('allow_image_upload');
+  async getAllowImageUpload(tenantId?: string): Promise<boolean> {
+    const enabled = await this.getSetting('allow_image_upload', tenantId);
     return enabled === 'true' || enabled === null; // Default to true
   }
 
-  async setAllowImageUpload(enabled: boolean, updatedBy?: string): Promise<void> {
+  async setAllowImageUpload(enabled: boolean, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'allow_image_upload',
       enabled.toString(),
       'Allow users to upload images for products',
       updatedBy,
+      tenantId,
     );
   }
 
-  async getAllowImageLink(): Promise<boolean> {
-    const enabled = await this.getSetting('allow_image_link');
+  async getAllowImageLink(tenantId?: string): Promise<boolean> {
+    const enabled = await this.getSetting('allow_image_link', tenantId);
     return enabled === 'true' || enabled === null; // Default to true
   }
 
-  async setAllowImageLink(enabled: boolean, updatedBy?: string): Promise<void> {
+  async setAllowImageLink(enabled: boolean, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'allow_image_link',
       enabled.toString(),
       'Allow users to insert image links for products',
       updatedBy,
+      tenantId,
     );
   }
 
-  async getImageUploadService(): Promise<ImageUploadService> {
-    const service = await this.getSetting('image_upload_service');
+  async getImageUploadService(tenantId?: string): Promise<ImageUploadService> {
+    const service = await this.getSetting('image_upload_service', tenantId);
     return (service as ImageUploadService) || ImageUploadService.IMGBB;
   }
 
-  async setImageUploadService(service: ImageUploadService, updatedBy?: string): Promise<void> {
+  async setImageUploadService(service: ImageUploadService, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'image_upload_service',
       service,
       'Image upload service (imgbb or cloudinary)',
       updatedBy,
+      tenantId,
     );
   }
 
-  async getImgbbApiKey(): Promise<string | null> {
-    return await this.getSetting('imgbb_api_key');
+  async getImgbbApiKey(tenantId?: string): Promise<string | null> {
+    return await this.getSetting('imgbb_api_key', tenantId);
   }
 
-  async setImgbbApiKey(apiKey: string, updatedBy?: string): Promise<void> {
+  async setImgbbApiKey(apiKey: string, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'imgbb_api_key',
       apiKey,
       'ImgBB API key for image uploads',
       updatedBy,
+      tenantId,
     );
   }
 
-  async getCloudinaryConfig(): Promise<{ cloudName: string; apiKey: string; apiSecret: string } | null> {
-    const config = await this.getSetting('cloudinary_config');
+  async getCloudinaryConfig(tenantId?: string): Promise<{ cloudName: string; apiKey: string; apiSecret: string } | null> {
+    const config = await this.getSetting('cloudinary_config', tenantId);
     if (config) {
       try {
         return JSON.parse(config);
@@ -293,12 +396,13 @@ export class SettingsService {
     return null;
   }
 
-  async setCloudinaryConfig(config: { cloudName: string; apiKey: string; apiSecret: string }, updatedBy?: string): Promise<void> {
+  async setCloudinaryConfig(config: { cloudName: string; apiKey: string; apiSecret: string }, updatedBy?: string, tenantId?: string): Promise<void> {
     await this.setSetting(
       'cloudinary_config',
       JSON.stringify(config),
       'Cloudinary configuration for image uploads',
       updatedBy,
+      tenantId,
     );
   }
 

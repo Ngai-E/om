@@ -13,6 +13,7 @@ import { settingsApi } from '@/lib/api/settings';
 import { useAdminProduct, useCategories } from '@/lib/hooks/use-products';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { VariantModal } from '@/components/admin/variant-modal';
+import { tenantFetch } from '@/lib/tenant';
 import { useToast } from '@/lib/hooks/use-toast';
 import { SuccessToast } from '@/components/ui/success-toast';
 import { ErrorToast } from '@/components/ui/error-toast';
@@ -146,7 +147,7 @@ export default function EditProductPage() {
 
     setIsCreatingCategory(true);
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

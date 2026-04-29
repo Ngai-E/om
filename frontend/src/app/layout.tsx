@@ -3,10 +3,13 @@ import Script from "next/script";
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ConditionalLayout } from "@/components/layout/conditional-layout";
+import { TenantProvider } from "@/components/providers/tenant-provider";
+import ErrorBoundary from "@/components/error-boundary";
+import { BrandingApplier } from "@/components/branding/branding-applier";
 
 export const metadata: Metadata = {
-  title: "OMEGA Afro Caribbean Superstore",
-  description: "Your one-stop shop for authentic African and Caribbean groceries",
+  title: "Online Store",
+  description: "Shop online for quality products with fast delivery",
   icons: {
     icon: [
       { url: '/icon.svg', type: 'image/svg+xml' },
@@ -18,28 +21,6 @@ export const metadata: Metadata = {
       { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
     shortcut: '/favicon-32x32.png',
-  },
-  openGraph: {
-    title: "OMEGA Afro Caribbean Superstore",
-    description: "Your one-stop shop for authentic African and Caribbean groceries",
-    url: 'https://www.omegaafro.com',
-    siteName: 'OMEGA Afro Caribbean Superstore',
-    images: [
-      {
-        url: 'https://www.omegaafro.com/omega-logo.png',
-        width: 1200,
-        height: 630,
-        alt: 'OMEGA Afro Caribbean Superstore',
-      },
-    ],
-    locale: 'en_GB',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: "OMEGA Afro Caribbean Superstore",
-    description: "Your one-stop shop for authentic African and Caribbean groceries",
-    images: ['https://www.omegaafro.com/omega-logo.png'],
   },
 };
 
@@ -61,10 +42,15 @@ export default function RootLayout({
           `}
         </Script>
       </head>
-      <body className="font-sans antialiased" suppressHydrationWarning>
-        <QueryProvider>
-          <ConditionalLayout>{children}</ConditionalLayout>
-        </QueryProvider>
+      <body className="font-sans antialiased">
+        <ErrorBoundary>
+          <QueryProvider>
+            <TenantProvider>
+              <BrandingApplier />
+              <ConditionalLayout>{children}</ConditionalLayout>
+            </TenantProvider>
+          </QueryProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

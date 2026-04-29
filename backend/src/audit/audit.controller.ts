@@ -1,9 +1,10 @@
-import { Controller, Get, Query, UseGuards, Param } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, Param, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { AuditService } from './audit.service';
+import { Request } from 'express';
 
 @ApiTags('audit')
 @Controller('audit')
@@ -25,6 +26,7 @@ export class AuditController {
   @ApiQuery({ name: 'limit', required: false })
   @ApiResponse({ status: 200, description: 'Audit logs retrieved successfully' })
   async getAuditLogs(
+    @Req() req: Request,
     @Query('userId') userId?: string,
     @Query('entity') entity?: string,
     @Query('entityId') entityId?: string,
@@ -43,6 +45,7 @@ export class AuditController {
       endDate: endDate ? new Date(endDate) : undefined,
       page: page ? parseInt(page) : 1,
       limit: limit ? parseInt(limit) : 50,
+      tenantId: (req as any).tenantId,
     });
   }
 

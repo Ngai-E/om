@@ -100,14 +100,14 @@ function SuccessContent() {
         </div>
 
         {/* Review Prompt */}
-        <div className="bg-[#036637]/5 border border-[#036637]/20 rounded-lg p-4 mb-6 text-left">
-          <h3 className="font-semibold text-[#036637] mb-2">📝 Share Your Experience</h3>
+        <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 mb-6 text-left">
+          <h3 className="font-semibold text-primary mb-2">📝 Share Your Experience</h3>
           <p className="text-sm text-gray-700 mb-3">
             Once you receive your order, we'd love to hear your feedback! Your reviews help other customers make informed decisions.
           </p>
           <Link
             href="/account/reviews"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#036637] hover:text-[#014D29] transition"
+            className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:text-primary/80 transition"
           >
             View My Reviews
             <ArrowRight className="w-4 h-4" />

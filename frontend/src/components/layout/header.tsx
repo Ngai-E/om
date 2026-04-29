@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { Search, ShoppingCart, User, Menu, X, LogOut, Heart, Home, Tag, Phone, ChevronDown, Grid } from 'lucide-react';
+import { Search, ShoppingCart, User, Menu, X, LogOut, Heart, Home, Tag, Phone, ChevronDown, Grid, Store } from 'lucide-react';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useGuestCartStore } from '@/lib/store/guest-cart-store';
@@ -13,6 +13,8 @@ import { useQuery } from '@tanstack/react-query';
 import { productsApi } from '@/lib/api/products';
 import { promotionsApi } from '@/lib/api/promotions';
 import { useCart } from '@/lib/hooks/use-cart';
+import { useTenant } from '@/components/providers/tenant-provider';
+import { getTenantSlug } from '@/lib/tenant';
 
 export function Header() {
   const router = useRouter();
@@ -22,9 +24,14 @@ export function Header() {
   const { items: guestCartItems } = useGuestCartStore();
   const { items: wishlistItems } = useWishlistStore();
   const { settings } = useSettingsStore();
+  const { tenant, branding } = useTenant();
   
   // Fetch cart data when authenticated to ensure count is up to date
   useCart();
+  
+  // Check if we're on a platform domain (not a tenant store)
+  const currentTenantSlug = getTenantSlug();
+  const isPlatformDomain = !currentTenantSlug; // No tenant slug means we're on platform
   
   // Calculate total cart count (authenticated or guest)
   const totalCartCount = isAuthenticated ? itemCount : guestCartItems.length;
@@ -108,19 +115,22 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 bg-white shadow-md">
       {/* Top Bar */}
-      <div className="bg-omega-green-dark text-white py-2">
+      <div className="bg-primary text-white py-2">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between text-xs md:text-sm">
             <div className="flex items-center gap-4">
-              <span className="font-medium">💰 Prices • 1,000+ Products</span>
-              <span className="hidden md:inline">🎁 Free ATI Programs</span>
+              <span className="font-medium">
+                {settings.promoBanner || tenant?.name || 'Welcome to our store'}
+              </span>
             </div>
-            <div className="flex items-center gap-2">
-              <Phone className="w-3 h-3 md:w-4 md:h-4" />
-              <a href="tel:07355316253" className="hover:text-omega-orange transition">
-                Call us: 07355 316253
-              </a>
-            </div>
+            {settings.phoneNumber && (
+              <div className="flex items-center gap-2">
+                <Phone className="w-3 h-3 md:w-4 md:h-4" />
+                <a href={`tel:${settings.phoneNumber.replace(/\s/g, '')}`} className="hover:text-secondary transition">
+                  Call us: {settings.phoneNumber}
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -131,16 +141,16 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 flex-shrink-0">
             <img 
-              src="/omega-logo.png" 
-              alt="OMEGA Afro Caribbean Superstore" 
+              src={branding?.logoUrl || '/omega-logo.png'} 
+              alt={tenant?.name || 'OMEGA Afro Caribbean Superstore'} 
               className="h-12 w-auto object-contain"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
               }}
             />
-            <div className="hidden font-black text-2xl text-omega-green-dark">
-              OMEGA
+            <div className="hidden font-black text-2xl text-primary">
+              {tenant?.name || 'OMEGA'}
             </div>
           </Link>
 
@@ -211,14 +221,25 @@ export function Header() {
               </Link>
             )}
             
+            {isPlatformDomain && (
+              <Link
+                href="/platform/marketplace"
+                className="flex items-center gap-1 px-3 py-2 text-gray-700 hover:text-primary transition"
+                title="Marketplace"
+              >
+                <Store className="w-5 h-5" />
+                <span className="hidden lg:inline">Marketplace</span>
+              </Link>
+            )}
+            
             <Link
               href="/cart"
-              className="relative flex items-center gap-1 px-3 py-2 text-gray-700 hover:text-omega-green-dark transition"
+              className="relative flex items-center gap-1 px-3 py-2 text-gray-700 hover:text-primary transition"
               title="Cart"
             >
               <ShoppingCart className="w-5 h-5" />
               {totalCartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-omega-orange text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
+                <span className="absolute -top-1 -right-1 bg-secondary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-semibold">
                   {totalCartCount}
                 </span>
               )}
@@ -226,7 +247,7 @@ export function Header() {
 
             <Link
               href="/wishlist"
-              className="relative flex items-center gap-1 px-3 py-2 text-gray-700 hover:text-omega-green-dark transition"
+              className="relative flex items-center gap-1 px-3 py-2 text-gray-700 hover:text-primary transition"
               title="Wishlist"
             >
               <Heart className="w-5 h-5" />
@@ -242,21 +263,21 @@ export function Header() {
                 {(user?.role === 'ADMIN' || user?.role === 'STAFF') && (
                   <Link
                     href={getDashboardUrl()}
-                    className="px-4 py-2 bg-omega-green-dark text-white rounded-lg hover:bg-omega-green transition font-medium"
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition font-medium"
                   >
                     Dashboard
                   </Link>
                 )}
                 <Link
                   href="/account"
-                  className="flex items-center gap-1 px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"
+                  className="flex items-center gap-1 px-4 py-2 text-gray-700 hover:text-primary transition font-medium"
                 >
                   <User className="w-4 h-4" />
                   My Account
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="px-6 py-2 bg-omega-orange hover:bg-omega-orange-light text-white rounded-lg font-bold transition"
+                  className="px-6 py-2 bg-secondary hover:bg-secondary/80 text-white rounded-lg font-bold transition"
                 >
                   Logout
                 </button>
@@ -265,13 +286,13 @@ export function Header() {
               <>
                 <Link
                   href="/login"
-                  className="px-4 py-2 text-gray-700 hover:text-omega-green-dark transition font-medium"
+                  className="px-4 py-2 text-gray-700 hover:text-primary transition font-medium"
                 >
                   Sign In
                 </Link>
                 <Link
                   href="/register"
-                  className="px-6 py-2 bg-omega-orange hover:bg-omega-orange-light text-white rounded-lg font-bold transition"
+                  className="px-6 py-2 bg-secondary hover:bg-secondary/80 text-white rounded-lg font-bold transition"
                 >
                   Sign Up
                 </Link>
@@ -320,7 +341,7 @@ export function Header() {
             <div className="relative" ref={categoriesRef}>
               <button
                 onClick={() => setShowCategoriesDropdown(!showCategoriesDropdown)}
-                className="flex items-center gap-2 px-4 py-2 bg-omega-green-dark text-white rounded-lg hover:bg-omega-green transition font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/80 transition font-medium"
               >
                 <Grid className="w-4 h-4" />
                 All Categories
@@ -354,7 +375,7 @@ export function Header() {
                 <Link
                   key={category.id}
                   href={`/products?category=${category.slug}`}
-                  className="px-4 py-2 text-gray-700 hover:text-omega-green-dark hover:bg-white rounded-lg transition font-medium text-sm"
+                  className="px-4 py-2 text-gray-700 hover:text-primary hover:bg-white rounded-lg transition font-medium text-sm"
                 >
                   {category.name}
                 </Link>
@@ -364,7 +385,7 @@ export function Header() {
             {/* Shop All Link */}
             <Link
               href="/products"
-              className="ml-auto px-4 py-2 text-omega-green-dark hover:text-omega-green font-medium text-sm flex items-center gap-1"
+              className="ml-auto px-4 py-2 text-primary hover:text-primary/80 font-medium text-sm flex items-center gap-1"
             >
               <Home className="w-4 h-4" />
               Shop All
@@ -406,7 +427,7 @@ export function Header() {
                 <Link
                   href="/products"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-2.5 text-omega-green-dark hover:bg-gray-100 rounded-lg font-medium"
+                  className="block px-4 py-2.5 text-primary hover:bg-gray-100 rounded-lg font-medium"
                 >
                   View All Categories →
                 </Link>
@@ -428,6 +449,18 @@ export function Header() {
               </Link>
             )}
             
+            {/* Only show Marketplace on platform domain, not on tenant stores */}
+            {isPlatformDomain && (
+              <Link
+                href="/platform/marketplace"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-4 py-3 hover:bg-gray-100 rounded-lg flex items-center gap-2 font-medium"
+              >
+                <Store className="w-4 h-4" />
+                Marketplace
+              </Link>
+            )}
+            
             {isAuthenticated ? (
               <>
                 <div className="border-t my-2"></div>
@@ -435,7 +468,7 @@ export function Header() {
                   <Link
                     href={getDashboardUrl()}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="block px-4 py-3 bg-green-100 text-green-700 rounded-lg font-medium"
+                    className="block px-4 py-3 bg-primary/10 text-primary rounded-lg font-medium"
                   >
                     Dashboard
                   </Link>

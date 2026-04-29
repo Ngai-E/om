@@ -1,9 +1,10 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { PrismaService } from '../prisma/prisma.service';
+import { Request } from 'express';
 
 @ApiTags('delivery-slots')
 @Controller('delivery-slots')
@@ -13,7 +14,8 @@ export class DeliveryTemplatesController {
   // Get available slots for a specific date (public)
   @Get('available')
   @ApiOperation({ summary: 'Get available delivery slots for a date' })
-  async getAvailableSlots(@Query('date') dateStr: string) {
+  async getAvailableSlots(@Req() req: Request, @Query('date') dateStr: string) {
+    const tenantId = (req as any).tenantId;
     const date = new Date(dateStr);
     const dayOfWeek = date.getDay();
 
@@ -22,6 +24,7 @@ export class DeliveryTemplatesController {
       where: {
         dayOfWeek,
         isActive: true,
+        ...(tenantId && { tenantId }),
       },
     });
 
@@ -33,6 +36,7 @@ export class DeliveryTemplatesController {
 
     const overrides = await this.prisma.deliverySlotOverride.findMany({
       where: {
+        ...(tenantId && { tenantId }),
         date: {
           gte: startOfDay,
           lt: endOfDay,
@@ -90,8 +94,10 @@ export class DeliveryTemplatesController {
   @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all delivery slot templates (Admin)' })
-  async getTemplates() {
+  async getTemplates(@Req() req: Request) {
+    const tenantId = (req as any).tenantId;
     return this.prisma.deliverySlotTemplate.findMany({
+      where: { ...(tenantId && { tenantId }) },
       orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
     });
   }
@@ -102,13 +108,16 @@ export class DeliveryTemplatesController {
   @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create delivery slot template (Admin)' })
-  async createTemplate(@Body() data: {
+  async createTemplate(@Req() req: Request, @Body() data: {
     dayOfWeek: number;
     startTime: string;
     endTime: string;
     capacity: number;
   }) {
-    return this.prisma.deliverySlotTemplate.create({ data });
+    const tenantId = (req as any).tenantId;
+    return this.prisma.deliverySlotTemplate.create({
+      data: { ...data, ...(tenantId && { tenantId }) },
+    });
   }
 
   // Admin: Update template
@@ -144,13 +153,14 @@ export class DeliveryTemplatesController {
   @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create delivery slot override (Admin)' })
-  async createOverride(@Body() data: {
+  async createOverride(@Req() req: Request, @Body() data: {
     date: string;
     startTime: string;
     endTime: string;
     capacity?: number;
     isDisabled?: boolean;
   }) {
+    const tenantId = (req as any).tenantId;
     return this.prisma.deliverySlotOverride.create({
       data: {
         date: new Date(data.date),
@@ -158,6 +168,7 @@ export class DeliveryTemplatesController {
         endTime: data.endTime,
         capacity: data.capacity || 10,
         isDisabled: data.isDisabled || false,
+        ...(tenantId && { tenantId }),
       },
     });
   }
@@ -168,8 +179,9 @@ export class DeliveryTemplatesController {
   @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get delivery slot overrides (Admin)' })
-  async getOverrides(@Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
-    const where: any = {};
+  async getOverrides(@Req() req: Request, @Query('startDate') startDate?: string, @Query('endDate') endDate?: string) {
+    const tenantId = (req as any).tenantId;
+    const where: any = { ...(tenantId && { tenantId }) };
     
     if (startDate && endDate) {
       where.date = {

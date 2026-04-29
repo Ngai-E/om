@@ -5,8 +5,9 @@ export interface User {
   firstName: string;
   lastName: string;
   phone?: string;
-  role: 'CUSTOMER' | 'STAFF' | 'ADMIN';
+  role: 'CUSTOMER' | 'STAFF' | 'ADMIN' | 'SUPER_ADMIN';
   permissions?: string[]; // Fine-grained permissions for staff (e.g., ['inventory', 'reports'])
+  tenantSlug?: string | null; // The tenant this user belongs to
   emailVerified: boolean;
   isActive: boolean;
   createdAt: string;
@@ -226,4 +227,29 @@ export interface ApiError {
   message: string;
   statusCode: number;
   error?: string;
+}
+
+// Testimonial types
+export interface Testimonial {
+  id: string;
+  title?: string;
+  description?: string;
+  videoUrl: string;
+  thumbnailUrl?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+// Review types
+export interface Review {
+  id: string;
+  productId: string;
+  product: Product;
+  userId: string;
+  user: User;
+  rating: number;
+  title?: string;
+  comment: string;
+  isPublished: boolean;
+  createdAt: string;
 }

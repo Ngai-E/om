@@ -12,6 +12,7 @@ export class CustomersService {
     isBlocked?: boolean;
     page?: number;
     limit?: number;
+    tenantId?: string;
   }) {
     const page = filters?.page || 1;
     const limit = filters?.limit || 50;
@@ -20,6 +21,7 @@ export class CustomersService {
     const where: any = {
       role: 'CUSTOMER',
       isGuest: false,
+      ...(filters?.tenantId && { tenantId: filters.tenantId }),
     };
 
     if (filters?.search) {
@@ -336,7 +338,7 @@ export class CustomersService {
     });
   }
 
-  async getCustomerStats() {
+  async getCustomerStats(tenantId?: string) {
     const [
       totalCustomers,
       activeCustomers,
@@ -345,13 +347,14 @@ export class CustomersService {
       newCustomersThisMonth,
     ] = await Promise.all([
       this.prisma.user.count({
-        where: { role: 'CUSTOMER', isGuest: false },
+        where: { role: 'CUSTOMER', isGuest: false, ...(tenantId && { tenantId }) },
       }),
       this.prisma.user.count({
         where: {
           role: 'CUSTOMER',
           isGuest: false,
           isActive: true,
+          ...(tenantId && { tenantId }),
         },
       }),
       this.prisma.customerProfile.count({
@@ -368,6 +371,7 @@ export class CustomersService {
         where: {
           role: 'CUSTOMER',
           isGuest: false,
+          ...(tenantId && { tenantId }),
           createdAt: {
             gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
           },

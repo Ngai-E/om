@@ -367,6 +367,179 @@ export class LicensingService {
   }
 
   // ============================================
+  // TENANT ENTITLEMENTS
+  // ============================================
+
+  /**
+   * Get the active license for a tenant.
+   * Returns null if no active license exists (e.g., expired trial).
+   */
+  async getTenantLicense(tenantId: string) {
+    return this.prisma.license.findFirst({
+      where: {
+        tenantId,
+        status: 'ACTIVE',
+      },
+      include: { package: true },
+      orderBy: { issuedAt: 'desc' },
+    });
+  }
+
+  /**
+   * Get full entitlements for a tenant (license + package features + usage).
+   */
+  async getTenantEntitlements(tenantId: string) {
+    const license = await this.getTenantLicense(tenantId);
+
+    if (!license) {
+      return {
+        hasActiveLicense: false,
+        tier: null,
+        features: {},
+        limits: {
+          orders: { current: 0, max: 0 },
+          users: { current: 0, max: 0 },
+          products: { current: 0, max: 0 },
+        },
+        trial: false,
+        expiresAt: null,
+      };
+    }
+
+    const pkg = license.package;
+    const features = (pkg.features as Record<string, boolean>) || {};
+
+    // Check if tenant is on trial via Tenant.billingStatus
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { billingStatus: true, trialEndsAt: true },
+    });
+
+    return {
+      hasActiveLicense: true,
+      tier: pkg.tier,
+      packageName: pkg.name,
+      features,
+      limits: {
+        orders: { current: license.currentOrders, max: pkg.maxOrders },
+        users: { current: license.currentUsers, max: pkg.maxUsers },
+        products: { current: license.currentProducts, max: pkg.maxProducts },
+      },
+      trial: tenant?.billingStatus === 'TRIAL',
+      trialEndsAt: tenant?.trialEndsAt,
+      expiresAt: license.expiresAt,
+    };
+  }
+
+  /**
+   * Check if a tenant has access to a specific feature.
+   * Returns true if no license exists (grace / free tier fallback).
+   */
+  async checkTenantFeature(tenantId: string, featureKey: string): Promise<boolean> {
+    const license = await this.getTenantLicense(tenantId);
+    if (!license) return false;
+
+    const features = (license.package.features as Record<string, boolean>) || {};
+    return features[featureKey] === true;
+  }
+
+  /**
+   * Check if a tenant is within a specific usage limit.
+   * Returns { allowed: true } if within limit or limit is null (unlimited).
+   * Returns { allowed: false, reason } if at/over limit.
+   */
+  async checkTenantLimit(
+    tenantId: string,
+    limitKey: 'orders' | 'users' | 'products',
+  ): Promise<{ allowed: boolean; reason?: string; current?: number; max?: number | null }> {
+    const license = await this.getTenantLicense(tenantId);
+
+    // No active license → block
+    if (!license) {
+      return { allowed: false, reason: 'No active subscription' };
+    }
+
+    const pkg = license.package;
+    let current: number;
+    let max: number | null;
+
+    switch (limitKey) {
+      case 'orders':
+        current = license.currentOrders;
+        max = pkg.maxOrders;
+        break;
+      case 'users':
+        current = license.currentUsers;
+        max = pkg.maxUsers;
+        break;
+      case 'products':
+        current = license.currentProducts;
+        max = pkg.maxProducts;
+        break;
+    }
+
+    // null max = unlimited
+    if (max === null) {
+      return { allowed: true, current, max };
+    }
+
+    if (current >= max) {
+      return {
+        allowed: false,
+        reason: `${limitKey} limit reached: ${current}/${max}`,
+        current,
+        max,
+      };
+    }
+
+    return { allowed: true, current, max };
+  }
+
+  /**
+   * Increment a usage counter for a tenant's active license.
+   */
+  async incrementTenantUsage(
+    tenantId: string,
+    metric: 'orders' | 'users' | 'products',
+  ) {
+    const license = await this.getTenantLicense(tenantId);
+    if (!license) return;
+
+    const field = {
+      orders: 'currentOrders',
+      users: 'currentUsers',
+      products: 'currentProducts',
+    }[metric] as 'currentOrders' | 'currentUsers' | 'currentProducts';
+
+    await this.prisma.license.update({
+      where: { id: license.id },
+      data: { [field]: { increment: 1 } },
+    });
+  }
+
+  /**
+   * Decrement a usage counter for a tenant's active license.
+   */
+  async decrementTenantUsage(
+    tenantId: string,
+    metric: 'orders' | 'users' | 'products',
+  ) {
+    const license = await this.getTenantLicense(tenantId);
+    if (!license) return;
+
+    const field = {
+      orders: 'currentOrders',
+      users: 'currentUsers',
+      products: 'currentProducts',
+    }[metric] as 'currentOrders' | 'currentUsers' | 'currentProducts';
+
+    await this.prisma.license.update({
+      where: { id: license.id },
+      data: { [field]: { decrement: 1 } },
+    });
+  }
+
+  // ============================================
   // STATISTICS
   // ============================================
 

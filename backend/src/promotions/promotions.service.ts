@@ -18,11 +18,11 @@ export class PromotionsService {
   // CRUD OPERATIONS
   // ============================================
 
-  async create(dto: CreatePromotionDto, adminId: string) {
+  async create(dto: CreatePromotionDto, adminId: string, tenantId?: string) {
     // Validate promo code uniqueness if provided
     if (dto.code) {
-      const existing = await this.prisma.promotion.findUnique({
-        where: { code: dto.code },
+      const existing = await this.prisma.promotion.findFirst({
+        where: { code: dto.code, ...(tenantId && { tenantId }) },
       });
       if (existing) {
         throw new BadRequestException('Promo code already exists');
@@ -41,6 +41,7 @@ export class PromotionsService {
 
     const promotion = await this.prisma.promotion.create({
       data: {
+        ...(tenantId && { tenantId }),
         name: dto.name,
         description: dto.description,
         imageUrl: dto.imageUrl,
@@ -72,6 +73,7 @@ export class PromotionsService {
   }
 
   async findAll(filters?: {
+    tenantId?: string;
     status?: string;
     search?: string;
     page?: number;
@@ -81,7 +83,11 @@ export class PromotionsService {
     const limit = filters?.limit || 50;
     const skip = (page - 1) * limit;
 
-    const where: Prisma.PromotionWhereInput = {};
+    const where: any = {};
+
+    if (filters?.tenantId) {
+      where.tenantId = filters.tenantId;
+    }
 
     if (filters?.status) {
       where.status = filters.status as any;
@@ -173,9 +179,9 @@ export class PromotionsService {
     return promotions;
   }
 
-  async findByCode(code: string) {
-    const promotion = await this.prisma.promotion.findUnique({
-      where: { code },
+  async findByCode(code: string, tenantId?: string) {
+    const promotion = await this.prisma.promotion.findFirst({
+      where: { code, ...(tenantId && { tenantId }) },
     });
 
     if (!promotion) {
@@ -185,10 +191,11 @@ export class PromotionsService {
     return promotion;
   }
 
-  async getActivePromotions() {
+  async getActivePromotions(tenantId?: string) {
     const promotions = await this.prisma.promotion.findMany({
       where: {
         status: 'ACTIVE',
+        ...(tenantId && { tenantId }),
         OR: [
           { startAt: null },
           { startAt: { lte: new Date() } },
@@ -278,13 +285,13 @@ export class PromotionsService {
     return eligiblePromotions;
   }
 
-  async update(id: string, dto: UpdatePromotionDto, adminId: string) {
+  async update(id: string, dto: UpdatePromotionDto, adminId: string, tenantId?: string) {
     const existing = await this.findOne(id);
 
     // Validate promo code uniqueness if changed
     if (dto.code && dto.code !== existing.code) {
-      const codeExists = await this.prisma.promotion.findUnique({
-        where: { code: dto.code },
+      const codeExists = await this.prisma.promotion.findFirst({
+        where: { code: dto.code, ...(tenantId && { tenantId }) },
       });
       if (codeExists) {
         throw new BadRequestException('Promo code already exists');

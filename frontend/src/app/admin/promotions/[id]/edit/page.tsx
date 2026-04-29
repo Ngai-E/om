@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
+import { tenantFetch } from '@/lib/tenant';
 
 export default function EditPromotionPage() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function EditPromotionPage() {
   const { data: settings } = useQuery({
     queryKey: ['settings'],
     queryFn: async () => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/settings`);
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/settings`);
       return response.json();
     },
   });

@@ -2,34 +2,38 @@
 
 import Link from 'next/link';
 import { AdminLayout } from '@/components/admin/admin-layout';
-import { Settings, Store, Bell, CreditCard, Users, Shield, Mail, ShoppingCart, Database, TrendingUp } from 'lucide-react';
+import { Settings, Store, Bell, CreditCard, Users, Shield, Mail, ShoppingCart, Database, TrendingUp, Paintbrush } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { useSettingsStore } from '@/lib/store/settings-store';
+import { useTenant } from '@/components/providers/tenant-provider';
 import { PaymentsTab } from '@/components/admin/settings/payments-tab';
+import { BrandingTab } from '@/components/admin/settings/branding-tab';
 import { SystemCleanupSection } from '@/components/admin/settings/system-cleanup-section';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '@/lib/api/client';
+import { settingsApi } from '@/lib/api/settings';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('store');
   const { toast, success, error, hideToast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
   const { settings, updateSettings } = useSettingsStore();
+  const { tenant } = useTenant();
 
   const [formData, setFormData] = useState({
-    storeName: settings.storeName,
-    storeEmail: settings.storeEmail,
-    phoneNumber: settings.phoneNumber,
-    whatsappNumber: settings.whatsappNumber || '+44 7535 316253',
-    address: settings.address,
-    deliveryMessage: settings.deliveryMessage,
-    promoBanner: settings.promoBanner,
-    aboutUs: settings.aboutUs,
-    contactEmail: settings.contactEmail,
-    openingHours: settings.openingHours,
-    googleMapsEmbedUrl: settings.googleMapsEmbedUrl,
+    storeName: settings.storeName || '',
+    storeEmail: settings.storeEmail || '',
+    phoneNumber: settings.phoneNumber || '',
+    whatsappNumber: settings.whatsappNumber || '',
+    address: settings.address || '',
+    deliveryMessage: settings.deliveryMessage || '',
+    promoBanner: settings.promoBanner || '',
+    aboutUs: settings.aboutUs || '',
+    contactEmail: settings.contactEmail || '',
+    openingHours: settings.openingHours || '',
+    googleMapsEmbedUrl: settings.googleMapsEmbedUrl || '',
   });
 
   // Image upload configuration state
@@ -40,29 +44,36 @@ export default function SettingsPage() {
     apiSecret: '',
   });
 
-  // Sync form data with settings when they change
+  // Sync form data with backend settings when they change, fall back to tenant info for new stores
   useEffect(() => {
     setFormData({
-      storeName: settings.storeName,
-      storeEmail: settings.storeEmail,
-      phoneNumber: settings.phoneNumber,
-      whatsappNumber: settings.whatsappNumber || '+44 7535 316253',
-      address: settings.address,
-      deliveryMessage: settings.deliveryMessage,
-      promoBanner: settings.promoBanner,
-      aboutUs: settings.aboutUs,
-      contactEmail: settings.contactEmail,
-      openingHours: settings.openingHours,
-      googleMapsEmbedUrl: settings.googleMapsEmbedUrl,
+      storeName: publicSettings?.store_name || settings.storeName || tenant?.name || '',
+      storeEmail: publicSettings?.store_email || settings.storeEmail || tenant?.email || '',
+      phoneNumber: publicSettings?.phone_number || settings.phoneNumber || '',
+      whatsappNumber: publicSettings?.whatsapp_number || settings.whatsappNumber || '',
+      address: publicSettings?.store_address || settings.address || '',
+      deliveryMessage: publicSettings?.delivery_banner_message || settings.deliveryMessage || '',
+      promoBanner: publicSettings?.promotional_banner || settings.promoBanner || '',
+      aboutUs: publicSettings?.about_us || settings.aboutUs || tenant?.description || '',
+      contactEmail: publicSettings?.contact_email || settings.contactEmail || tenant?.email || '',
+      openingHours: publicSettings?.opening_hours || settings.openingHours || '',
+      googleMapsEmbedUrl: publicSettings?.google_maps_embed_url || settings.googleMapsEmbedUrl || '',
     });
-  }, [settings]);
+  }, [publicSettings, settings, tenant]);
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
     try {
+      // Save to backend API
+      const { data } = await apiClient.put('/settings', formData);
+      
       // Update the settings store (persists to localStorage)
       updateSettings(formData);
-      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['public-settings'] });
+      queryClient.invalidateQueries({ queryKey: ['system-settings'] });
+      
       success('Settings saved successfully! Changes will appear on the homepage immediately.');
       
       // Force a small delay to ensure localStorage is updated
@@ -71,7 +82,8 @@ export default function SettingsPage() {
         window.dispatchEvent(new Event('storage'));
       }, 100);
     } catch (err) {
-      error('Failed to save settings');
+      console.error('Failed to save settings:', err);
+      error('Failed to save settings. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -86,6 +98,12 @@ export default function SettingsPage() {
       const { data } = await apiClient.get('/settings');
       return data;
     },
+  });
+
+  // Fetch public settings (including store information) from backend
+  const { data: publicSettings } = useQuery({
+    queryKey: ['public-settings'],
+    queryFn: () => settingsApi.getPublicSettings(),
   });
 
   // Toggle guest checkout
@@ -195,6 +213,7 @@ export default function SettingsPage() {
 
   const tabs = [
     { id: 'store', label: 'Store Settings', icon: Store },
+    { id: 'branding', label: 'Branding', icon: Paintbrush },
     { id: 'checkout', label: 'Checkout', icon: ShoppingCart },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'payments', label: 'Payments', icon: CreditCard },
@@ -419,159 +438,18 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Image Upload Service Configuration */}
+            {/* Note about platform-managed image upload */}
             {systemSettings?.allow_image_upload && (
-              <div className="bg-white border rounded-lg p-6">
-                <h2 className="text-lg font-bold mb-4">Image Upload Service</h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Choose which service to use for uploading product images.
-                </p>
-
-                {/* Service Selection */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium mb-2">Upload Service</label>
-                  <select
-                    value={systemSettings?.image_upload_service || 'imgbb'}
-                    onChange={(e) => updateUploadService.mutate(e.target.value as 'imgbb' | 'cloudinary')}
-                    disabled={updateUploadService.isPending}
-                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="imgbb">ImgBB (Free, No Account Required)</option>
-                    <option value="cloudinary">Cloudinary (Requires Account)</option>
-                  </select>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 text-blue-600 mt-0.5">ℹ️</div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-blue-900 mb-1">Platform-Managed Image Upload</h3>
+                    <p className="text-sm text-blue-700">
+                      Image upload service is configured at the platform level. Contact your platform administrator if you need to change the upload service or API keys.
+                    </p>
+                  </div>
                 </div>
-
-                {/* ImgBB Configuration */}
-                {systemSettings?.image_upload_service === 'imgbb' && (
-                  <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div>
-                      <h3 className="font-medium mb-2">ImgBB Configuration</h3>
-                      <p className="text-sm text-gray-600 mb-3">
-                        Get your free API key from{' '}
-                        <a
-                          href="https://api.imgbb.com/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          ImgBB API
-                        </a>
-                      </p>
-                      <label className="block text-sm font-medium mb-2">API Key</label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={imgbbApiKey}
-                          onChange={(e) => setImgbbApiKey(e.target.value)}
-                          placeholder="Enter your ImgBB API key"
-                          className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                        />
-                        <button
-                          onClick={() => {
-                            if (imgbbApiKey.trim()) {
-                              updateImgbbKey.mutate(imgbbApiKey.trim());
-                              setImgbbApiKey('');
-                            }
-                          }}
-                          disabled={updateImgbbKey.isPending || !imgbbApiKey.trim()}
-                          className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {updateImgbbKey.isPending ? 'Saving...' : 'Save'}
-                        </button>
-                      </div>
-                      {systemSettings?.imgbb_api_key && (
-                        <p className="text-sm text-green-600 mt-2">✓ API key configured</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Cloudinary Configuration */}
-                {systemSettings?.image_upload_service === 'cloudinary' && (
-                  <div className="space-y-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-                    <div>
-                      <h3 className="font-medium mb-2">Cloudinary Configuration</h3>
-                      <p className="text-sm text-gray-600 mb-3">
-                        Get your credentials from{' '}
-                        <a
-                          href="https://cloudinary.com/console"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-purple-600 hover:underline"
-                        >
-                          Cloudinary Console
-                        </a>
-                      </p>
-
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Cloud Name</label>
-                          <input
-                            type="text"
-                            value={cloudinaryConfig.cloudName}
-                            onChange={(e) =>
-                              setCloudinaryConfig({ ...cloudinaryConfig, cloudName: e.target.value })
-                            }
-                            placeholder="your-cloud-name"
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-1">API Key</label>
-                          <input
-                            type="text"
-                            value={cloudinaryConfig.apiKey}
-                            onChange={(e) =>
-                              setCloudinaryConfig({ ...cloudinaryConfig, apiKey: e.target.value })
-                            }
-                            placeholder="123456789012345"
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-medium mb-1">API Secret</label>
-                          <input
-                            type="password"
-                            value={cloudinaryConfig.apiSecret}
-                            onChange={(e) =>
-                              setCloudinaryConfig({ ...cloudinaryConfig, apiSecret: e.target.value })
-                            }
-                            placeholder="Enter API secret"
-                            className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                          />
-                        </div>
-
-                        <button
-                          onClick={() => {
-                            if (
-                              cloudinaryConfig.cloudName.trim() &&
-                              cloudinaryConfig.apiKey.trim() &&
-                              cloudinaryConfig.apiSecret.trim()
-                            ) {
-                              updateCloudinaryConfig.mutate(cloudinaryConfig);
-                              setCloudinaryConfig({ cloudName: '', apiKey: '', apiSecret: '' });
-                            }
-                          }}
-                          disabled={
-                            updateCloudinaryConfig.isPending ||
-                            !cloudinaryConfig.cloudName.trim() ||
-                            !cloudinaryConfig.apiKey.trim() ||
-                            !cloudinaryConfig.apiSecret.trim()
-                          }
-                          className="w-full px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {updateCloudinaryConfig.isPending ? 'Saving...' : 'Save Configuration'}
-                        </button>
-
-                        {systemSettings?.cloudinary_configured && (
-                          <p className="text-sm text-green-600">✓ Cloudinary configured</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
@@ -592,6 +470,11 @@ export default function SettingsPage() {
               </button>
             </div>
           </div>
+        )}
+
+        {/* Branding */}
+        {activeTab === 'branding' && (
+          <BrandingTab onSuccess={success} onError={error} />
         )}
 
         {/* Checkout Settings */}

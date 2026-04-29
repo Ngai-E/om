@@ -9,7 +9,7 @@ export class DeliveryService {
   /**
    * Check if a postcode is in a delivery zone and get delivery fee
    */
-  async checkPostcode(dto: CheckPostcodeDto) {
+  async checkPostcode(dto: CheckPostcodeDto, tenantId?: string) {
     // Normalize postcode (remove spaces, uppercase)
     const normalizedPostcode = dto.postcode.replace(/\s/g, '').toUpperCase();
     
@@ -40,6 +40,7 @@ export class DeliveryService {
     const zone = await this.prisma.deliveryZone.findFirst({
       where: {
         isActive: true,
+        ...(tenantId && { tenantId }),
         postcodePrefix: {
           hasSome: possiblePrefixes,
         },
@@ -70,9 +71,9 @@ export class DeliveryService {
   /**
    * Get all active delivery zones
    */
-  async getZones() {
+  async getZones(tenantId?: string) {
     const zones = await this.prisma.deliveryZone.findMany({
-      where: { isActive: true },
+      where: { isActive: true, ...(tenantId && { tenantId }) },
       orderBy: { name: 'asc' },
     });
 
@@ -92,8 +93,8 @@ export class DeliveryService {
   /**
    * Get available delivery slots
    */
-  async getAvailableSlots(dto: GetDeliverySlotsDto) {
-    const where: any = { isActive: true };
+  async getAvailableSlots(dto: GetDeliverySlotsDto, tenantId?: string) {
+    const where: any = { isActive: true, ...(tenantId && { tenantId }) };
 
     // Filter by date if provided
     if (dto.date) {
@@ -214,10 +215,10 @@ export class DeliveryService {
   /**
    * Validate cart against delivery zone requirements
    */
-  async validateCartForDelivery(userId: string, addressId?: string) {
+  async validateCartForDelivery(userId: string, addressId?: string, tenantId?: string) {
     // Get user's cart
     const cart = await this.prisma.cart.findFirst({
-      where: { userId },
+      where: { userId, ...(tenantId && { tenantId }) },
       include: {
         items: {
           include: {

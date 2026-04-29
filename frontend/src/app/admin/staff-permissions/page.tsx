@@ -7,6 +7,7 @@ import { AdminLayout } from '@/components/admin/admin-layout';
 import { Shield, User, Check, X } from 'lucide-react';
 import { Toast } from '@/components/ui/toast';
 import { useToast } from '@/hooks/use-toast';
+import { tenantFetch } from '@/lib/tenant';
 
 interface StaffMember {
   id: string;
@@ -48,7 +49,7 @@ export default function StaffPermissionsPage() {
   const updatePermissions = useMutation({
     mutationFn: async ({ staffId, permissions }: { staffId: string; permissions: string[] }) => {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/staff/${staffId}/permissions`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/staff/${staffId}/permissions`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

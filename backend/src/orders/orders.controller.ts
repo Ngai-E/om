@@ -17,10 +17,13 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { TenantRequiredGuard } from '../common/guards/tenant-required.guard';
+import { CurrentTenant } from '../common/decorators/current-tenant.decorator';
+import { TenantContext } from '../common/interfaces/tenant-context.interface';
 
 @ApiTags('orders')
 @Controller('orders')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TenantRequiredGuard)
 @ApiBearerAuth()
 export class OrdersController {
   constructor(private ordersService: OrdersService) {}
@@ -30,8 +33,8 @@ export class OrdersController {
   @ApiResponse({ status: 201, description: 'Order created successfully' })
   @ApiResponse({ status: 400, description: 'Cart is empty or validation failed' })
   @ApiResponse({ status: 404, description: 'Address or delivery slot not found' })
-  async create(@CurrentUser() user: any, @Body() dto: CreateOrderDto) {
-    return this.ordersService.create(user.id, dto);
+  async create(@CurrentTenant() tenant: TenantContext, @CurrentUser() user: any, @Body() dto: CreateOrderDto) {
+    return this.ordersService.create(user.id, dto, tenant.id);
   }
 
   @Get()
@@ -40,11 +43,12 @@ export class OrdersController {
   @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default: 10)' })
   @ApiResponse({ status: 200, description: 'Orders retrieved successfully' })
   async findAll(
+    @CurrentTenant() tenant: TenantContext,
     @CurrentUser() user: any,
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page?: number,
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit?: number,
   ) {
-    return this.ordersService.findAll(user.id, page, limit);
+    return this.ordersService.findAll(user.id, page, limit, tenant.id);
   }
 
   @Get(':id')
@@ -52,8 +56,8 @@ export class OrdersController {
   @ApiParam({ name: 'id', description: 'Order ID' })
   @ApiResponse({ status: 200, description: 'Order found' })
   @ApiResponse({ status: 404, description: 'Order not found' })
-  async findOne(@CurrentUser() user: any, @Param('id') orderId: string) {
-    return this.ordersService.findOne(user.id, orderId);
+  async findOne(@CurrentTenant() tenant: TenantContext, @CurrentUser() user: any, @Param('id') orderId: string) {
+    return this.ordersService.findOne(user.id, orderId, tenant.id);
   }
 
   @Patch(':id/status')
@@ -73,7 +77,7 @@ export class OrdersController {
   @ApiResponse({ status: 200, description: 'Order cancelled' })
   @ApiResponse({ status: 400, description: 'Order cannot be cancelled' })
   @ApiResponse({ status: 404, description: 'Order not found' })
-  async cancel(@CurrentUser() user: any, @Param('id') orderId: string) {
-    return this.ordersService.cancel(user.id, orderId);
+  async cancel(@CurrentTenant() tenant: TenantContext, @CurrentUser() user: any, @Param('id') orderId: string) {
+    return this.ordersService.cancel(user.id, orderId, tenant.id);
   }
 }

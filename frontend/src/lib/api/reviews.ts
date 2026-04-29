@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/v1';
+import apiClient from './client';
 
 export interface Review {
   id: string;
@@ -57,57 +55,40 @@ export interface ApproveReviewDto {
 export const reviewsApi = {
   // Customer endpoints
   createReview: async (data: CreateReviewDto, token: string): Promise<Review> => {
-    const response = await axios.post(`${API_URL}/reviews`, data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await apiClient.post('/reviews', data);
     return response.data;
   },
 
   getMyReviews: async (token: string): Promise<Review[]> => {
-    const response = await axios.get(`${API_URL}/reviews/my-reviews`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await apiClient.get('/reviews/my-reviews');
     return response.data;
   },
 
   deleteReview: async (reviewId: string, token: string): Promise<{ message: string }> => {
-    const response = await axios.delete(`${API_URL}/reviews/${reviewId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await apiClient.delete(`/reviews/${reviewId}`);
     return response.data;
   },
 
   // Public endpoints
   getProductReviews: async (productId: string): Promise<ProductReviewsResponse> => {
-    const response = await axios.get(`${API_URL}/reviews/product/${productId}`);
+    const response = await apiClient.get(`/reviews/product/${productId}`);
     return response.data;
   },
 
   // Admin/Staff endpoints
   getPendingReviews: async (token: string): Promise<Review[]> => {
-    const response = await axios.get(`${API_URL}/reviews/pending`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await apiClient.get('/reviews/pending');
     return response.data;
   },
 
   getAllReviews: async (token: string, status?: string): Promise<Review[]> => {
     const params = status ? { status } : {};
-    const response = await axios.get(`${API_URL}/reviews/all`, {
-      headers: { Authorization: `Bearer ${token}` },
-      params,
-    });
+    const response = await apiClient.get('/reviews/all', { params });
     return response.data;
   },
 
   approveReview: async (reviewId: string, token: string): Promise<Review> => {
-    const response = await axios.patch(
-      `${API_URL}/reviews/${reviewId}/approve`,
-      {},
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    const response = await apiClient.patch(`/reviews/${reviewId}/approve`, {});
     return response.data;
   },
 
@@ -116,13 +97,7 @@ export const reviewsApi = {
     data: ApproveReviewDto,
     token: string
   ): Promise<Review> => {
-    const response = await axios.patch(
-      `${API_URL}/reviews/${reviewId}/reject`,
-      data,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+    const response = await apiClient.patch(`/reviews/${reviewId}/reject`, data);
     return response.data;
   },
 };

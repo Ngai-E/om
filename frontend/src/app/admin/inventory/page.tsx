@@ -6,10 +6,11 @@ import { ArrowLeft, Search, AlertTriangle, Package, TrendingDown, Download, Uplo
 import { useProducts } from '@/lib/hooks/use-products';
 import { AdminLayout } from '@/components/admin/admin-layout';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { productsApi } from '@/lib/api/products';
+import { adminApi } from '@/lib/api/admin';
 import { useToast } from '@/hooks/use-toast';
 import { Toast } from '@/components/ui/toast';
 import { getProductImageUrl } from '@/lib/utils/image';
+import { tenantFetch } from '@/lib/tenant';
 
 export default function InventoryManagementPage() {
   const [searchInput, setSearchInput] = useState('');
@@ -40,7 +41,7 @@ export default function InventoryManagementPage() {
         limit: pageSize.toString(),
       });
       if (searchTerm) params.append('search', searchTerm);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products?${params}`);
+      const res = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/products?${params}`);
       if (!res.ok) throw new Error('Failed to fetch products');
       return res.json();
     },
@@ -48,22 +49,13 @@ export default function InventoryManagementPage() {
 
   const { data: statsData } = useQuery({
     queryKey: ['inventory-stats'],
-    queryFn: async () => {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/inventory/stats`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!res.ok) throw new Error('Failed to fetch inventory stats');
-      return res.json();
-    },
+    queryFn: () => adminApi.getInventoryStats(),
   });
 
   const updateInventory = useMutation({
     mutationFn: async ({ productId, quantity }: { productId: string; quantity: number }) => {
       const token = localStorage.getItem('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId}/inventory`, {
+      const response = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/products/${productId}/inventory`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -71,11 +63,11 @@ export default function InventoryManagementPage() {
         },
         body: JSON.stringify({ quantity, action: 'SET' }),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to update inventory');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -129,8 +121,8 @@ export default function InventoryManagementPage() {
       'Current Stock': item.stock,
       'Low Stock Threshold': 10,
       Price: parseFloat(item.price).toFixed(2),
-      Status: item.stock === 0 ? 'Out of Stock' : 
-              item.stock <= 10 ? 'Low Stock' : 'In Stock',
+      Status: item.stock === 0 ? 'Out of Stock' :
+        item.stock <= 10 ? 'Low Stock' : 'In Stock',
     }));
 
     const headers = Object.keys(csvData[0]);
@@ -159,7 +151,7 @@ export default function InventoryManagementPage() {
         const text = e.target?.result as string;
         const lines = text.split('\n');
         const headers = lines[0].split(',');
-        
+
         // TODO: Parse CSV and update inventory
         success(`CSV file loaded: ${lines.length - 1} rows`);
       } catch (err) {
@@ -315,7 +307,7 @@ export default function InventoryManagementPage() {
             </label>
 
             <div className="flex-1" />
-            
+
             <div className="text-sm text-gray-600 flex items-center gap-2">
               <span className="inline-flex items-center gap-1">
                 <span className="w-3 h-3 rounded-full bg-red-500"></span>
@@ -411,11 +403,10 @@ export default function InventoryManagementPage() {
                               onClick={() => handleStartEdit(item.id, item.stock)}
                               className="group inline-flex items-center gap-2 px-3 py-1 rounded hover:bg-gray-100 transition"
                             >
-                              <span className={`font-bold text-lg ${
-                                isOutOfStock ? 'text-red-600' : 
-                                isLowStock ? 'text-orange-600' : 
-                                'text-green-600'
-                              }`}>
+                              <span className={`font-bold text-lg ${isOutOfStock ? 'text-red-600' :
+                                isLowStock ? 'text-orange-600' :
+                                  'text-green-600'
+                                }`}>
                                 {item.stock}
                               </span>
                               <Edit2 className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition" />

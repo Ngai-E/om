@@ -10,6 +10,7 @@ import { Server, Socket } from 'socket.io';
   cors: {
     origin: [
       'http://localhost:3000',
+      'http://localhost:3001',
       'http://172.20.10.6:3000',
       'https://www.omegaafro.com',
       'https://omegaafro.com',

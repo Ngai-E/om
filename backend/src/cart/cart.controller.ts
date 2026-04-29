@@ -4,10 +4,13 @@ import { CartService } from './cart.service';
 import { AddToCartDto, UpdateCartItemDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { TenantRequiredGuard } from '../common/guards/tenant-required.guard';
+import { CurrentTenant } from '../common/decorators/current-tenant.decorator';
+import { TenantContext } from '../common/interfaces/tenant-context.interface';
 
 @ApiTags('cart')
 @Controller('cart')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, TenantRequiredGuard)
 @ApiBearerAuth()
 export class CartController {
   constructor(private cartService: CartService) {}
@@ -15,8 +18,8 @@ export class CartController {
   @Get()
   @ApiOperation({ summary: 'Get current user cart' })
   @ApiResponse({ status: 200, description: 'Cart retrieved successfully' })
-  async getCart(@CurrentUser() user: any) {
-    return this.cartService.getOrCreateCart(user.id);
+  async getCart(@CurrentTenant() tenant: TenantContext, @CurrentUser() user: any) {
+    return this.cartService.getOrCreateCart(user.id, tenant.id);
   }
 
   @Post('items')
@@ -24,8 +27,8 @@ export class CartController {
   @ApiResponse({ status: 201, description: 'Item added to cart' })
   @ApiResponse({ status: 404, description: 'Product not found' })
   @ApiResponse({ status: 400, description: 'Insufficient stock' })
-  async addItem(@CurrentUser() user: any, @Body() dto: AddToCartDto) {
-    return this.cartService.addItem(user.id, dto);
+  async addItem(@CurrentTenant() tenant: TenantContext, @CurrentUser() user: any, @Body() dto: AddToCartDto) {
+    return this.cartService.addItem(user.id, dto, tenant.id);
   }
 
   @Patch('items/:id')
@@ -34,25 +37,26 @@ export class CartController {
   @ApiResponse({ status: 404, description: 'Cart item not found' })
   @ApiResponse({ status: 400, description: 'Insufficient stock' })
   async updateItem(
+    @CurrentTenant() tenant: TenantContext,
     @CurrentUser() user: any,
     @Param('id') itemId: string,
     @Body() dto: UpdateCartItemDto,
   ) {
-    return this.cartService.updateItem(user.id, itemId, dto);
+    return this.cartService.updateItem(user.id, itemId, dto, tenant.id);
   }
 
   @Delete('items/:id')
   @ApiOperation({ summary: 'Remove item from cart' })
   @ApiResponse({ status: 200, description: 'Item removed from cart' })
   @ApiResponse({ status: 404, description: 'Cart item not found' })
-  async removeItem(@CurrentUser() user: any, @Param('id') itemId: string) {
-    return this.cartService.removeItem(user.id, itemId);
+  async removeItem(@CurrentTenant() tenant: TenantContext, @CurrentUser() user: any, @Param('id') itemId: string) {
+    return this.cartService.removeItem(user.id, itemId, tenant.id);
   }
 
   @Delete()
   @ApiOperation({ summary: 'Clear cart' })
   @ApiResponse({ status: 200, description: 'Cart cleared' })
-  async clearCart(@CurrentUser() user: any) {
-    return this.cartService.clearCart(user.id);
+  async clearCart(@CurrentTenant() tenant: TenantContext, @CurrentUser() user: any) {
+    return this.cartService.clearCart(user.id, tenant.id);
   }
 }
