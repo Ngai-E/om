@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
-// Use different build directories for platform vs tenant apps
-const isPlatform = process.env.PORT === '3000';
-const distDir = isPlatform ? '.next-platform' : '.next-tenant';
+// Use a separate build directory only when explicitly requested (e.g. running
+// the platform app and the tenant app in parallel locally). In production
+// (Vercel/Render) we keep the default `.next` so the deploy provider can find
+// `routes-manifest.json` without extra configuration.
+const distDir =
+  process.env.NEXT_BUILD_DIR ||
+  (process.env.NEXT_PUBLIC_IS_PLATFORM === 'true' ? '.next-platform' : undefined) ||
+  '.next';
 
 const nextConfig: NextConfig = {
   distDir,
