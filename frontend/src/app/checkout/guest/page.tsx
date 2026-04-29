@@ -18,6 +18,8 @@ export default function GuestCheckoutPage() {
   const [fulfillmentType, setFulfillmentType] = useState<'DELIVERY' | 'COLLECTION'>('DELIVERY');
   const [paymentMethod, setPaymentMethod] = useState<'CARD' | 'CASH_ON_DELIVERY' | 'PAY_IN_STORE'>('CASH_ON_DELIVERY');
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     countryCode: '+44',
@@ -34,13 +36,23 @@ export default function GuestCheckoutPage() {
     setIsSubmitting(true);
 
     try {
+      // Build the payload to match GuestCheckoutDto:
+      //  - drop the UI-only `countryCode` field (DTO uses forbidNonWhitelisted)
+      //  - prefix the phone number with the dialing code so the backend stores
+      //    a fully-qualified E.164-style number.
+      const { countryCode, phone, ...rest } = formData;
+      const normalisedPhone = phone.startsWith('+')
+        ? phone.replace(/\s+/g, '')
+        : `${countryCode}${phone.replace(/^0+/, '').replace(/\s+/g, '')}`;
+      const guestPayload = { ...rest, phone: normalisedPhone };
+
       // Step 1: Create/find guest user
       const guestResponse = await tenantFetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/guest/checkout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(guestPayload),
       });
 
       if (!guestResponse.ok) {
@@ -194,6 +206,39 @@ export default function GuestCheckoutPage() {
                 </h2>
 
                 <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        First Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        required
+                        minLength={2}
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="John"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-2">
+                        Last Name *
+                      </label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        required
+                        minLength={2}
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                        placeholder="Doe"
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium mb-2 flex items-center gap-2">
                       <Mail className="w-4 h-4" />
