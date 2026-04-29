@@ -37,12 +37,15 @@ export class AuthRecovery {
   static initialize(): void {
     if (typeof window === 'undefined') return;
 
-    // Check auth health periodically
-    this.startHealthCheck();
-    
+    // NOTE: periodic health check is disabled. It polled relative URLs
+    // (`/api/auth/health`, `/api/auth/validate`, `/api/auth/refresh`) that
+    // do not exist on the Next.js frontend, generating 404s every 5 min.
+    // Recovery already runs on demand from the axios response interceptor
+    // when a real 401 occurs, so the poller adds nothing.
+
     // Listen for storage changes (other tabs)
     window.addEventListener('storage', this.handleStorageChange.bind(this));
-    
+
     // Listen for online/offline events
     window.addEventListener('online', this.handleConnectionChange.bind(this));
     window.addEventListener('offline', this.handleConnectionChange.bind(this));
@@ -229,17 +232,28 @@ export class AuthRecovery {
   private static async clearToken(): Promise<boolean> {
     try {
       const token = localStorage.getItem('token');
-      if (token) {
-        console.log('🗑️ Clearing invalid token');
-        localStorage.removeItem('token');
-        
-        // Try to use refresh token if available
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-          return await this.attemptTokenRefresh(refreshToken);
-        }
+      if (!token) {
+        // Nothing to recover from.
+        return false;
       }
-      return true;
+
+      const refreshToken = localStorage.getItem('refreshToken');
+
+      // ONLY delete the access token if we actually have a refresh token
+      // to swap it for. Otherwise we'd silently log the user out (token
+      // wiped from localStorage, axios interceptor stops sending the
+      // Authorization header) while the persisted auth-store still says
+      // "authenticated" — the UI lies and every subsequent request 401s.
+      if (refreshToken) {
+        console.log('🗑️ Clearing access token, attempting refresh');
+        localStorage.removeItem('token');
+        return await this.attemptTokenRefresh(refreshToken);
+      }
+
+      // No recovery possible. Leave the token in place; the response
+      // interceptor will surface the error normally and the user can
+      // log in again deliberately.
+      return false;
     } catch (error) {
       console.error('Failed to clear token:', error);
       return false;
