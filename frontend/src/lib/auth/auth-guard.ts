@@ -87,10 +87,14 @@ export class AuthGuard {
         };
       
       case 403:
+        // 403 = authenticated but not allowed for this resource (e.g. wrong
+        // role, missing tenant context, feature not enabled). It must NOT
+        // wipe the session or bounce the user to /login — that would log
+        // out a valid admin just because one request lacks permission.
         return {
           code: 'INVALID_TOKEN',
-          message: message || 'Access denied. Invalid credentials.',
-          shouldRedirect: true
+          message: message || 'You do not have permission to access this resource.',
+          shouldRedirect: false
         };
       
       case 404:
