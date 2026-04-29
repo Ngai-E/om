@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 
-const DEFAULT_TENANT_SLUG = 'omega-afro-shop';
+const DEFAULT_TENANT_SLUG = 'omegaafro';
 const PLATFORM_SUBDOMAINS = new Set(['market', 'console', 'api', 'www', 'app']);
 
 /**

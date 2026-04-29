@@ -31,12 +31,19 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Check if we're on platform port (3000) - don't send tenant slug
-    const isPlatform = typeof window !== 'undefined' && window.location.port === '3000';
-    
-    // Add tenant slug header for multi-tenancy (only for tenant app)
+    // Determine whether this client is running inside the platform app
+    // (landing/marketplace/console) — those requests must NOT carry a tenant slug.
+    // In production this is controlled by the explicit NEXT_PUBLIC_IS_PLATFORM flag;
+    // the dev-only fallback treats localhost:3000 as platform.
+    const isPlatform =
+      process.env.NEXT_PUBLIC_IS_PLATFORM === 'true' ||
+      (typeof window !== 'undefined' && window.location.port === '3000');
+
     if (!isPlatform) {
-      config.headers['X-Tenant-Slug'] = getTenantSlug();
+      const slug = getTenantSlug();
+      if (slug) {
+        config.headers['X-Tenant-Slug'] = slug;
+      }
     }
     
     return config;

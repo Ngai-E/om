@@ -4,13 +4,13 @@
  * Resolution order:
  * 1. NEXT_PUBLIC_TENANT_SLUG env var (for local dev override)
  * 2. Subdomain from current hostname ({slug}.stores.xxx)
- * 3. Falls back to 'omega-afro-shop'
+ * 3. Falls back to 'omegaafro'
  *
  * The resolved slug is sent as X-Tenant-Slug header to the backend,
  * where TenantContextMiddleware resolves it to a full tenant object.
  */
 
-const DEFAULT_TENANT_SLUG = 'omega-afro-shop';
+const DEFAULT_TENANT_SLUG = 'omegaafro';
 
 /**
  * Known platform subdomains that are NOT tenant slugs.

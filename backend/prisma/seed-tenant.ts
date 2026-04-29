@@ -9,7 +9,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-const TENANT_OMEGA_SLUG = 'omega-afro-shop';
+const TENANT_OMEGA_SLUG = 'omegaafro';
 const TENANT_OMEGA_NAME = 'Omega Afro Shop';
 const TENANT_OMEGA_EMAIL = 'admin@omegaafroshop.com';
 

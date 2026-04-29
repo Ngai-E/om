@@ -42,7 +42,7 @@ async function main() {
 
   // Find tenant_omega to associate the super admin with
   const tenant = await prisma.tenant.findFirst({
-    where: { slug: 'omega-afro-shop' },
+    where: { slug: 'omegaafro' },
   });
 
   const user = await prisma.user.create({

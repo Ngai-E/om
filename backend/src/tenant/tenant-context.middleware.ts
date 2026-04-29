@@ -10,7 +10,7 @@ import { TenantContext } from '../common/interfaces/tenant-context.interface';
  * 1. X-Tenant-Slug header (trusted internal/dev use only)
  * 2. Subdomain from Host header ({slug}.stores.xxx)
  * 3. Custom domain lookup from tenant_domains table
- * 4. In development: Falls back to omega-afro-shop
+ * 4. In development: Falls back to omegaafro
  * 5. In production: NO FALLBACK - tenant must be resolved
  * 
  * Sets req['tenantId'] and req['tenant'] (typed TenantContext) for downstream use.
@@ -34,6 +34,15 @@ export class TenantContextMiddleware implements NestMiddleware {
       let tenant: any = null;
       const host = req.headers.host || '';
       const path = req.path;
+
+      // 0a. INFRASTRUCTURE PATHS - Skip tenant resolution entirely
+      // Health checks, docs, and static assets never carry tenant context.
+      if (this.isInfraPath(path)) {
+        (req as any).tenant = null;
+        (req as any).tenantId = null;
+        next();
+        return;
+      }
 
       // 0. PLATFORM DOMAINS - Skip tenant resolution entirely
       // These domains serve the platform app (landing, marketplace, onboarding, super admin)
@@ -88,16 +97,28 @@ export class TenantContextMiddleware implements NestMiddleware {
         }
       }
 
-      // 3. Try full domain lookup (custom domains)
+      // 3. Try full domain lookup (custom domains).
+      // Try the host as-is first, then a www-stripped variant so a tenant only
+      // needs to register one of `example.com` / `www.example.com` (though
+      // registering both is still recommended).
       if (!tenantId && host) {
-        const cleanHost = host.split(':')[0]; // Remove port
-        const cached = this.getFromCache(`domain:${cleanHost}`);
-        if (cached) {
-          tenantId = cached.tenantId;
-          tenant = cached.tenant;
+        const cleanHost = host.split(':')[0].toLowerCase();
+        const candidates: string[] = [cleanHost];
+        if (cleanHost.startsWith('www.')) {
+          candidates.push(cleanHost.slice(4));
         } else {
+          candidates.push(`www.${cleanHost}`);
+        }
+
+        for (const candidate of candidates) {
+          const cached = this.getFromCache(`domain:${candidate}`);
+          if (cached) {
+            tenantId = cached.tenantId;
+            tenant = cached.tenant;
+            break;
+          }
           const tenantDomain = await this.prisma.tenantDomain.findUnique({
-            where: { domain: cleanHost },
+            where: { domain: candidate },
             include: {
               tenant: {
                 include: { branding: true },
@@ -107,7 +128,8 @@ export class TenantContextMiddleware implements NestMiddleware {
           if (tenantDomain && !tenantDomain.tenant.deletedAt) {
             tenantId = tenantDomain.tenant.id;
             tenant = tenantDomain.tenant;
-            this.setCache(`domain:${cleanHost}`, tenantId, tenant);
+            this.setCache(`domain:${candidate}`, tenantId, tenant);
+            break;
           }
         }
       }
@@ -238,14 +260,41 @@ export class TenantContextMiddleware implements NestMiddleware {
    *   - {slug}.stores.xxx (tenant storefront)
    *   - localhost:3001 (tenant dev)
    */
+  /**
+   * Paths that never carry tenant context and should bypass resolution.
+   * Keeps health checks, docs, and static assets out of tenant logs.
+   */
+  private isInfraPath(path: string): boolean {
+    if (!path) return false;
+    if (path === '/' || path === '/health' || path === '/healthz' || path === '/ready') {
+      return true;
+    }
+    return (
+      path.startsWith('/health') ||
+      path.startsWith('/api/docs') ||
+      path.startsWith('/uploads/') ||
+      path.startsWith('/favicon')
+    );
+  }
+
   private isPlatformDomain(host: string): boolean {
     const cleanHost = host.split(':')[0].toLowerCase(); // Remove port
-    
+
     // Development: localhost on port 3000 is platform
     if (host.includes('localhost:3000') || host.includes('127.0.0.1:3000')) {
       return true;
     }
-    
+
+    // The API's own public host (e.g. <service>.onrender.com) is infra, not a
+    // tenant domain. Configure via API_HOST env var (comma-separated allowed).
+    const apiHosts = (process.env.API_HOST || '')
+      .split(',')
+      .map((h) => h.trim().toLowerCase())
+      .filter(Boolean);
+    if (apiHosts.includes(cleanHost)) {
+      return true;
+    }
+
     // Production platform domains
     const platformDomains = [
       'stores.xxx',           // Root domain (landing page)
@@ -253,7 +302,7 @@ export class TenantContextMiddleware implements NestMiddleware {
       'market.stores.xxx',    // Marketplace
       'console.stores.xxx',   // Super admin console
     ];
-    
+
     if (platformDomains.includes(cleanHost)) {
       return true;
     }
