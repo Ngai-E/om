@@ -1,9 +1,11 @@
 import { headers } from 'next/headers';
 
 const DEFAULT_TENANT_SLUG = 'omegaafro';
-// NOTE: `www` is intentionally excluded — it is a common prefix on tenant
-// custom domains (e.g. www.omegaafro.com) and must not be treated as platform.
-const PLATFORM_SUBDOMAINS = new Set(['market', 'console', 'api', 'app', 'admin', 'platform']);
+// Subdomain labels that are NEVER a tenant slug. `www` is included here:
+// there is no tenant named "www"; it is a cosmetic prefix on custom domains
+// (e.g. www.omegaafro.com). Requests on those hosts must fall back to
+// NEXT_PUBLIC_TENANT_SLUG or the default tenant, not send "www" as the slug.
+const PLATFORM_SUBDOMAINS = new Set(['market', 'console', 'api', 'app', 'admin', 'platform', 'www']);
 
 /**
  * Extract tenant slug from a hostname on the server.
@@ -25,6 +27,18 @@ function extractSlugFromHost(host: string | null): string | null {
     const subdomain = parts[0];
     if (!PLATFORM_SUBDOMAINS.has(subdomain)) {
       return subdomain;
+    }
+  }
+
+  // Custom-domain fallback: derive the slug from the apex label.
+  //   www.omegaafro.com  → 'omegaafro'
+  //   omegaafro.com      → 'omegaafro'
+  // Requires tenants to have a slug that matches the apex label of their
+  // custom domain (enforce this at onboarding time).
+  if (parts.length >= 2) {
+    const apexLabel = parts[parts[0] === 'www' ? 1 : 0];
+    if (apexLabel && !PLATFORM_SUBDOMAINS.has(apexLabel)) {
+      return apexLabel;
     }
   }
 
