@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'next/navigation';
 import { Search, ShoppingCart, Store, Star, ExternalLink } from 'lucide-react';
@@ -37,7 +37,7 @@ interface Product {
   };
 }
 
-export default function MarketplaceSearchPage() {
+function MarketplaceSearchInner() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
 
@@ -120,6 +120,23 @@ export default function MarketplaceSearchPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function MarketplaceSearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Loading search...</p>
+          </div>
+        </div>
+      }
+    >
+      <MarketplaceSearchInner />
+    </Suspense>
   );
 }
 

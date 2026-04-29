@@ -44,6 +44,23 @@ export default function SettingsPage() {
     apiSecret: '',
   });
 
+  const queryClient = useQueryClient();
+
+  // Fetch system settings from backend
+  const { data: systemSettings } = useQuery({
+    queryKey: ['system-settings'],
+    queryFn: async () => {
+      const { data } = await apiClient.get('/settings');
+      return data;
+    },
+  });
+
+  // Fetch public settings (including store information) from backend
+  const { data: publicSettings } = useQuery({
+    queryKey: ['public-settings'],
+    queryFn: () => settingsApi.getPublicSettings(),
+  });
+
   // Sync form data with backend settings when they change, fall back to tenant info for new stores
   useEffect(() => {
     setFormData({
@@ -88,23 +105,6 @@ export default function SettingsPage() {
       setIsSaving(false);
     }
   };
-
-  const queryClient = useQueryClient();
-
-  // Fetch system settings from backend
-  const { data: systemSettings } = useQuery({
-    queryKey: ['system-settings'],
-    queryFn: async () => {
-      const { data } = await apiClient.get('/settings');
-      return data;
-    },
-  });
-
-  // Fetch public settings (including store information) from backend
-  const { data: publicSettings } = useQuery({
-    queryKey: ['public-settings'],
-    queryFn: () => settingsApi.getPublicSettings(),
-  });
 
   // Toggle guest checkout
   const toggleGuestCheckout = useMutation({
