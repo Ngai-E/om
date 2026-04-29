@@ -34,7 +34,9 @@ export class GuestCheckoutService {
       );
     }
 
-    // If guest user exists, update their info but KEEP them as guest
+    // If guest user exists, update their info but KEEP them as guest.
+    // This is what enables a returning anonymous shopper to reuse their
+    // email/phone and have their previous addresses prefilled.
     if (user && user.isGuest) {
       user = await this.prisma.user.update({
         where: { id: user.id },
