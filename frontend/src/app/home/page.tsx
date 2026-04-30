@@ -8,6 +8,7 @@ import { CategoryList } from '@/components/home/CategoryList';
 import { ProductCardSkeleton, CategoryCardSkeleton } from '@/components/ui/skeleton';
 import { Product, Testimonial, Review } from '@/types';
 
+export const dynamic = 'force-dynamic'; // This page uses headers() so it cannot be statically generated
 export const revalidate = 60; // Revalidate every minute
 
 export default async function Home() {

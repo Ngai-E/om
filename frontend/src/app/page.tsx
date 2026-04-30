@@ -1,6 +1,8 @@
 import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 
+export const dynamic = 'force-dynamic'; // This page uses headers() so it cannot be statically generated
+
 function isPlatformDomain(hostname: string): boolean {
   // Platform domains (production)
   const platformDomains = [
