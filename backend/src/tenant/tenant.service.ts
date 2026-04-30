@@ -50,7 +50,7 @@ export class TenantService {
       await tx.tenantDomain.create({
         data: {
           tenantId: tenant.id,
-          domain: `${dto.slug}.stores.com`,
+          domain: `${dto.slug}.viralsocialmediabooster.com`,
           type: 'SUBDOMAIN',
           isPrimary: true,
           sslStatus: 'ACTIVE',

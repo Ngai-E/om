@@ -3,7 +3,7 @@
  *
  * Resolution order:
  * 1. NEXT_PUBLIC_TENANT_SLUG env var (for local dev override)
- * 2. Subdomain from current hostname ({slug}.stores.com)
+ * 2. Subdomain from current hostname ({slug}.viralsocialmediabooster.com)
  * 3. Falls back to 'omegaafro'
  *
  * The resolved slug is sent as X-Tenant-Slug header to the backend,
@@ -23,13 +23,13 @@ const PLATFORM_SUBDOMAINS = new Set(['market', 'console', 'api', 'app', 'admin',
 
 /**
  * Extract tenant slug from a hostname.
- * Expected format: {slug}.stores.com or {slug}.localhost
+ * Expected format: {slug}.viralsocialmediabooster.com or {slug}.localhost
  */
 function extractSlugFromHost(host: string): string | null {
   const cleanHost = host.split(':')[0]; // Remove port
   const parts = cleanHost.split('.');
 
-  // Need at least 3 parts for subdomain (slug.stores.com)
+  // Need at least 3 parts for subdomain (slug.viralsocialmediabooster.com)
   // or 2 parts for local dev (slug.localhost)
   if (parts.length >= 3) {
     const subdomain = parts[0];

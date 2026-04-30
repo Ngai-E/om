@@ -16,7 +16,7 @@ function extractSlugFromHost(host: string | null): string | null {
   const cleanHost = host.split(':')[0]; // Remove port
   const parts = cleanHost.split('.');
 
-  // Need at least 3 parts for subdomain (slug.stores.com)
+  // Need at least 3 parts for subdomain (slug.viralsocialmediabooster.com)
   // or 2 parts for local dev (slug.localhost)
   if (parts.length >= 3) {
     const subdomain = parts[0];

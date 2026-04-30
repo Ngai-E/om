@@ -74,7 +74,7 @@ describe('Tenant Context Resolution (e2e)', () => {
     it('should resolve tenant from subdomain in Host header', () => {
       return request(app.getHttpServer())
         .get('/products')
-        .set('Host', 'teststore.stores.com')
+        .set('Host', 'teststore.viralsocialmediabooster.com')
         .expect(200);
     });
 

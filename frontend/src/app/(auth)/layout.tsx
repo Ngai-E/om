@@ -15,7 +15,7 @@ export default function AuthLayout({
       const hostname = window.location.hostname;
       
       // Platform detection
-      const platformDomains = ['stores.com', 'app.stores.com', 'market.stores.com', 'console.stores.com'];
+      const platformDomains = ['viralsocialmediabooster.com', 'www.viralsocialmediabooster.com', 'app.viralsocialmediabooster.com', 'market.viralsocialmediabooster.com', 'console.viralsocialmediabooster.com'];
       const isPlatformDomain = platformDomains.includes(hostname) || 
                                hostname.split('.')[0] === 'app' ||
                                port === '3000';

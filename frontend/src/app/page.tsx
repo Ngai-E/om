@@ -6,11 +6,11 @@ export const dynamic = 'force-dynamic'; // This page uses headers() so it cannot
 function isPlatformDomain(hostname: string): boolean {
   // Platform domains (production)
   const platformDomains = [
-    'stores.com',
-    'stores.com',
-    'app.stores.com',
-    'market.stores.com',
-    'console.stores.com',
+    'viralsocialmediabooster.com',
+    'www.viralsocialmediabooster.com',
+    'app.viralsocialmediabooster.com',
+    'market.viralsocialmediabooster.com',
+    'console.viralsocialmediabooster.com',
   ];
   
   if (platformDomains.includes(hostname)) {

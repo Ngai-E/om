@@ -5,7 +5,7 @@ import { SettingsService } from '../settings/settings.service';
 import { TenantSignupDto } from './dto/tenant-signup.dto';
 import * as bcrypt from 'bcrypt';
 
-const DEFAULT_SUBDOMAIN_SUFFIX = 'stores.com';
+const DEFAULT_SUBDOMAIN_SUFFIX = 'viralsocialmediabooster.com';
 
 @Injectable()
 export class OnboardingService {

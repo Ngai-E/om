@@ -44,11 +44,11 @@ async function backfillTenantOmega() {
 
     // 3. Create default domain
     const domain = await (prisma as any).tenantDomain.upsert({
-      where: { domain: 'omegaafro.stores.com' },
+      where: { domain: 'omegaafro.viralsocialmediabooster.com' },
       update: {},
       create: {
         tenantId: 'tenant_omega',
-        domain: 'omegaafro.stores.com',
+        domain: 'omegaafro.viralsocialmediabooster.com',
         type: 'SUBDOMAIN',
         isPrimary: true,
         sslStatus: 'pending',

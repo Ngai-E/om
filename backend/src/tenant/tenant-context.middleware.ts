@@ -8,7 +8,7 @@ import { TenantContext } from '../common/interfaces/tenant-context.interface';
  * 
  * Resolution order:
  * 1. X-Tenant-Slug header (trusted internal/dev use only)
- * 2. Subdomain from Host header ({slug}.stores.com)
+ * 2. Subdomain from Host header ({slug}.viralsocialmediabooster.com)
  * 3. Custom domain lookup from tenant_domains table
  * 4. In development: Falls back to omegaafro
  * 5. In production: NO FALLBACK - tenant must be resolved
@@ -250,14 +250,14 @@ export class TenantContextMiddleware implements NestMiddleware {
    * Platform domains serve: landing page, marketplace, onboarding, super admin.
    * 
    * Platform domains:
-   *   - stores.com (root domain)
-   *   - app.stores.com (platform admin)
-   *   - market.stores.com (marketplace)
-   *   - console.stores.com (super admin)
+   *   - viralsocialmediabooster.com (root domain)
+   *   - app.viralsocialmediabooster.com (platform admin)
+   *   - market.viralsocialmediabooster.com (marketplace)
+   *   - console.viralsocialmediabooster.com (super admin)
    *   - localhost:3000 (platform dev)
    * 
    * Tenant domains:
-   *   - {slug}.stores.com (tenant storefront)
+   *   - {slug}.viralsocialmediabooster.com (tenant storefront)
    *   - localhost:3001 (tenant dev)
    */
   /**
@@ -297,10 +297,11 @@ export class TenantContextMiddleware implements NestMiddleware {
 
     // Production platform domains
     const platformDomains = [
-      'stores.com',           // Root domain (landing page)
-      'app.stores.com',       // Platform admin
-      'market.stores.com',    // Marketplace
-      'console.stores.com',   // Super admin console
+      'viralsocialmediabooster.com', 
+      'www.viralsocialmediabooster.com',        // Root domain (landing page)
+      'app.viralsocialmediabooster.com',        // Platform admin
+      'market.viralsocialmediabooster.com',     // Marketplace
+      'console.viralsocialmediabooster.com',    // Super admin console
     ];
 
     if (platformDomains.includes(cleanHost)) {
@@ -323,16 +324,16 @@ export class TenantContextMiddleware implements NestMiddleware {
   /**
    * Extract subdomain slug from host.
    * Examples:
-   *   "myshop.stores.com" → "myshop"
-   *   "myshop.stores.com:3000" → "myshop"
+   *   "myshop.viralsocialmediabooster.com" → "myshop"
+   *   "myshop.viralsocialmediabooster.com:3000" → "myshop"
    *   "localhost:3001" → null
-   *   "stores.com" → null
+   *   "viralsocialmediabooster.com" → null
    */
   private extractSubdomain(host: string): string | null {
     const cleanHost = host.split(':')[0]; // Remove port
     const parts = cleanHost.split('.');
 
-    // Need at least 3 parts for subdomain: slug.stores.com
+    // Need at least 3 parts for subdomain: slug.viralsocialmediabooster.com
     if (parts.length >= 3) {
       const slug = parts[0];
       // Skip common non-tenant subdomains
